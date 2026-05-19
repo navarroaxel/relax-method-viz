@@ -19,12 +19,11 @@ import { applyGeometryToGrid } from "@/lib/storage";
 import type { DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
 import type { WorkerInbound, WorkerOutbound } from "@/types/worker";
 
-const GRID_N = 80;
 const DISPLAY_SIZE = 480;
 const MANUAL_STEP = 50;
 
 export function Simulator() {
-  const [grid] = useState<GridState>(() => createGrid(GRID_N, "dirichlet0"));
+  const [grid, setGrid] = useState<GridState>(() => createGrid(120, "dirichlet0"));
   const workerRef = useRef<Worker | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -36,6 +35,7 @@ export function Simulator() {
     equipotentials: true,
     arrows: true,
   });
+  const [omega, setOmega] = useState(DEFAULT_SOLVER_CONFIG.omega);
   const [isRunning, setIsRunning] = useState(false);
   const [iteration, setIteration] = useState(0);
   const [deltaMax, setDeltaMax] = useState(Number.POSITIVE_INFINITY);
@@ -102,7 +102,7 @@ export function Simulator() {
     setIsRunning((r) => {
       const next = !r;
       if (next) {
-        post({ type: "run", config: DEFAULT_SOLVER_CONFIG });
+        post({ type: "run", config: { ...DEFAULT_SOLVER_CONFIG, omega } });
       } else {
         post({ type: "pause" });
       }
@@ -114,7 +114,7 @@ export function Simulator() {
     if (isRunning) return;
     post({
       type: "step",
-      omega: DEFAULT_SOLVER_CONFIG.omega,
+      omega,
       count: MANUAL_STEP,
     });
   };
@@ -125,6 +125,18 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     post({ type: "reset" });
     bumpRender();
+  };
+
+  const handleAutoOmega = () => {
+    setOmega(parseFloat((2 / (1 + Math.sin(Math.PI / grid.N))).toFixed(3)));
+  };
+
+  const handleChangeN = (n: number) => {
+    setIsRunning(false);
+    setGrid(createGrid(n, "dirichlet0"));
+    setPresetId("custom");
+    setIteration(0);
+    setDeltaMax(Number.POSITIVE_INFINITY);
   };
 
   const handleClear = () => {
@@ -155,9 +167,12 @@ export function Simulator() {
     setPresetId("custom");
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
-    postUpdateFixed();
     bumpRender();
-  }, [bumpRender, postUpdateFixed]);
+  }, [bumpRender]);
+
+  const handlePaintEnd = useCallback(() => {
+    postUpdateFixed();
+  }, [postUpdateFixed]);
 
   const handleLoadGeometry = (geometry: SavedGeometry) => {
     if (isRunning) {
@@ -223,10 +238,15 @@ export function Simulator() {
       <DisplayToggles display={display} onChange={setDisplay} />
       <RunControls
         isRunning={isRunning}
+        gridN={grid.N}
+        omega={omega}
         onToggleRun={handleToggleRun}
         onStep={handleStep}
         onResetPotential={handleResetPotential}
         onClear={handleClear}
+        onChangeN={handleChangeN}
+        onChangeOmega={setOmega}
+        onAutoOmega={handleAutoOmega}
       />
       <ExportControls
         onOpenSaveLoad={() => setDialogOpen(true)}
@@ -242,6 +262,7 @@ export function Simulator() {
           displaySize={DISPLAY_SIZE}
           renderTick={renderTick}
           onPaint={handlePaint}
+          onPaintEnd={handlePaintEnd}
           canvasRef={canvasRef}
         />
       </div>
@@ -256,7 +277,7 @@ export function Simulator() {
           </span>
         </div>
         <span className="text-zinc-500 dark:text-zinc-400">
-          ω = {DEFAULT_SOLVER_CONFIG.omega} · tolerancia ={" "}
+          ω = {omega} · tolerancia ={" "}
           {DEFAULT_SOLVER_CONFIG.tolerance}
         </span>
       </div>

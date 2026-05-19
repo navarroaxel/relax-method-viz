@@ -47,22 +47,22 @@ function gridToCells(grid: GridState): Array<[number, number, number]> {
   return cells;
 }
 
+const MAX_GRID_N = 512;
+const MAX_ABS_V = 1000;
+
 function isSavedGeometry(value: unknown): value is SavedGeometry {
   if (value === null || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
-  if (typeof v.name !== "string") return false;
-  if (typeof v.N !== "number") return false;
-  if (typeof v.createdAt !== "number") return false;
-  if (!Array.isArray(v.cells)) return false;
+  if (typeof v.name !== "string" || v.name.length === 0 || v.name.length > 200) return false;
+  if (typeof v.N !== "number" || !Number.isInteger(v.N) || v.N < 1 || v.N > MAX_GRID_N) return false;
+  const N = v.N;
+  if (typeof v.createdAt !== "number" || !Number.isFinite(v.createdAt) || v.createdAt < 0) return false;
+  if (!Array.isArray(v.cells) || v.cells.length > N * N) return false;
   for (const cell of v.cells) {
     if (!Array.isArray(cell) || cell.length !== 3) return false;
-    if (
-      typeof cell[0] !== "number" ||
-      typeof cell[1] !== "number" ||
-      typeof cell[2] !== "number"
-    ) {
-      return false;
-    }
+    if (typeof cell[0] !== "number" || !Number.isInteger(cell[0]) || cell[0] < 0 || cell[0] >= N) return false;
+    if (typeof cell[1] !== "number" || !Number.isInteger(cell[1]) || cell[1] < 0 || cell[1] >= N) return false;
+    if (typeof cell[2] !== "number" || !Number.isFinite(cell[2]) || Math.abs(cell[2]) > MAX_ABS_V) return false;
   }
   return true;
 }

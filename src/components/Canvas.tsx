@@ -14,6 +14,7 @@ interface CanvasProps {
   displaySize: number;
   renderTick: number;
   onPaint: () => void;
+  onPaintEnd?: () => void;
   canvasRef?: RefObject<HTMLCanvasElement | null>;
 }
 
@@ -33,6 +34,7 @@ export function Canvas({
   displaySize,
   renderTick,
   onPaint,
+  onPaintEnd,
   canvasRef: externalCanvasRef,
 }: CanvasProps) {
   const internalCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -124,6 +126,7 @@ export function Canvas({
       setHover(null);
     };
     const onMouseUp = () => {
+      if (isDrawingRef.current) onPaintEnd?.();
       isDrawingRef.current = false;
       lastCellRef.current = null;
     };
@@ -146,6 +149,7 @@ export function Canvas({
     };
     const onTouchEnd = (e: TouchEvent) => {
       e.preventDefault();
+      if (isDrawingRef.current) onPaintEnd?.();
       isDrawingRef.current = false;
       lastCellRef.current = null;
     };
@@ -169,7 +173,7 @@ export function Canvas({
       canvas.removeEventListener("touchend", onTouchEnd);
       canvas.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [canvasRef, onPaint]);
+  }, [canvasRef, onPaint, onPaintEnd]);
 
   return (
     <div
