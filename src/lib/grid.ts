@@ -31,6 +31,7 @@ export function applyFixedValues(grid: GridState): void {
 
 export function applyBoundary(grid: GridState): void {
   const { V, N, boundary } = grid;
+  // Dirichlet boundary condition (V = 0)
   if (boundary === "dirichlet0") {
     for (let i = 0; i < N; i++) {
       V[idx(i, 0, N)] = 0;
@@ -39,6 +40,7 @@ export function applyBoundary(grid: GridState): void {
       V[idx(N - 1, i, N)] = 0;
     }
   } else {
+    // Neumann boundary condition (∂V/∂n = 0)
     for (let i = 1; i < N - 1; i++) {
       V[idx(i, 0, N)] = V[idx(i, 1, N)] as number;
       V[idx(i, N - 1, N)] = V[idx(i, N - 2, N)] as number;

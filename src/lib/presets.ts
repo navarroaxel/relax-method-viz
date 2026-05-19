@@ -128,8 +128,9 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Placas paralelas",
     apply: (g) => {
       clearAll(g);
-      setRect(g, 20, 22, 60, 25, +60);
-      setRect(g, 20, 55, 60, 58, -60);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      setRect(g, sc(20), sc(22), sc(60), sc(25), +60);
+      setRect(g, sc(20), sc(55), sc(60), sc(58), -60);
       applyFixedValues(g);
     },
   },
@@ -137,8 +138,9 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Dipolo",
     apply: (g) => {
       clearAll(g);
-      setDisc(g, 28, 40, 3, +80);
-      setDisc(g, 52, 40, 3, -80);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      setDisc(g, sc(28), sc(40), sc(3), +80);
+      setDisc(g, sc(52), sc(40), sc(3), -80);
       applyFixedValues(g);
     },
   },
@@ -146,9 +148,10 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Pararrayos + nube",
     apply: (g) => {
       clearAll(g);
-      setRect(g, 8, 6, 72, 13, +80);
-      setRect(g, 0, 71, 80, 74, 0);
-      setTriangleTipUp(g, 40, 70, 32, 5, 0);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      setRect(g, sc(8), sc(6), sc(72), sc(13), +80);
+      setRect(g, 0, sc(71), sc(80), sc(74), 0);
+      setTriangleTipUp(g, sc(40), sc(70), sc(32), sc(5), 0);
       applyFixedValues(g);
     },
   },
@@ -156,8 +159,9 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Coaxial cuadrado",
     apply: (g) => {
       clearAll(g);
-      setHollowRect(g, 14, 14, 66, 66, 0);
-      setRect(g, 35, 35, 46, 46, +80);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      setHollowRect(g, sc(14), sc(14), sc(66), sc(66), 0);
+      setRect(g, sc(35), sc(35), sc(46), sc(46), +80);
       applyFixedValues(g);
     },
   },
@@ -165,9 +169,10 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Jaula de Faraday",
     apply: (g) => {
       clearAll(g);
-      setHollowRect(g, 14, 14, 58, 58, 0);
-      setDisc(g, 36, 36, 3, +80);
-      setDisc(g, 68, 36, 3, -80);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      setHollowRect(g, sc(14), sc(14), sc(58), sc(58), 0);
+      setDisc(g, sc(36), sc(36), sc(3), +80);
+      setDisc(g, sc(68), sc(36), sc(3), -80);
       applyFixedValues(g);
     },
   },
@@ -175,8 +180,9 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Punta vs plano",
     apply: (g) => {
       clearAll(g);
-      setRect(g, 0, 68, 80, 71, -50);
-      setTriangleTipUp(g, 40, 42, 10, 6, +80);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      setRect(g, 0, sc(68), sc(80), sc(71), -50);
+      setTriangleTipUp(g, sc(40), sc(42), sc(10), sc(6), +80);
       applyFixedValues(g);
     },
   },
