@@ -10,6 +10,7 @@ import { ProjectCredits } from "@/components/ProjectCredits";
 import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
 import { GitHubLink } from "@/components/GitHubLink";
+import { Surface3D } from "@/components/Surface3DDynamic";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
 import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/grid";
@@ -34,7 +35,9 @@ export function Simulator() {
   const [display, setDisplay] = useState<DisplayFlags>({
     heatmap: true,
     equipotentials: true,
-    arrows: true,
+    arrows: false,
+    streamlines: true,
+    surface3D: false,
   });
   const [omega, setOmega] = useState(DEFAULT_SOLVER_CONFIG.omega);
   const [isRunning, setIsRunning] = useState(false);
@@ -289,6 +292,11 @@ export function Simulator() {
           canvasRef={canvasRef}
         />
       </div>
+      {display.surface3D && (
+        <div className="flex justify-center">
+          <Surface3D grid={grid} renderTick={renderTick} vmax={vmax} />
+        </div>
+      )}
       <Legend vmax={vmax} />
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
         <div className="flex flex-wrap gap-4">
