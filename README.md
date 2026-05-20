@@ -8,8 +8,9 @@ field vectors develop in real time as the solver converges.
 
 ## Features
 
-- **Six built-in geometries**: parallel plates, dipole, lightning rod,
-  square coaxial, Faraday cage, tip-vs-plane.
+- **Eight built-in geometries**: flat capacitor, dipole, simplified
+  lightning rod, coaxial cable, Faraday cage, tip-vs-plane, L-shaped
+  conducting plates, 4-subconductor HV bundle.
 - **Freehand drawing**: paint conductors with four tools (`+V`, `−V`,
   ground, erase), voltage preset (100 V / 220 V / 100 kV / √(2/3)×500 kV)
   and brush size (1–6), mouse and touch supported.
@@ -68,14 +69,16 @@ transferable `ArrayBuffer` support.
 
 ## Presets
 
-| Preset             | What you should see after **Calcular**                                                            |
-| ------------------ | -------------------------------------------------------------------------------------------------- |
-| Placas paralelas   | Linear `V` between the plates; uniform vertical `E`.                                               |
-| Dipolo             | Cardioid-shaped equipotentials; field lines bending from `+` to `−`.                               |
-| Pararrayos + nube  | Equipotentials compress sharply near the rod tip — the "lightning rod effect".                    |
-| Coaxial cuadrado   | Concentric square equipotentials; radial field outward from the inner conductor.                    |
-| Jaula de Faraday   | `V ≈ 0` and no arrows inside the closed shell, even with an external charge — the cage screens.   |
-| Punta vs plano    | Equipotential density far higher near the tip than near the flat plate.                            |
+| Preset ID        | Label                     | What you should see after **Calcular**                                                          |
+| ---------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `parallel`       | Capacitor plano           | Linear `V` between the plates; uniform vertical `E` (textbook parallel-plate capacitor).        |
+| `dipole`         | Dipolo                    | Cardioid-shaped equipotentials; field lines curving from `+` disc to `−` disc.                  |
+| `lightning`      | Pararrayos simplificado   | Top plate at +100 kV, grounded rod below — equipotentials compress sharply near the rod tip.    |
+| `coaxial`        | Cable Coaxial             | Concentric circular equipotentials; radial field outward from the inner disc.                    |
+| `faraday`        | Jaula de Faraday          | `V ≈ 0` and no arrows inside the grounded closed box, even with an external field — cage screens. |
+| `tip`            | Punta vs plano            | Triangular tip at +80 V over a grounded plate — high field density near the apex.               |
+| `conductors`     | Placas conductoras        | L-shaped geometry (horizontal +100 kV plate, vertical −100 kV plate); fringe fields at edges.  |
+| `subconductors`  | Línea 4 subconductores    | 2×2 bundle of discs at √(2/3)×500 kV over a ground plane — models a 4-subconductor HV bundle.  |
 
 ## The math
 

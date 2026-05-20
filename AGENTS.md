@@ -41,3 +41,16 @@ npx tsc --noEmit
 - `DEFAULT_SOLVER_CONFIG` in `src/lib/relaxation.ts`: ω = 1.9, tolerance = 1e-3, maxIterations = 2000, reportEvery = 5
 
 **Path alias**: `@/` maps to `src/`.
+
+**Presets** (`src/lib/presets.ts`): Eight entries in `PRESETS: Record<PresetId, Preset>`, rendered in the order defined by `PRESET_ORDER`. Each `apply(g)` calls `clearAll`, then geometry helpers (`setRect`, `setDisc`, `setRing`, `setHollowRect`, `setTriangleTipUp`), then `applyFixedValues`. All coordinates are written for N = 80 and scaled via `sc = (x) => Math.round(x * g.N / 80)` so they adapt to any grid size.
+
+| ID             | Label                    | Geometry                                                        |
+| -------------- | ------------------------ | --------------------------------------------------------------- |
+| `parallel`     | Capacitor plano          | Two horizontal strips at ±100 kV                               |
+| `dipole`       | Dipolo                   | Two discs at ±100 kV, centred left/right                       |
+| `lightning`    | Pararrayos simplificado  | Top plate +100 kV, grounded bottom plate + grounded rod        |
+| `coaxial`      | Cable Coaxial            | Grounded outer ring + central disc at +80 V                    |
+| `faraday`      | Jaula de Faraday         | Top plate +80 V, grounded bottom plate + grounded closed box   |
+| `tip`          | Punta vs plano           | Grounded bottom plate + triangular tip at +80 V                |
+| `conductors`   | Placas conductoras       | Horizontal plate +100 kV + vertical plate −100 kV (L-shape)   |
+| `subconductors`| Línea 4 subconductores   | Ground plane + 2×2 disc bundle at √(2/3)×500 kV               |

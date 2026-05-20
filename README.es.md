@@ -9,8 +9,9 @@ y los vectores de campo mientras el solver converge en tiempo real.
 
 ## Qué hace
 
-- **Seis geometrías predefinidas**: placas paralelas, dipolo, pararrayos
-  + nube, coaxial cuadrado, jaula de Faraday, punta vs plano.
+- **Ocho geometrías predefinidas**: capacitor plano, dipolo, pararrayos
+  simplificado, cable coaxial, jaula de Faraday, punta vs plano, placas
+  conductoras en L, bundle de 4 subconductores AT.
 - **Dibujo a mano alzada**: cuatro herramientas (`+V`, `−V`, tierra,
   borrar), preset de voltaje (100 V / 220 V / 100 kV / √(2/3)×500 kV),
   pincel ajustable (1–6), soporte para mouse y touch.
@@ -73,14 +74,16 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 
 ## Presets
 
-| Preset             | Qué se ve después de **Calcular**                                                                  |
-| ------------------ | ------------------------------------------------------------------------------------------------- |
-| Placas paralelas   | `V` lineal entre las placas; `E` uniforme y vertical.                                              |
-| Dipolo             | Equipotenciales con forma de cardioides; líneas de campo curvándose de `+` a `−`.                 |
-| Pararrayos + nube  | Las equipotenciales se aprietan visiblemente cerca de la punta — el famoso efecto punta.          |
-| Coaxial cuadrado   | Equipotenciales cuadradas concéntricas; campo radial saliendo del conductor central.               |
-| Jaula de Faraday   | `V ≈ 0` y sin flechas dentro del recinto cerrado, incluso con carga externa — apantallamiento.   |
-| Punta vs plano    | Densidad de equipotenciales mucho mayor cerca de la punta que del plano.                          |
+| ID               | Etiqueta                  | Qué se ve después de **Calcular**                                                               |
+| ---------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `parallel`       | Capacitor plano           | `V` lineal entre las placas; `E` uniforme y vertical (capacitor de placas paralelas).           |
+| `dipole`         | Dipolo                    | Equipotenciales con forma de cardioides; líneas de campo curvándose del disco `+` al `−`.       |
+| `lightning`      | Pararrayos simplificado   | Placa superior a +100 kV, varilla aterrada abajo — equipotenciales se aprietan en la punta.     |
+| `coaxial`        | Cable Coaxial             | Equipotenciales circulares concéntricas; campo radial saliendo del disco central.                |
+| `faraday`        | Jaula de Faraday          | `V ≈ 0` y sin flechas dentro de la caja cerrada aterrada, incluso con campo externo.            |
+| `tip`            | Punta vs plano            | Punta triangular a +80 V sobre plano aterrado — alta concentración de campo en el vértice.      |
+| `conductors`     | Placas conductoras        | Geometría en L (placa horizontal +100 kV, placa vertical −100 kV); campos de franja en bordes.  |
+| `subconductors`  | Línea 4 subconductores    | Bundle 2×2 de discos a √(2/3)×500 kV sobre plano de tierra — modela línea AT real.             |
 
 ## La matemática
 
@@ -145,7 +148,7 @@ src/
     Simulator.tsx          Estado top-level + plumbing del worker
     Canvas.tsx             Canvas 480×480, paint + touch + hover
     Toolbar.tsx            Herramientas, sliders de voltaje y pincel
-    PresetSelect.tsx       Dropdown de los seis presets
+    PresetSelect.tsx       Dropdown de los ocho presets
     DisplayToggles.tsx     Checkboxes de visibilidad de capas
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grilla / contorno
     ExportControls.tsx     Botones de Guardar/Cargar y Exportar PNG
