@@ -267,6 +267,163 @@ export function renderFieldArrows(
   ctx.restore();
 }
 
+export function renderStreamlines(
+  ctx: CanvasRenderingContext2D,
+  V: Float32Array,
+  fixed: Uint8Array,
+  N: number,
+  cellSize: number,
+  density = 10,
+): void {
+  const visited = new Uint8Array(N * N);
+  const h = 0.5;
+  const maxSteps = 4 * N;
+  const arrowSpacingPx = 80;
+  const headSize = 4;
+
+  // Bilinear field sampler. (x, y) in grid units; returns [ex, ey, mag].
+  // mag === 0 is the "stop" signal: either out of bounds, or one of the
+  // four enclosing corner cells touches the boundary or a conductor.
+  const sampleE = (x: number, y: number): [number, number, number] => {
+    const i0 = Math.floor(x);
+    const j0 = Math.floor(y);
+    if (i0 < 1 || j0 < 1 || i0 >= N - 2 || j0 >= N - 2) return [0, 0, 0];
+    const fx = x - i0;
+    const fy = y - j0;
+    const corner = (ii: number, jj: number): [number, number] | null => {
+      if ((fixed[idx(ii, jj, N)] as number) === 1) return null;
+      const vR = V[idx(ii + 1, jj, N)] as number;
+      const vL = V[idx(ii - 1, jj, N)] as number;
+      const vD = V[idx(ii, jj + 1, N)] as number;
+      const vU = V[idx(ii, jj - 1, N)] as number;
+      return [-(vR - vL) * 0.5, -(vD - vU) * 0.5];
+    };
+    const c00 = corner(i0, j0);
+    const c10 = corner(i0 + 1, j0);
+    const c01 = corner(i0, j0 + 1);
+    const c11 = corner(i0 + 1, j0 + 1);
+    if (!c00 || !c10 || !c01 || !c11) return [0, 0, 0];
+    const w00 = (1 - fx) * (1 - fy);
+    const w10 = fx * (1 - fy);
+    const w01 = (1 - fx) * fy;
+    const w11 = fx * fy;
+    const ex = w00 * c00[0] + w10 * c10[0] + w01 * c01[0] + w11 * c11[0];
+    const ey = w00 * c00[1] + w10 * c10[1] + w01 * c01[1] + w11 * c11[1];
+    const mag = Math.hypot(ex, ey);
+    return [ex, ey, mag];
+  };
+
+  const trace = (x0: number, y0: number, dir: 1 | -1): number[] => {
+    const pts: number[] = [x0 * cellSize, y0 * cellSize];
+    let x = x0;
+    let y = y0;
+    let lastIc = Math.round(x0);
+    let lastJc = Math.round(y0);
+    for (let step = 0; step < maxSteps; step++) {
+      const k1 = sampleE(x, y);
+      if (k1[2] === 0) break;
+      const nx1 = k1[0] / k1[2];
+      const ny1 = k1[1] / k1[2];
+      const k2 = sampleE(x + 0.5 * h * dir * nx1, y + 0.5 * h * dir * ny1);
+      if (k2[2] === 0) break;
+      const nx2 = k2[0] / k2[2];
+      const ny2 = k2[1] / k2[2];
+      const nxn = x + h * dir * nx2;
+      const nyn = y + h * dir * ny2;
+      const ic = Math.round(nxn);
+      const jc = Math.round(nyn);
+      if (ic < 1 || jc < 1 || ic >= N - 1 || jc >= N - 1) break;
+      if ((fixed[idx(ic, jc, N)] as number) === 1) break;
+      if (ic !== lastIc || jc !== lastJc) {
+        if ((visited[idx(ic, jc, N)] as number) === 1) break;
+        visited[idx(ic, jc, N)] = 1;
+        lastIc = ic;
+        lastJc = jc;
+      }
+      pts.push(nxn * cellSize, nyn * cellSize);
+      x = nxn;
+      y = nyn;
+    }
+    return pts;
+  };
+
+  const drawArrowheadsAlong = (pts: number[]): void => {
+    let acc = 0;
+    let nextAt = arrowSpacingPx * 0.5;
+    for (let i = 2; i < pts.length; i += 2) {
+      const x0 = pts[i - 2] as number;
+      const y0 = pts[i - 1] as number;
+      const x1 = pts[i] as number;
+      const y1 = pts[i + 1] as number;
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      const seg = Math.hypot(dx, dy);
+      if (seg === 0) continue;
+      acc += seg;
+      while (acc >= nextAt) {
+        const angle = Math.atan2(dy, dx);
+        const hx = Math.cos(angle);
+        const hy = Math.sin(angle);
+        const px = -hy;
+        const py = hx;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(
+          x1 - hx * headSize + px * headSize * 0.55,
+          y1 - hy * headSize + py * headSize * 0.55,
+        );
+        ctx.lineTo(
+          x1 - hx * headSize - px * headSize * 0.55,
+          y1 - hy * headSize - py * headSize * 0.55,
+        );
+        ctx.closePath();
+        ctx.fill();
+        nextAt += arrowSpacingPx;
+      }
+    }
+  };
+
+  const stepG = (N - 2) / density;
+  const lines: number[][] = [];
+  for (let sj = 0; sj < density; sj++) {
+    for (let si = 0; si < density; si++) {
+      const sx = 1 + (si + 0.5) * stepG;
+      const sy = 1 + (sj + 0.5) * stepG;
+      const ic = Math.round(sx);
+      const jc = Math.round(sy);
+      if (ic < 1 || jc < 1 || ic >= N - 1 || jc >= N - 1) continue;
+      if ((fixed[idx(ic, jc, N)] as number) === 1) continue;
+      if ((visited[idx(ic, jc, N)] as number) === 1) continue;
+      visited[idx(ic, jc, N)] = 1;
+      const fwd = trace(sx, sy, +1);
+      const bwd = trace(sx, sy, -1);
+      const pts: number[] = [];
+      for (let i = bwd.length - 2; i >= 0; i -= 2) {
+        pts.push(bwd[i] as number, (bwd[i + 1] as number));
+      }
+      for (let i = 2; i < fwd.length; i += 2) {
+        pts.push(fwd[i] as number, (fwd[i + 1] as number));
+      }
+      if (pts.length >= 6) lines.push(pts);
+    }
+  }
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(0,0,0,0.78)";
+  ctx.fillStyle = "rgba(0,0,0,0.78)";
+  ctx.lineWidth = 1.0;
+  for (const pts of lines) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0] as number, pts[1] as number);
+    for (let i = 2; i < pts.length; i += 2) {
+      ctx.lineTo(pts[i] as number, pts[i + 1] as number);
+    }
+    ctx.stroke();
+    drawArrowheadsAlong(pts);
+  }
+  ctx.restore();
+}
+
 export function renderConductors(
   ctx: CanvasRenderingContext2D,
   fixed: Uint8Array,
@@ -303,5 +460,7 @@ export function renderAll(
   if (display.equipotentials)
     renderEquipotentials(ctx, V, N, vmax, cellSize);
   if (display.arrows) renderFieldArrows(ctx, V, fixed, N, cellSize);
+  else if (display.streamlines)
+    renderStreamlines(ctx, V, fixed, N, cellSize);
   renderConductors(ctx, fixed, Vfix, N, cellSize);
 }

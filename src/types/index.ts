@@ -34,4 +34,6 @@ export interface DisplayFlags {
   heatmap: boolean;
   equipotentials: boolean;
   arrows: boolean;
+  streamlines: boolean;
+  surface3D: boolean;
 }
