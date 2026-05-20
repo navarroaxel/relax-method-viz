@@ -179,7 +179,13 @@ export function Simulator() {
       post({ type: "pause" });
       setIsRunning(false);
     }
-    applyGeometryToGrid(grid, geometry);
+    if (geometry.N !== grid.N) {
+      const newGrid = createGrid(geometry.N, "dirichlet0");
+      applyGeometryToGrid(newGrid, geometry);
+      setGrid(newGrid);
+    } else {
+      applyGeometryToGrid(grid, geometry);
+    }
     setPresetId("custom");
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);

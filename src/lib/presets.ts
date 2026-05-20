@@ -201,7 +201,7 @@ export const PRESETS: Record<PresetId, Preset> = {
       const sc = (x: number) => Math.round(x * g.N / 80);
       // V1: top plate
       setRect(g, 0, sc(2), sc(80), sc(5), +80);
-      // V2: bottom plate + open-top U-box (all ground)
+      // V2: bottom plate + closed box enclosure (all ground)
       setRect(g, 0, sc(75), sc(80), sc(78), 0);
       setRect(g, sc(25), sc(44), sc(55), sc(46), 0); // roof
       setRect(g, sc(25), sc(44), sc(27), sc(76), 0); // left wall
