@@ -26,38 +26,6 @@ function setRect(
   }
 }
 
-function setHollowRect(
-  g: GridState,
-  i0: number,
-  j0: number,
-  i1: number,
-  j1: number,
-  v: number,
-): void {
-  const { N, fixed, Vfix } = g;
-  const iMin = Math.max(0, Math.min(i0, i1));
-  const iMax = Math.min(N, Math.max(i0, i1));
-  const jMin = Math.max(0, Math.min(j0, j1));
-  const jMax = Math.min(N, Math.max(j0, j1));
-  if (iMax <= iMin || jMax <= jMin) return;
-  for (let i = iMin; i < iMax; i++) {
-    const kTop = idx(i, jMin, N);
-    const kBot = idx(i, jMax - 1, N);
-    fixed[kTop] = 1;
-    Vfix[kTop] = v;
-    fixed[kBot] = 1;
-    Vfix[kBot] = v;
-  }
-  for (let j = jMin; j < jMax; j++) {
-    const kLeft = idx(iMin, j, N);
-    const kRight = idx(iMax - 1, j, N);
-    fixed[kLeft] = 1;
-    Vfix[kLeft] = v;
-    fixed[kRight] = 1;
-    Vfix[kRight] = v;
-  }
-}
-
 function setDisc(
   g: GridState,
   ci: number,

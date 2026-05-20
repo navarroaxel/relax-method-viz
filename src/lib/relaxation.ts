@@ -1,4 +1,4 @@
-import { applyBoundary, applyFixedValues } from "@/lib/grid";
+import { applyBoundary } from "@/lib/grid";
 import type { GridState, SolverConfig } from "@/types";
 
 export const DEFAULT_SOLVER_CONFIG: SolverConfig = {
