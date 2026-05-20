@@ -1,18 +1,18 @@
 # Electrostatic Field Simulator — Relaxation Method
 
 A client-side web app that visualizes the 2D electrostatic field by solving
-Laplace's equation `∇²V = 0` with successive over-relaxation (SOR) on an
-80×80 grid. Draw conductors by hand or load classic textbook geometries,
-watch the potential, equipotentials, and field vectors develop in real
-time as the solver converges.
+Laplace's equation `∇²V = 0` with successive over-relaxation (SOR) on a
+user-selectable grid (80×80, 120×120, or 200×200). Draw conductors by hand
+or load classic textbook geometries, watch the potential, equipotentials, and
+field vectors develop in real time as the solver converges.
 
 ## Features
 
 - **Six built-in geometries**: parallel plates, dipole, lightning rod,
   square coaxial, Faraday cage, tip-vs-plane.
 - **Freehand drawing**: paint conductors with four tools (`+V`, `−V`,
-  ground, erase), adjustable voltage (10–100) and brush size (1–6),
-  mouse and touch supported.
+  ground, erase), voltage preset (100 V / 220 V / 100 kV / √(2/3)×500 kV)
+  and brush size (1–6), mouse and touch supported.
 - **Three visualization layers**: potential heatmap (divergent
   blue-white-red colormap), equipotential lines (marching squares), and
   electric-field arrows (`E = −∇V` via centered differences). Each
@@ -20,6 +20,11 @@ time as the solver converges.
 - **Live solver**: SOR (`ω ≈ 1.9`) runs in a dedicated **Web Worker** so
   the UI never blocks. Iteration count and `Δmax` update in real time;
   the loop stops automatically at `Δmax < 10⁻³`.
+- **Grid size**: switch between 80×80, 120×120, and 200×200 at runtime;
+  the **Auto** button recomputes the optimal ω for the current N.
+- **Boundary conditions**: choose between Dirichlet (V = 0 at walls —
+  grounded enclosure) and Neumann (∂V/∂n = 0 — insulating walls, field
+  lines parallel to boundary) without losing the current conductor layout.
 - **Save / load**: name and persist geometries in `localStorage`,
   export/import as JSON, export the rendered canvas as PNG.
 - **Static export**: produces a fully static `out/` directory with no
@@ -43,8 +48,8 @@ transferable `ArrayBuffer` support.
 
 ## Using the app
 
-1. Pick a tool (`+V`, `−V`, `Tierra`, or `Borrar`) and a voltage / brush
-   size.
+1. Pick a tool (`+V`, `−V`, `Tierra`, or `Borrar`), choose a voltage preset,
+   and set the brush size.
 2. Either draw conductors on the canvas or select a preset from the
    **Preset** dropdown to load a textbook geometry.
 3. Press **Calcular** to start the solver. The heatmap, equipotentials,
@@ -52,10 +57,13 @@ transferable `ArrayBuffer` support.
 4. **Pausar** stops the loop, **Paso (50)** advances a fixed number of
    iterations synchronously, **Reset V** zeros the potential while
    keeping conductors, **Limpiar** wipes everything.
-5. **Guardar / Cargar** opens the persistence dialog (save by name,
+5. Use the **Grilla** dropdown to switch grid resolution and **Contorno**
+   to toggle between Dirichlet and Neumann boundaries mid-session;
+   conductors are preserved in both cases.
+6. **Guardar / Cargar** opens the persistence dialog (save by name,
    delete, import/export JSON). **Exportar PNG** downloads the current
    canvas as `campo.png`.
-6. Hover over any cell to read its grid coordinates, potential `V`, and
+7. Hover over any cell to read its grid coordinates, potential `V`, and
    field magnitude `|E|` from a small overlay in the canvas corner.
 
 ## Presets
@@ -96,9 +104,11 @@ V[i,j] := V[i,j] + ω · (avg − V[i,j])
 ```
 
 The optimal `ω` for an `N × N` grid with Dirichlet boundaries is
-`2 / (1 + π / N)` — about `1.924` for `N = 80`. We use `ω = 1.9` as a
-safe default. The stopping criterion is `Δmax = max |V_new − V_old| <
-10⁻³`, typically reached in under 400 iterations on 80².
+`2 / (1 + π / N)` — about `1.924` for `N = 80` and `1.949` for `N = 200`.
+The **Auto** button computes this exactly for the active grid size. The
+default is `ω = 1.9`. The stopping criterion is
+`Δmax = max |V_new − V_old| < 10⁻³`, typically reached in under 400
+iterations on 80².
 
 The field is recovered from the converged potential by centered
 differences:
@@ -110,7 +120,7 @@ Ey = −(V[i,j+1] − V[i,j−1]) / 2
 
 ## Rendering layers
 
-- **Heatmap**: a 80×80 `ImageData` colored with a divergent
+- **Heatmap**: an `N×N` `ImageData` colored with a divergent
   blue-white-red colormap (`−Vmax → 0 → +Vmax`), then bilinearly
   upscaled onto the 480×480 display canvas.
 - **Equipotentials**: 13 levels equispaced in `[−Vmax, +Vmax]` excluding
@@ -133,7 +143,7 @@ src/
     Toolbar.tsx            Tool picker, voltage / brush sliders
     PresetSelect.tsx       Dropdown of six preset geometries
     DisplayToggles.tsx     Layer visibility checkboxes
-    RunControls.tsx        Calcular / Paso / Reset V / Limpiar
+    RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grid size / boundary
     ExportControls.tsx     Save-load + PNG export buttons
     SaveLoadDialog.tsx     localStorage manager + JSON import/export
     Legend.tsx             Colormap legend + conductor color key
@@ -199,11 +209,8 @@ vercel --prod
 
 - Two-dimensional only; no magnetic media.
 - Fixed-step square grid (no adaptive refinement).
-- Laplace only — no charge density `ρ` (Poisson is in `TASK.md §17` as
-  a future extension).
+- Laplace only — no charge density `ρ` (no Poisson equation support).
 - Uniform permittivity (no dielectric regions).
-- Grid size is fixed in `Simulator.tsx` at `GRID_N = 80`; the solver
-  itself supports arbitrary `N`.
 
 ## License
 
