@@ -14,18 +14,24 @@ field vectors develop in real time as the solver converges.
 - **Freehand drawing**: paint conductors with four tools (`+V`, `−V`,
   ground, erase), voltage preset (100 V / 220 V / 100 kV / √(2/3)×500 kV)
   and brush size (1–6), mouse and touch supported.
-- **Three visualization layers**: potential heatmap (divergent
-  blue-white-red colormap), equipotential lines (marching squares), and
-  electric-field arrows (`E = −∇V` via centered differences). Each
-  layer toggles independently.
+- **Four visualization layers**: potential heatmap (divergent
+  blue-white-red colormap), equipotential lines (marching squares),
+  electric-field arrows (`E = −∇V` via centered differences), and
+  field-line streamlines (RK2 integration through the bilinearly
+  sampled field). Each layer toggles independently; arrows and
+  streamlines are mutually exclusive.
+- **Optional 3D surface view**: render `V(x, y)` as a Three.js mesh
+  with the same divergent colormap, orbit-controlled camera; runs
+  alongside the 2D canvas and updates live as the solver iterates.
 - **Live solver**: SOR (`ω ≈ 1.9`) runs in a dedicated **Web Worker** so
   the UI never blocks. Iteration count and `Δmax` update in real time;
   the loop stops automatically at `Δmax < 10⁻³`.
 - **Grid size**: switch between 80×80, 120×120, and 200×200 at runtime;
   the **Auto** button recomputes the optimal ω for the current N.
-- **Boundary conditions**: choose between Dirichlet (V = 0 at walls —
-  grounded enclosure) and Neumann (∂V/∂n = 0 — insulating walls, field
-  lines parallel to boundary) without losing the current conductor layout.
+- **Boundary conditions**: defaults to Neumann (∂V/∂n = 0) — the region
+  walls are non-conductive, so the field can only have a component
+  parallel to them. Switch to Dirichlet (V = 0 at walls — grounded
+  enclosure) for comparison without losing the current conductor layout.
 - **Save / load**: name and persist geometries in `localStorage`,
   export/import as JSON, export the rendered canvas as PNG.
 - **Static export**: produces a fully static `out/` directory with no
@@ -54,13 +60,16 @@ transferable `ArrayBuffer` support.
 2. Either draw conductors on the canvas or select a preset from the
    **Preset** dropdown to load a textbook geometry.
 3. Press **Calcular** to start the solver. The heatmap, equipotentials,
-   and arrows update at ~60 fps as SOR sweeps iterate in the worker.
+   field arrows or streamlines, and the optional 3D surface update at
+   ~60 fps as SOR sweeps iterate in the worker.
 4. **Pausar** stops the loop, **Paso (50)** advances a fixed number of
    iterations synchronously, **Reset V** zeros the potential while
    keeping conductors, **Limpiar** wipes everything.
 5. Use the **Grilla** dropdown to switch grid resolution and **Contorno**
-   to toggle between Dirichlet and Neumann boundaries mid-session;
-   conductors are preserved in both cases.
+   to toggle between Neumann (default) and Dirichlet boundaries
+   mid-session; conductors are preserved in both cases. The **Mostrar**
+   row toggles each visualization layer individually, including
+   **Líneas de campo** (streamlines) and **Superficie 3D**.
 6. **Guardar / Cargar** opens the persistence dialog (save by name,
    delete, import/export JSON). **Exportar PNG** downloads the current
    canvas as `campo.png`.
@@ -132,6 +141,17 @@ Ey = −(V[i,j+1] − V[i,j−1]) / 2
 - **Field arrows**: sub-grid sampling every 5 cells. Arrow length
   scales as `sqrt(|E| / Emax)`, oriented by `atan2(Ey, Ex)`, with a
   triangular head.
+- **Streamlines (líneas de campo)**: seeded on a uniform sub-grid,
+  traced by RK2 (midpoint) integration of the unit field through
+  bilinearly sampled `E`, both directions. A `visited[]` mask keeps
+  lines from bunching, and integration stops on the domain edge, a
+  conductor, or zero field. Arrowheads are placed every ~80 px along
+  the path.
+- **3D surface**: `V(x, y)` is rendered as a Three.js `PlaneGeometry`
+  (one vertex per grid cell) with per-vertex height `v / vmax` and
+  per-vertex color from the same divergent colormap. The 2D layers
+  and the 3D mesh share `grid.V`; both are invalidated by the same
+  `renderTick`, so they stay in sync as the solver iterates.
 - **Conductors** are painted last, opaquely (`#791F1F` for `+V`,
   `#0C447C` for `−V`, `#2C2C2A` for ground).
 
@@ -143,9 +163,12 @@ src/
   components/
     Simulator.tsx          Top-level state + worker plumbing
     Canvas.tsx             480×480 canvas, paint + touch + hover
+    Surface3D.tsx          Three.js mesh of V(x, y), orbit-controlled
+    Surface3DDynamic.tsx   Next dynamic-import wrapper around Surface3D
     Toolbar.tsx            Tool picker, voltage / brush sliders
-    PresetSelect.tsx       Dropdown of six preset geometries
-    DisplayToggles.tsx     Layer visibility checkboxes
+    PresetSelect.tsx       Dropdown of the eight preset geometries
+    DisplayToggles.tsx     Per-layer checkboxes (heatmap / equipotentials /
+                           streamlines / arrows / 3D surface)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grid size / boundary
     ExportControls.tsx     Save-load + PNG export buttons
     SaveLoadDialog.tsx     localStorage manager + JSON import/export
@@ -153,7 +176,7 @@ src/
   lib/
     grid.ts                GridState, idx, paintBrush/Stroke
     relaxation.ts          relaxStep (SOR sweep), DEFAULT_SOLVER_CONFIG
-    rendering.ts           Heatmap / equipotentials / arrows / conductors
+    rendering.ts           Heatmap / equipotentials / arrows / streamlines / conductors
     colormap.ts            Divergent blue-white-red lerp
     presets.ts             Six geometry helpers + registry
     storage.ts             localStorage + JSON import/export
@@ -190,7 +213,10 @@ the hot loop somewhere — start by checking `lib/relaxation.ts`.
 - Next.js 16 (App Router + Turbopack, the default bundler in v16)
 - React 19, TypeScript strict + `noUncheckedIndexedAccess`
 - Tailwind CSS v4 via `@tailwindcss/postcss`
-- Canvas 2D API only — no Three.js, no WebGL, no D3
+- Canvas 2D for the 2D heatmap / equipotentials / arrows / streamlines
+- Three.js (via `@react-three/fiber` + `@react-three/drei`) only for the
+  optional 3D surface view; loaded with `next/dynamic` so the 2D-only
+  bundle stays light
 - Web Worker for the solver, transferable `Float32Array` / `Uint8Array`
   for zero-copy progress streaming
 - `localStorage` for persistence; `canvas.toBlob` for PNG export
