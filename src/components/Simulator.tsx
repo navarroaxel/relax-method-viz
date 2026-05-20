@@ -28,7 +28,7 @@ export function Simulator() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [tool, setTool] = useState<Tool>("pos");
-  const [voltage, setVoltage] = useState(50);
+  const [voltage, setVoltage] = useState(100);
   const [brushSize, setBrushSize] = useState(2);
   const [display, setDisplay] = useState<DisplayFlags>({
     heatmap: true,
