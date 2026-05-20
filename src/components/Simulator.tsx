@@ -11,19 +11,19 @@ import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
-import { clearAll, createGrid, resetPotential } from "@/lib/grid";
+import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/grid";
 import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
 import { computeVmax } from "@/lib/rendering";
 import { applyGeometryToGrid } from "@/lib/storage";
-import type { DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
+import type { BoundaryCondition, DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
 import type { WorkerInbound, WorkerOutbound } from "@/types/worker";
 
 const DISPLAY_SIZE = 480;
 const MANUAL_STEP = 50;
 
 export function Simulator() {
-  const [grid, setGrid] = useState<GridState>(() => createGrid(120, "dirichlet0"));
+  const [grid, setGrid] = useState<GridState>(() => createGrid(120, "dirichlet"));
   const workerRef = useRef<Worker | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -133,8 +133,19 @@ export function Simulator() {
 
   const handleChangeN = (n: number) => {
     setIsRunning(false);
-    setGrid(createGrid(n, "dirichlet0"));
+    setGrid(createGrid(n, grid.boundary));
     setPresetId("custom");
+    setIteration(0);
+    setDeltaMax(Number.POSITIVE_INFINITY);
+  };
+
+  const handleChangeBoundary = (b: BoundaryCondition) => {
+    setIsRunning(false);
+    const newGrid = createGrid(grid.N, b);
+    newGrid.fixed.set(grid.fixed);
+    newGrid.Vfix.set(grid.Vfix);
+    applyFixedValues(newGrid);
+    setGrid(newGrid);
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
   };
@@ -180,7 +191,7 @@ export function Simulator() {
       setIsRunning(false);
     }
     if (geometry.N !== grid.N) {
-      const newGrid = createGrid(geometry.N, "dirichlet0");
+      const newGrid = createGrid(geometry.N, grid.boundary);
       applyGeometryToGrid(newGrid, geometry);
       setGrid(newGrid);
     } else {
@@ -246,6 +257,7 @@ export function Simulator() {
         isRunning={isRunning}
         gridN={grid.N}
         omega={omega}
+        boundary={grid.boundary}
         onToggleRun={handleToggleRun}
         onStep={handleStep}
         onResetPotential={handleResetPotential}
@@ -253,6 +265,7 @@ export function Simulator() {
         onChangeN={handleChangeN}
         onChangeOmega={setOmega}
         onAutoOmega={handleAutoOmega}
+        onChangeBoundary={handleChangeBoundary}
       />
       <ExportControls
         onOpenSaveLoad={() => setDialogOpen(true)}

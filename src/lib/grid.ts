@@ -10,7 +10,7 @@ export function idx(i: number, j: number, N: number): number {
 
 export function createGrid(
   N: number,
-  boundary: BoundaryCondition = "dirichlet0",
+  boundary: BoundaryCondition = "dirichlet",
 ): GridState {
   const size = N * N;
   return {
@@ -32,7 +32,7 @@ export function applyFixedValues(grid: GridState): void {
 export function applyBoundary(grid: GridState): void {
   const { V, N, boundary } = grid;
   // Dirichlet boundary condition (V = 0)
-  if (boundary === "dirichlet0") {
+  if (boundary === "dirichlet") {
     for (let i = 0; i < N; i++) {
       V[idx(i, 0, N)] = 0;
       V[idx(i, N - 1, N)] = 0;
