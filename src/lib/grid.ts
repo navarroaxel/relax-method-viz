@@ -10,7 +10,7 @@ export function idx(i: number, j: number, N: number): number {
 
 export function createGrid(
   N: number,
-  boundary: BoundaryCondition = "dirichlet",
+  boundary: BoundaryCondition = "neumann",
 ): GridState {
   const size = N * N;
   return {

@@ -25,7 +25,7 @@ const DISPLAY_SIZE = 480;
 const MANUAL_STEP = 50;
 
 export function Simulator() {
-  const [grid, setGrid] = useState<GridState>(() => createGrid(120, "dirichlet"));
+  const [grid, setGrid] = useState<GridState>(() => createGrid(120, "neumann"));
   const workerRef = useRef<Worker | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 

@@ -15,19 +15,25 @@ y los vectores de campo mientras el solver converge en tiempo real.
 - **Dibujo a mano alzada**: cuatro herramientas (`+V`, `−V`, tierra,
   borrar), preset de voltaje (100 V / 220 V / 100 kV / √(2/3)×500 kV),
   pincel ajustable (1–6), soporte para mouse y touch.
-- **Tres capas de visualización**: mapa de calor del potencial
+- **Cuatro capas de visualización**: mapa de calor del potencial
   (colormap divergente azul-blanco-rojo), curvas equipotenciales
-  (marching squares) y flechas del campo eléctrico (`E = −∇V` con
-  diferencias centradas). Cada capa se activa o desactiva por separado.
+  (marching squares), flechas del campo eléctrico (`E = −∇V` con
+  diferencias centradas) y líneas de campo (integración RK2 sobre el
+  campo muestreado por interpolación bilineal). Cada capa se activa o
+  desactiva por separado; flechas y líneas son mutuamente excluyentes.
+- **Vista 3D opcional**: render de `V(x, y)` como malla Three.js con
+  el mismo colormap divergente y cámara orbital; corre en paralelo al
+  lienzo 2D y se actualiza en vivo mientras el solver itera.
 - **Solver en vivo**: SOR (`ω ≈ 1.9`) corre en un **Web Worker**
   dedicado, así la UI no se traba. La iteración y `Δmax` se actualizan
   en tiempo real; el loop se detiene solo cuando `Δmax < 10⁻³`.
 - **Tamaño de grilla**: cambiá entre 80×80, 120×120 y 200×200 en tiempo
   de ejecución; el botón **Auto** recalcula el ω óptimo para cada N.
-- **Condiciones de contorno**: elegí entre Dirichlet (V = 0 en las
-  paredes — recinto aterrizado) y Neumann (∂V/∂n = 0 — paredes
-  aislantes, líneas de campo paralelas al borde) sin perder los
-  conductores dibujados.
+- **Condiciones de contorno**: el default es Neumann (∂V/∂n = 0) — las
+  paredes de la región no son conductoras, así que el campo solo puede
+  tener componente paralela al borde. Se puede cambiar a Dirichlet
+  (V = 0 en las paredes — recinto aterrizado) para comparar, sin
+  perder los conductores dibujados.
 - **Guardar y cargar**: persistir geometrías por nombre en
   `localStorage`, exportar/importar como JSON, exportar el canvas
   renderizado a PNG.
@@ -57,14 +63,17 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 2. Dibujá conductores en el lienzo o seleccioná un preset desde el
    dropdown **Preset** para cargar una geometría de referencia.
 3. Apretá **Calcular** para arrancar el solver. El mapa de calor, las
-   equipotenciales y las flechas se actualizan a ~60 fps mientras las
-   barridas SOR iteran en el worker.
+   equipotenciales, las flechas o líneas de campo, y la superficie 3D
+   opcional se actualizan a ~60 fps mientras las barridas SOR iteran
+   en el worker.
 4. **Pausar** detiene el loop, **Paso (50)** avanza una cantidad fija
    de iteraciones de manera sincrónica, **Reset V** pone V en cero
    manteniendo los conductores, **Limpiar** borra todo.
 5. Usá el dropdown **Grilla** para cambiar la resolución y **Contorno**
-   para alternar entre Dirichlet y Neumann en cualquier momento; los
-   conductores se conservan en ambos casos.
+   para alternar entre Neumann (default) y Dirichlet en cualquier
+   momento; los conductores se conservan en ambos casos. La fila
+   **Mostrar** prende y apaga cada capa por separado, incluyendo
+   **Líneas de campo** y **Superficie 3D**.
 6. **Guardar / Cargar** abre el diálogo de persistencia (guardar por
    nombre, borrar, importar/exportar JSON). **Exportar PNG** descarga
    el canvas como `campo.png`.
@@ -136,6 +145,19 @@ Ey = −(V[i,j+1] − V[i,j−1]) / 2
 - **Flechas del campo**: muestreo sub-grilla cada 5 celdas. Longitud
   proporcional a `sqrt(|E| / Emax)`, orientadas por `atan2(Ey, Ex)`,
   con punta triangular.
+- **Líneas de campo (streamlines)**: semillas en una sub-grilla
+  uniforme, trazadas con integración RK2 (midpoint) sobre el campo
+  unitario, muestreado por interpolación bilineal de `E`, en ambas
+  direcciones. Una máscara `visited[]` evita que las líneas se
+  apiñen; la integración corta al llegar al borde del dominio, a un
+  conductor o a campo nulo. Se dibujan cabezas de flecha cada ~80 px
+  a lo largo del recorrido.
+- **Superficie 3D**: `V(x, y)` se renderiza como un `PlaneGeometry`
+  de Three.js (un vértice por celda) con altura por vértice
+  `v / vmax` y color por vértice usando el mismo colormap divergente.
+  Las capas 2D y la malla 3D comparten `grid.V`; ambas se invalidan
+  con el mismo `renderTick`, así quedan en sincro mientras el solver
+  itera.
 - **Conductores** pintados al final, opacos (`#791F1F` para `+V`,
   `#0C447C` para `−V`, `#2C2C2A` para tierra).
 
@@ -147,9 +169,12 @@ src/
   components/
     Simulator.tsx          Estado top-level + plumbing del worker
     Canvas.tsx             Canvas 480×480, paint + touch + hover
+    Surface3D.tsx          Malla Three.js de V(x, y), con cámara orbital
+    Surface3DDynamic.tsx   Wrapper de dynamic-import de Next sobre Surface3D
     Toolbar.tsx            Herramientas, sliders de voltaje y pincel
     PresetSelect.tsx       Dropdown de los ocho presets
-    DisplayToggles.tsx     Checkboxes de visibilidad de capas
+    DisplayToggles.tsx     Checkboxes por capa (heatmap / equipotenciales /
+                           líneas de campo / flechas / superficie 3D)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grilla / contorno
     ExportControls.tsx     Botones de Guardar/Cargar y Exportar PNG
     SaveLoadDialog.tsx     Manager de localStorage + import/export JSON
@@ -157,7 +182,7 @@ src/
   lib/
     grid.ts                GridState, idx, paintBrush/Stroke
     relaxation.ts          relaxStep (barrida SOR), DEFAULT_SOLVER_CONFIG
-    rendering.ts           Heatmap / equipotenciales / flechas / conductores
+    rendering.ts           Heatmap / equipotenciales / flechas / líneas de campo / conductores
     colormap.ts            Lerp divergente azul-blanco-rojo
     presets.ts             Helpers de geometría + registro
     storage.ts             localStorage + import/export JSON
@@ -194,7 +219,11 @@ del hot loop — empezar mirando `lib/relaxation.ts`.
 - Next.js 16 (App Router + Turbopack, el bundler default en v16)
 - React 19, TypeScript en modo strict + `noUncheckedIndexedAccess`
 - Tailwind CSS v4 vía `@tailwindcss/postcss`
-- Canvas 2D API solamente — sin Three.js, sin WebGL, sin D3
+- Canvas 2D para las capas 2D (heatmap / equipotenciales / flechas /
+  líneas de campo)
+- Three.js (vía `@react-three/fiber` + `@react-three/drei`) solo para
+  la vista 3D opcional; se importa con `next/dynamic` para que el
+  bundle de la vista 2D quede liviano
 - Web Worker para el solver, `Float32Array` / `Uint8Array`
   transferables para streaming de progreso sin copias
 - `localStorage` para persistencia; `canvas.toBlob` para export a PNG
