@@ -1,4 +1,4 @@
-name: CI
+name: Build
 
 on:
   push:
@@ -11,14 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version-file: package.json
           cache: npm
-
       - run: npm ci
-
       - run: npm run lint
-
+      - run: npx tsc --noEmit
       - run: npm run build
