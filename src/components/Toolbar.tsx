@@ -11,6 +11,13 @@ interface ToolbarProps {
   onBrushChange: (b: number) => void;
 }
 
+const VOLTAGE_PRESETS: { value: number; label: string }[] = [
+  { value: 100, label: "100 V" },
+  { value: 220, label: "220 V" },
+  { value: 100_000, label: "100 kV" },
+  { value: Math.round(Math.sqrt(2 / 3) * 500_000), label: "√(2/3) * 500 kV" },
+];
+
 interface ToolOption {
   id: Tool;
   label: string;
@@ -91,16 +98,18 @@ export function Toolbar({
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <span className="w-20">Voltaje: {voltage}</span>
-          <input
-            type="range"
-            min={10}
-            max={100}
-            step={5}
+          <span>Voltaje:</span>
+          <select
             value={voltage}
             onChange={(e) => onVoltageChange(Number(e.target.value))}
-            className="w-40"
-          />
+            className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+          >
+            {VOLTAGE_PRESETS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <span className="w-20">Pincel: {brushSize}</span>
