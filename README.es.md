@@ -2,18 +2,18 @@
 
 Aplicación web cliente-side que visualiza el campo electrostático en 2D
 resolviendo la ecuación de Laplace `∇²V = 0` con sobre-relajación
-sucesiva (SOR) sobre una grilla de 80×80. Dibujá conductores a mano o
-cargá geometrías clásicas de libro y mirá cómo se forma el potencial,
-las equipotenciales y los vectores de campo mientras el solver converge
-en tiempo real.
+sucesiva (SOR) sobre una grilla seleccionable por el usuario (80×80,
+120×120 o 200×200). Dibujá conductores a mano o cargá geometrías
+clásicas de libro y mirá cómo se forma el potencial, las equipotenciales
+y los vectores de campo mientras el solver converge en tiempo real.
 
 ## Qué hace
 
 - **Seis geometrías predefinidas**: placas paralelas, dipolo, pararrayos
   + nube, coaxial cuadrado, jaula de Faraday, punta vs plano.
 - **Dibujo a mano alzada**: cuatro herramientas (`+V`, `−V`, tierra,
-  borrar), voltaje ajustable (10–100), pincel ajustable (1–6), soporte
-  para mouse y touch.
+  borrar), preset de voltaje (100 V / 220 V / 100 kV / √(2/3)×500 kV),
+  pincel ajustable (1–6), soporte para mouse y touch.
 - **Tres capas de visualización**: mapa de calor del potencial
   (colormap divergente azul-blanco-rojo), curvas equipotenciales
   (marching squares) y flechas del campo eléctrico (`E = −∇V` con
@@ -21,6 +21,12 @@ en tiempo real.
 - **Solver en vivo**: SOR (`ω ≈ 1.9`) corre en un **Web Worker**
   dedicado, así la UI no se traba. La iteración y `Δmax` se actualizan
   en tiempo real; el loop se detiene solo cuando `Δmax < 10⁻³`.
+- **Tamaño de grilla**: cambiá entre 80×80, 120×120 y 200×200 en tiempo
+  de ejecución; el botón **Auto** recalcula el ω óptimo para cada N.
+- **Condiciones de contorno**: elegí entre Dirichlet (V = 0 en las
+  paredes — recinto aterrizado) y Neumann (∂V/∂n = 0 — paredes
+  aislantes, líneas de campo paralelas al borde) sin perder los
+  conductores dibujados.
 - **Guardar y cargar**: persistir geometrías por nombre en
   `localStorage`, exportar/importar como JSON, exportar el canvas
   renderizado a PNG.
@@ -45,8 +51,8 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 
 ## Cómo se usa
 
-1. Elegí una herramienta (`+V`, `−V`, `Tierra` o `Borrar`) y ajustá
-   voltaje y pincel.
+1. Elegí una herramienta (`+V`, `−V`, `Tierra` o `Borrar`), seleccioná
+   un preset de voltaje y ajustá el pincel.
 2. Dibujá conductores en el lienzo o seleccioná un preset desde el
    dropdown **Preset** para cargar una geometría de referencia.
 3. Apretá **Calcular** para arrancar el solver. El mapa de calor, las
@@ -55,10 +61,13 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 4. **Pausar** detiene el loop, **Paso (50)** avanza una cantidad fija
    de iteraciones de manera sincrónica, **Reset V** pone V en cero
    manteniendo los conductores, **Limpiar** borra todo.
-5. **Guardar / Cargar** abre el diálogo de persistencia (guardar por
+5. Usá el dropdown **Grilla** para cambiar la resolución y **Contorno**
+   para alternar entre Dirichlet y Neumann en cualquier momento; los
+   conductores se conservan en ambos casos.
+6. **Guardar / Cargar** abre el diálogo de persistencia (guardar por
    nombre, borrar, importar/exportar JSON). **Exportar PNG** descarga
    el canvas como `campo.png`.
-6. Pasá el cursor sobre cualquier celda para leer sus coordenadas,
+7. Pasá el cursor sobre cualquier celda para leer sus coordenadas,
    el potencial `V` y la magnitud `|E|` del campo en un panel chico
    en la esquina del lienzo.
 
@@ -100,8 +109,9 @@ V[i,j] := V[i,j] + ω · (avg − V[i,j])
 ```
 
 El `ω` óptimo para una grilla `N × N` con Dirichlet es
-`2 / (1 + π / N)` — alrededor de `1.924` para `N = 80`. Usamos
-`ω = 1.9` como default seguro. El criterio de corte es
+`2 / (1 + π / N)` — alrededor de `1.924` para `N = 80` y `1.949` para
+`N = 200`. El botón **Auto** calcula esto exactamente para el tamaño
+activo. El default es `ω = 1.9`. El criterio de corte es
 `Δmax = max |V_new − V_old| < 10⁻³`, típicamente alcanzado en menos
 de 400 iteraciones en 80².
 
@@ -114,7 +124,7 @@ Ey = −(V[i,j+1] − V[i,j−1]) / 2
 
 ## Capas de render
 
-- **Mapa de calor**: un `ImageData` de 80×80 coloreado con un colormap
+- **Mapa de calor**: un `ImageData` de `N×N` coloreado con un colormap
   divergente azul-blanco-rojo (`−Vmax → 0 → +Vmax`), después escalado
   bilineal al canvas de 480×480.
 - **Equipotenciales**: 13 niveles equiespaciados en `[−Vmax, +Vmax]`
@@ -137,7 +147,7 @@ src/
     Toolbar.tsx            Herramientas, sliders de voltaje y pincel
     PresetSelect.tsx       Dropdown de los seis presets
     DisplayToggles.tsx     Checkboxes de visibilidad de capas
-    RunControls.tsx        Calcular / Paso / Reset V / Limpiar
+    RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grilla / contorno
     ExportControls.tsx     Botones de Guardar/Cargar y Exportar PNG
     SaveLoadDialog.tsx     Manager de localStorage + import/export JSON
     Legend.tsx             Leyenda del colormap + colores de conductores
@@ -203,11 +213,8 @@ vercel --prod
 
 - Solo 2D; sin medios magnéticos.
 - Grilla cuadrada de paso fijo (sin refinamiento adaptativo).
-- Solo Laplace — sin densidad de carga `ρ` (Poisson está en
-  `TASK.md §17` como extensión futura).
+- Solo Laplace — sin densidad de carga `ρ` (sin soporte para Poisson).
 - Permitividad uniforme (sin regiones dieléctricas).
-- El tamaño de la grilla está fijo en `Simulator.tsx` con
-  `GRID_N = 80`; el solver soporta cualquier `N`.
 
 ## Licencia
 

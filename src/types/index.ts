@@ -1,6 +1,6 @@
 export type Tool = "pos" | "neg" | "gnd" | "era";
 
-export type BoundaryCondition = "dirichlet0" | "neumann";
+export type BoundaryCondition = "dirichlet" | "neumann";
 
 export interface GridState {
   N: number;
