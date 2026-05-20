@@ -32,7 +32,11 @@ npx tsc --noEmit
 - Inbound: `init | run | pause | reset | step | updateFixed`
 - Outbound: `progress | done` — both carry a transferable `V: Float32Array` snapshot
 
-**Rendering** (`src/lib/rendering.ts`): all Canvas 2D, no WebGL. Heatmap draws an `N×N` `ImageData` into an off-screen buffer then `drawImage`-scales it to 480×480. Equipotentials use marching squares. Field arrows sub-sample every 5 cells and scale length as `sqrt(|E| / Emax)`.
+**Rendering** — two pipelines, both driven by the same `renderTick`:
+- 2D (`src/lib/rendering.ts`): Canvas 2D only. Heatmap draws an `N×N` `ImageData` into an off-screen buffer then `drawImage`-scales it to 480×480. Equipotentials use marching squares. Field arrows sub-sample every 5 cells and scale length as `sqrt(|E| / Emax)`. Streamlines (`renderStreamlines`) seed on a uniform sub-grid and trace RK2 through a bilinearly sampled field; **arrows and streamlines are mutually exclusive** (enforced in `DisplayToggles.tsx`).
+- 3D (`src/components/Surface3D.tsx`, lazy-loaded via `Surface3DDynamic.tsx` + `next/dynamic`): Three.js via `@react-three/fiber` + `@react-three/drei`. One vertex per grid cell on a `PlaneGeometry`; per-vertex height `v / vmax` and per-vertex color from the same `divergentColor`. WebGL only loads when `display.surface3D` is on.
+
+**Boundary conditions** (`src/lib/grid.ts:applyBoundary`): outer-wall BC type lives on `GridState.boundary` and is **Neumann by default** (ghost-cell mirror — corners copy diagonally). Dirichlet (V=0 at all four edges) is available via the `Contorno` selector but is physically incorrect for the textbook cases shipped here (walls are not conductors). `applyBoundary` runs at the top of every `relaxStep` and **does not re-assert fixed cells on the edge row/column** — keep conductors off rows/cols 0 and N−1.
 
 **Key constants** (all in `Simulator.tsx`):
 - Grid size (N) and ω are runtime state — user-selectable via the UI controls (grid: 80/120/200, ω: 1.0–1.999)
@@ -42,7 +46,7 @@ npx tsc --noEmit
 
 **Path alias**: `@/` maps to `src/`.
 
-**Presets** (`src/lib/presets.ts`): Eight entries in `PRESETS: Record<PresetId, Preset>`, rendered in the order defined by `PRESET_ORDER`. Each `apply(g)` calls `clearAll`, then geometry helpers (`setRect`, `setDisc`, `setRing`, `setHollowRect`, `setTriangleTipUp`), then `applyFixedValues`. All coordinates are written for N = 80 and scaled via `sc = (x) => Math.round(x * g.N / 80)` so they adapt to any grid size.
+**Presets** (`src/lib/presets.ts`): Eight entries in `PRESETS: Record<PresetId, Preset>`, rendered in the order defined by `PRESET_ORDER`. Each `apply(g)` calls `clearAll`, then geometry helpers (`setRect`, `setDisc`, `setRing`, `setTriangleTipUp`), then `applyFixedValues`. All coordinates are written for N = 80 and scaled via `sc = (x) => Math.round(x * g.N / 80)` so they adapt to any grid size.
 
 | ID             | Label                    | Geometry                                                        |
 | -------------- | ------------------------ | --------------------------------------------------------------- |
