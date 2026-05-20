@@ -34,20 +34,6 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
       <label className="flex items-center gap-1.5">
         <input
           type="checkbox"
-          checked={display.arrows}
-          onChange={(e) =>
-            onChange({
-              ...display,
-              arrows: e.target.checked,
-              streamlines: e.target.checked ? false : display.streamlines,
-            })
-          }
-        />
-        Campo E (flechas)
-      </label>
-      <label className="flex items-center gap-1.5">
-        <input
-          type="checkbox"
           checked={display.streamlines}
           onChange={(e) =>
             onChange({
@@ -58,6 +44,20 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
           }
         />
         Líneas de campo
+      </label>
+      <label className="flex items-center gap-1.5">
+        <input
+          type="checkbox"
+          checked={display.arrows}
+          onChange={(e) =>
+            onChange({
+              ...display,
+              arrows: e.target.checked,
+              streamlines: e.target.checked ? false : display.streamlines,
+            })
+          }
+        />
+        Campo E (flechas)
       </label>
       <label className="flex items-center gap-1.5">
         <input
