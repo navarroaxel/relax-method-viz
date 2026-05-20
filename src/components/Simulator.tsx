@@ -9,6 +9,7 @@ import { PresetSelect } from "@/components/PresetSelect";
 import { ProjectCredits } from "@/components/ProjectCredits";
 import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
+import { GitHubLink } from "@/components/GitHubLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
 import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/grid";
@@ -236,7 +237,10 @@ export function Simulator() {
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
             Campo Eléctrico — Método de Relax
           </h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <GitHubLink />
+            <ThemeToggle />
+          </div>
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-200">
           Dibujá conductores en el lienzo, asignales un potencial, y mirá cómo
