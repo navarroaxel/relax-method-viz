@@ -48,7 +48,7 @@ function gridToCells(grid: GridState): Array<[number, number, number]> {
 }
 
 const MAX_GRID_N = 512;
-const MAX_ABS_V = 1000;
+const MAX_ABS_V = 1_000_000; // 1 MV — covers 500 kV-class presets (√(2/3)×500 kV ≈ 408 kV)
 
 function isSavedGeometry(value: unknown): value is SavedGeometry {
   if (value === null || typeof value !== "object") return false;

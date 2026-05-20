@@ -95,12 +95,6 @@ export function SaveLoadDialog({
   };
 
   const handleLoad = (g: SavedGeometry) => {
-    if (g.N !== grid.N) {
-      setErrorMsg(
-        `Tamaño de grilla incompatible (guardado: ${g.N}, actual: ${grid.N}).`,
-      );
-      return;
-    }
     onLoad(g);
     onClose();
   };
@@ -125,12 +119,6 @@ export function SaveLoadDialog({
       const geom = importFromJSON(text);
       if (!geom) {
         setErrorMsg("Archivo JSON inválido.");
-        return;
-      }
-      if (geom.N !== grid.N) {
-        setErrorMsg(
-          `Tamaño de grilla incompatible (archivo: ${geom.N}, actual: ${grid.N}).`,
-        );
         return;
       }
       onLoad(geom);
