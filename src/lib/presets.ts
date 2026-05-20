@@ -84,6 +84,33 @@ function setDisc(
   }
 }
 
+function setRing(
+  g: GridState,
+  ci: number,
+  cj: number,
+  r: number,
+  thickness: number,
+  v: number,
+): void {
+  const { N, fixed, Vfix } = g;
+  const r2outer = r * r;
+  const r2inner = (r - thickness) * (r - thickness);
+  const iMin = Math.max(0, Math.floor(ci - r));
+  const iMax = Math.min(N - 1, Math.ceil(ci + r));
+  const jMin = Math.max(0, Math.floor(cj - r));
+  const jMax = Math.min(N - 1, Math.ceil(cj + r));
+  for (let i = iMin; i <= iMax; i++) {
+    for (let j = jMin; j <= jMax; j++) {
+      const d2 = (i - ci) ** 2 + (j - cj) ** 2;
+      if (d2 >= r2inner && d2 <= r2outer) {
+        const k = idx(i, j, N);
+        fixed[k] = 1;
+        Vfix[k] = v;
+      }
+    }
+  }
+}
+
 function setTriangleTipUp(
   g: GridState,
   ci: number,
@@ -116,7 +143,9 @@ export type PresetId =
   | "lightning"
   | "coaxial"
   | "faraday"
-  | "tip";
+  | "tip"
+  | "subconductors"
+  | "conductors";
 
 interface Preset {
   label: string;
@@ -125,12 +154,12 @@ interface Preset {
 
 export const PRESETS: Record<PresetId, Preset> = {
   parallel: {
-    label: "Placas paralelas",
+    label: "Capacitor plano",
     apply: (g) => {
       clearAll(g);
       const sc = (x: number) => Math.round(x * g.N / 80);
-      setRect(g, sc(20), sc(22), sc(60), sc(25), +60);
-      setRect(g, sc(20), sc(55), sc(60), sc(58), -60);
+      setRect(g, sc(20), sc(22), sc(60), sc(25), +100_000);
+      setRect(g, sc(20), sc(55), sc(60), sc(58), -100_000);
       applyFixedValues(g);
     },
   },
@@ -139,29 +168,29 @@ export const PRESETS: Record<PresetId, Preset> = {
     apply: (g) => {
       clearAll(g);
       const sc = (x: number) => Math.round(x * g.N / 80);
-      setDisc(g, sc(28), sc(40), sc(3), +80);
-      setDisc(g, sc(52), sc(40), sc(3), -80);
+      setDisc(g, sc(28), sc(40), sc(3), +100_000);
+      setDisc(g, sc(52), sc(40), sc(3), -100_000);
       applyFixedValues(g);
     },
   },
   lightning: {
-    label: "Pararrayos + nube",
+    label: "Pararrayos simplificado",
     apply: (g) => {
       clearAll(g);
       const sc = (x: number) => Math.round(x * g.N / 80);
-      setRect(g, sc(8), sc(6), sc(72), sc(13), +80);
-      setRect(g, 0, sc(71), sc(80), sc(74), 0);
-      setTriangleTipUp(g, sc(40), sc(70), sc(32), sc(5), 0);
+      setRect(g, 0, sc(2), sc(80), sc(5), +100_000);  // V1: top plate
+      setRect(g, 0, sc(75), sc(80), sc(78), 0);        // V2: bottom plate
+      setRect(g, sc(39), sc(40), sc(41), sc(76), 0);   // V2: vertical rod
       applyFixedValues(g);
     },
   },
   coaxial: {
-    label: "Coaxial cuadrado",
+    label: "Cable Coaxial",
     apply: (g) => {
       clearAll(g);
       const sc = (x: number) => Math.round(x * g.N / 80);
-      setHollowRect(g, sc(14), sc(14), sc(66), sc(66), 0);
-      setRect(g, sc(35), sc(35), sc(46), sc(46), +80);
+      setRing(g, sc(40), sc(40), sc(30), sc(2), 0);
+      setDisc(g, sc(40), sc(40), sc(8), +80);
       applyFixedValues(g);
     },
   },
@@ -170,9 +199,37 @@ export const PRESETS: Record<PresetId, Preset> = {
     apply: (g) => {
       clearAll(g);
       const sc = (x: number) => Math.round(x * g.N / 80);
-      setHollowRect(g, sc(14), sc(14), sc(58), sc(58), 0);
-      setDisc(g, sc(36), sc(36), sc(3), +80);
-      setDisc(g, sc(68), sc(36), sc(3), -80);
+      // V1: top plate
+      setRect(g, 0, sc(2), sc(80), sc(5), +80);
+      // V2: bottom plate + open-top U-box (all ground)
+      setRect(g, 0, sc(75), sc(80), sc(78), 0);
+      setRect(g, sc(25), sc(44), sc(55), sc(46), 0); // roof
+      setRect(g, sc(25), sc(44), sc(27), sc(76), 0); // left wall
+      setRect(g, sc(53), sc(44), sc(55), sc(76), 0); // right wall
+      applyFixedValues(g);
+    },
+  },
+  conductors: {
+    label: "Placas conductoras",
+    apply: (g) => {
+      clearAll(g);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      setRect(g, sc(10), sc(16), sc(57), sc(18), +100_000); // horizontal plate V1
+      setRect(g, sc(60), sc(20), sc(62), sc(68), -100_000); // vertical plate V2
+      applyFixedValues(g);
+    },
+  },
+  subconductors: {
+    label: "Línea 4 subconductores",
+    apply: (g) => {
+      clearAll(g);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      const V1 = Math.sqrt(2 / 3) * 500_000;
+      setRect(g, 0, sc(75), sc(80), sc(78), 0);
+      setDisc(g, sc(36), sc(26), sc(2), V1);
+      setDisc(g, sc(44), sc(26), sc(2), V1);
+      setDisc(g, sc(36), sc(34), sc(2), V1);
+      setDisc(g, sc(44), sc(34), sc(2), V1);
       applyFixedValues(g);
     },
   },
@@ -195,4 +252,6 @@ export const PRESET_ORDER: PresetId[] = [
   "coaxial",
   "faraday",
   "tip",
+  "subconductors",
+  "conductors",
 ];
