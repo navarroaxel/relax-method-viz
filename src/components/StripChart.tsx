@@ -134,7 +134,11 @@ export function StripChart(props: StripChartProps) {
         acPeriodSec ?? 1,
         acPhases ?? [],
         palette,
-        { axisT: t("stripchart.axis_t") },
+        {
+          axisT: t("stripchart.axis_t"),
+          sinLabel: t("stripchart.ac.sin_label"),
+          phasePrefix: t("stripchart.ac.phase_prefix"),
+        },
       );
     } else {
       drawProbe(
@@ -198,6 +202,8 @@ export function StripChart(props: StripChartProps) {
 
 interface AcLabels {
   axisT: string;
+  sinLabel: string;
+  phasePrefix: string;
 }
 
 function drawFrame(
@@ -316,13 +322,13 @@ function drawAc(
   ctx.textBaseline = "alphabetic";
   if (phases.length === 0) {
     ctx.fillStyle = palette.phaseLines[0] ?? palette.vLabel;
-    ctx.fillText("sin(ωt)", 8, plotY + 4);
+    ctx.fillText(labels.sinLabel, 8, plotY + 4);
   } else {
     let lx = 8;
     for (let pIdx = 0; pIdx < phases.length; pIdx++) {
       const phi = phases[pIdx] as number;
       const deg = Math.round((phi * 180) / Math.PI);
-      const text = `φ=${deg}°`;
+      const text = `${labels.phasePrefix}=${deg}°`;
       ctx.fillStyle = palette.phaseLines[
         pIdx % palette.phaseLines.length
       ] as string;
