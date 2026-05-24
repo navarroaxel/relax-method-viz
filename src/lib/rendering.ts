@@ -29,25 +29,27 @@ export interface FieldStats {
 // Single-pass field summary. Used by both the rendering pipeline (heatmap /
 // equipotentials need vmax) and the trace chart (which needs both as fixed
 // axis scales). Returning them together keeps the two ranges tightly aligned
-// — they're always computed from the same snapshot of V.
+// — they're always computed from the same snapshot of V — and one walk over
+// V is cache-friendlier than scanning it twice.
 export function computeFieldStats(V: Float32Array, N: number): FieldStats {
   let vmax = 0;
-  for (let k = 0; k < V.length; k++) {
-    const v = V[k] as number;
-    const a = v < 0 ? -v : v;
-    if (a > vmax) vmax = a;
-  }
   let emax = 0;
-  for (let i = 1; i < N - 1; i++) {
-    for (let j = 1; j < N - 1; j++) {
-      const vR = V[idx(i + 1, j, N)] as number;
-      const vL = V[idx(i - 1, j, N)] as number;
-      const vD = V[idx(i, j + 1, N)] as number;
-      const vU = V[idx(i, j - 1, N)] as number;
-      const ex = -(vR - vL) * 0.5;
-      const ey = -(vD - vU) * 0.5;
-      const m = Math.hypot(ex, ey);
-      if (m > emax) emax = m;
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const v = V[idx(i, j, N)] as number;
+      const a = v < 0 ? -v : v;
+      if (a > vmax) vmax = a;
+      // |E| via central differences is only defined on interior cells.
+      if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {
+        const vR = V[idx(i + 1, j, N)] as number;
+        const vL = V[idx(i - 1, j, N)] as number;
+        const vD = V[idx(i, j + 1, N)] as number;
+        const vU = V[idx(i, j - 1, N)] as number;
+        const ex = -(vR - vL) * 0.5;
+        const ey = -(vD - vU) * 0.5;
+        const m = Math.hypot(ex, ey);
+        if (m > emax) emax = m;
+      }
     }
   }
   return { vmax: vmax > 0 ? vmax : 1, emax: emax > 0 ? emax : 1 };
