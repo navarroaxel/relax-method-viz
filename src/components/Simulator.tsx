@@ -18,7 +18,7 @@ import { TraceChart } from "@/components/TraceChart";
 import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/grid";
 import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
-import { computeEmax, computeVmax, type TraceShape } from "@/lib/rendering";
+import { computeFieldStats, type TraceShape } from "@/lib/rendering";
 import { sampleTrace } from "@/lib/sampling";
 import { applyGeometryToGrid } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -247,11 +247,12 @@ export function Simulator() {
     ? deltaMax.toExponential(2)
     : "—";
 
-  // grid.V is mutated in place; renderTick is the change signal.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const vmax = useMemo(() => computeVmax(grid.V), [grid, renderTick]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const emax = useMemo(() => computeEmax(grid.V, grid.N), [grid, renderTick]);
+  const { vmax, emax } = useMemo(
+    () => computeFieldStats(grid.V, grid.N),
+    // grid.V is mutated in place; renderTick is the change signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [grid, renderTick],
+  );
 
   const traceSamples = useMemo(
     () => (trace ? sampleTrace(grid, trace.points, TRACE_SAMPLE_STEP) : null),

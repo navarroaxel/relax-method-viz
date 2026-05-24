@@ -21,20 +21,23 @@ function getHeatmapBuffer(N: number): HTMLCanvasElement {
   return heatmapBuffer;
 }
 
-export function computeVmax(V: Float32Array): number {
-  let max = 0;
+export interface FieldStats {
+  vmax: number; // max |V| over the full grid
+  emax: number; // max |E| (central differences) over interior cells
+}
+
+// Single-pass field summary. Used by both the rendering pipeline (heatmap /
+// equipotentials need vmax) and the trace chart (which needs both as fixed
+// axis scales). Returning them together keeps the two ranges tightly aligned
+// — they're always computed from the same snapshot of V.
+export function computeFieldStats(V: Float32Array, N: number): FieldStats {
+  let vmax = 0;
   for (let k = 0; k < V.length; k++) {
     const v = V[k] as number;
     const a = v < 0 ? -v : v;
-    if (a > max) max = a;
+    if (a > vmax) vmax = a;
   }
-  return max > 0 ? max : 1;
-}
-
-// Max |E| over the interior of the grid (central differences). Used to give
-// the trace chart a stable Y-axis scale that matches the heatmap/streamlines.
-export function computeEmax(V: Float32Array, N: number): number {
-  let max = 0;
+  let emax = 0;
   for (let i = 1; i < N - 1; i++) {
     for (let j = 1; j < N - 1; j++) {
       const vR = V[idx(i + 1, j, N)] as number;
@@ -44,10 +47,10 @@ export function computeEmax(V: Float32Array, N: number): number {
       const ex = -(vR - vL) * 0.5;
       const ey = -(vD - vU) * 0.5;
       const m = Math.hypot(ex, ey);
-      if (m > max) max = m;
+      if (m > emax) emax = m;
     }
   }
-  return max > 0 ? max : 1;
+  return { vmax: vmax > 0 ? vmax : 1, emax: emax > 0 ? emax : 1 };
 }
 
 export function renderHeatmap(
@@ -509,7 +512,7 @@ export function renderAll(
   ctx.clearRect(0, 0, displaySize, displaySize);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, displaySize, displaySize);
-  const vmax = computeVmax(V);
+  const { vmax } = computeFieldStats(V, N);
   if (display.heatmap) renderHeatmap(ctx, V, N, vmax, displaySize);
   if (display.equipotentials)
     renderEquipotentials(ctx, V, N, vmax, cellSize);
