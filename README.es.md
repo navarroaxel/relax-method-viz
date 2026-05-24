@@ -34,6 +34,19 @@ y los vectores de campo mientras el solver converge en tiempo real.
   tener componente paralela al borde. Se puede cambiar a Dirichlet
   (V = 0 en las paredes — recinto aterrizado) para comparar, sin
   perder los conductores dibujados.
+- **Herramienta de traza**: dibujá un segmento recto o una curva libre
+  sobre el lienzo para leer `V(s)` y `|E|(s)` a lo largo del recorrido
+  en un gráfico Canvas2D de dos ejes (muestreo bilineal de `V`,
+  diferencias centradas para `|E|`). Si hacés clic dos veces sobre la
+  **misma celda** — o mousedown sin arrastrar con la curva — la traza
+  se vuelve una **sonda** de un punto y registra `V(t)` y `|E|(t)` en
+  el tiempo, en una franja temporal (strip chart) de los últimos 10
+  segundos.
+- **Modulación AC**: cada conductor fijo oscila como
+  `V = Vfix · sin(ωt + φ)` con período seleccionable (0.1–60 s) y una
+  fase `φ` por celda configurable al pintar (dipolos, configuraciones
+  trifásicas, etc. quedan a un clic). Un segundo strip chart muestra
+  la onda de referencia `sin(ωt)` para tener la modulación a la vista.
 - **Guardar y cargar**: persistir geometrías por nombre en
   `localStorage`, exportar/importar como JSON, exportar el canvas
   renderizado a PNG.
@@ -80,6 +93,20 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 7. Pasá el cursor sobre cualquier celda para leer sus coordenadas,
    el potencial `V` y la magnitud `|E|` del campo en un panel chico
    en la esquina del lienzo.
+8. **Herramienta de traza**: elegí **Traza recta** o **Curva libre**
+   en la barra. Dos clics distintos (recta) o un arrastre (curva)
+   arman una polilínea — el perfil `V(s)` / `|E|(s)` aparece debajo
+   del lienzo. Hacé clic **dos veces sobre la misma celda** con la
+   herramienta recta (o mousedown sin arrastrar con la curva) para
+   dropear una sonda de un solo punto; el gráfico se convierte en una
+   franja temporal de 10 s de `V(t)` y `|E|(t)` en ese punto.
+9. **Modulación AC**: marcá **Modulación AC** y elegí el período en
+   segundos. Cada celda fija oscila como `Vfix · sin(ωt + φ)`. Usá el
+   campo **Fase** mientras pintás para configurar `φ` por celda
+   (por ejemplo, un polo del dipolo a 0° y el otro a 180°). Aparece un
+   strip chart adicional con la onda `sin(ωt)` de referencia
+   scrolleando sobre los últimos 10 segundos. Pausar congela ambos
+   strip charts; Reset V vacía el buffer de la sonda.
 
 ## Presets
 
@@ -168,38 +195,53 @@ src/
   app/                     Shell de Next.js App Router (layout + page)
   components/
     Simulator.tsx          Estado top-level + plumbing del worker
-    Canvas.tsx             Canvas 480×480, paint + touch + hover
+    Canvas.tsx             Canvas 480×480, paint + touch + hover + traza
     Surface3D.tsx          Malla Three.js de V(x, y), con cámara orbital
     Surface3DDynamic.tsx   Wrapper de dynamic-import de Next sobre Surface3D
-    Toolbar.tsx            Herramientas, sliders de voltaje y pincel
+    Toolbar.tsx            Herramientas, sliders de voltaje / pincel / fase
     PresetSelect.tsx       Dropdown de los ocho presets
     DisplayToggles.tsx     Checkboxes por capa (heatmap / equipotenciales /
                            líneas de campo / flechas / superficie 3D)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grilla / contorno
+    ACControls.tsx         Activar AC + período + lectura ωt / sin(ωt) en vivo
     ExportControls.tsx     Botones de Guardar/Cargar y Exportar PNG
     SaveLoadDialog.tsx     Manager de localStorage + import/export JSON
     Legend.tsx             Leyenda del colormap + colores de conductores
+    TraceChart.tsx         Gráfico de perfil V(s) / |E|(s) (traza de 2+ puntos)
+    StripChart.tsx         Onda AC sin(ωt) + sonda V(t) / |E|(t) en franja
+                           temporal de 10 s (traza de 1 punto)
+    MethodExplanation.tsx  Bloque de notas (relajación / traza / AC)
+    ProjectCredits.tsx     <footer> de la página con créditos de cátedra y equipo
+    LanguageToggle.tsx     Switch ES / EN (useSyncExternalStore)
+    ThemeToggle.tsx        Switch de tema claro / oscuro / sistema
+    GitHubLink.tsx         Link al repo
   lib/
-    grid.ts                GridState, idx, paintBrush/Stroke
+    grid.ts                GridState, idx, paintBrush/Stroke, applyModulatedFixed
     relaxation.ts          relaxStep (barrida SOR), DEFAULT_SOLVER_CONFIG
-    rendering.ts           Heatmap / equipotenciales / flechas / líneas de campo / conductores
+    rendering.ts           Heatmap / equipotenciales / flechas / líneas de campo / traza
+    sampling.ts            sampleV, sampleE, sampleTrace (interpolación bilineal)
+    chartUtils.ts          niceTicks, formatNum (compartidos por Trace + StripChart)
     colormap.ts            Lerp divergente azul-blanco-rojo
     presets.ts             Helpers de geometría + registro
     storage.ts             localStorage + import/export JSON
   workers/
-    solver.worker.ts       Loop SOR, fuera del main thread
+    solver.worker.ts       Loop SOR + acumulador de fase AC, fuera del main thread
+  contexts/
+    LanguageContext.tsx    Traducciones ES / EN + provider
   types/
-    index.ts               Tipos compartidos
+    index.ts               Tipos compartidos (GridState, AcConfig, TraceShape, ...)
     worker.ts              Protocolo de mensajes del worker
 ```
 
 El **solver corre en un Web Worker**. El worker mantiene su propia
-copia de `V / fixed / Vfix` y emite snapshots transferibles de `V`
-al main thread cada pocas iteraciones. Pintar mientras el solver
-itera dispara mensajes `updateFixed`; el worker re-aplica los valores
-fijos entre barridas sin reiniciar el loop. Un contador `runToken`
-descarta iteraciones huérfanas después de `pause` / `reset` / `init`,
-así no quedan mensajes de progreso obsoletos en vuelo.
+copia de `V / fixed / Vfix / phase` y emite snapshots transferibles
+de `V` más el `acPhaseRad` actual al main thread cada pocas
+iteraciones. Pintar mientras el solver itera dispara mensajes
+`updateFixed`; el worker re-aplica los valores fijos entre barridas
+sin reiniciar el loop. `setAC` activa el modo AC y ajusta el período
+en caliente. Un contador `runToken` descarta iteraciones huérfanas
+después de `pause` / `reset` / `init`, así no quedan mensajes de
+progreso obsoletos en vuelo.
 
 ## Performance
 
