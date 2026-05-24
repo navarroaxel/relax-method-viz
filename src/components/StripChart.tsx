@@ -83,7 +83,7 @@ const DARK_PALETTE: Palette = {
 
 const WIDTH = 580;
 const HEIGHT = 200;
-const MARGIN = { top: 18, right: 56, bottom: 32, left: 56 };
+const MARGIN = { top: 26, right: 56, bottom: 32, left: 56 };
 const WINDOW_SEC = PROBE_WINDOW_MS / 1000;
 
 function useIsDarkMode(): boolean {
@@ -321,7 +321,7 @@ function drawAc(
   ctx.font = "11px ui-sans-serif, system-ui, -apple-system, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "bottom";
-  const labelY = plotY - 3;
+  const labelY = plotY - 8;
   if (phases.length === 0) {
     ctx.fillStyle = palette.phaseLines[0] ?? palette.vLabel;
     ctx.fillText(labels.sinLabel, 8, labelY);
