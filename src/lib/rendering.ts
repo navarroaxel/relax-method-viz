@@ -1,6 +1,12 @@
 import { divergentColor } from "@/lib/colormap";
 import { idx } from "@/lib/grid";
+import { sampleEForStreamline } from "@/lib/sampling";
 import type { DisplayFlags, GridState } from "@/types";
+
+export interface TraceShape {
+  kind: "line" | "curve";
+  points: ReadonlyArray<readonly [number, number]>;
+}
 
 let heatmapBuffer: HTMLCanvasElement | null = null;
 let heatmapBufferN = 0;
@@ -281,38 +287,6 @@ export function renderStreamlines(
   const arrowSpacingPx = 80;
   const headSize = 4;
 
-  // Bilinear field sampler. (x, y) in grid units; returns [ex, ey, mag].
-  // mag === 0 is the "stop" signal: either out of bounds, or one of the
-  // four enclosing corner cells touches the boundary or a conductor.
-  const sampleE = (x: number, y: number): [number, number, number] => {
-    const i0 = Math.floor(x);
-    const j0 = Math.floor(y);
-    if (i0 < 1 || j0 < 1 || i0 >= N - 2 || j0 >= N - 2) return [0, 0, 0];
-    const fx = x - i0;
-    const fy = y - j0;
-    const corner = (ii: number, jj: number): [number, number] | null => {
-      if ((fixed[idx(ii, jj, N)] as number) === 1) return null;
-      const vR = V[idx(ii + 1, jj, N)] as number;
-      const vL = V[idx(ii - 1, jj, N)] as number;
-      const vD = V[idx(ii, jj + 1, N)] as number;
-      const vU = V[idx(ii, jj - 1, N)] as number;
-      return [-(vR - vL) * 0.5, -(vD - vU) * 0.5];
-    };
-    const c00 = corner(i0, j0);
-    const c10 = corner(i0 + 1, j0);
-    const c01 = corner(i0, j0 + 1);
-    const c11 = corner(i0 + 1, j0 + 1);
-    if (!c00 || !c10 || !c01 || !c11) return [0, 0, 0];
-    const w00 = (1 - fx) * (1 - fy);
-    const w10 = fx * (1 - fy);
-    const w01 = (1 - fx) * fy;
-    const w11 = fx * fy;
-    const ex = w00 * c00[0] + w10 * c10[0] + w01 * c01[0] + w11 * c11[0];
-    const ey = w00 * c00[1] + w10 * c10[1] + w01 * c01[1] + w11 * c11[1];
-    const mag = Math.hypot(ex, ey);
-    return [ex, ey, mag];
-  };
-
   const trace = (x0: number, y0: number, dir: 1 | -1): number[] => {
     const pts: number[] = [x0 * cellSize, y0 * cellSize];
     let x = x0;
@@ -320,14 +294,20 @@ export function renderStreamlines(
     let lastIc = Math.round(x0);
     let lastJc = Math.round(y0);
     for (let step = 0; step < maxSteps; step++) {
-      const k1 = sampleE(x, y);
-      if (k1[2] === 0) break;
-      const nx1 = k1[0] / k1[2];
-      const ny1 = k1[1] / k1[2];
-      const k2 = sampleE(x + 0.5 * h * dir * nx1, y + 0.5 * h * dir * ny1);
-      if (k2[2] === 0) break;
-      const nx2 = k2[0] / k2[2];
-      const ny2 = k2[1] / k2[2];
+      const k1 = sampleEForStreamline(V, fixed, N, x, y);
+      if (k1.mag === 0) break;
+      const nx1 = k1.ex / k1.mag;
+      const ny1 = k1.ey / k1.mag;
+      const k2 = sampleEForStreamline(
+        V,
+        fixed,
+        N,
+        x + 0.5 * h * dir * nx1,
+        y + 0.5 * h * dir * ny1,
+      );
+      if (k2.mag === 0) break;
+      const nx2 = k2.ex / k2.mag;
+      const ny2 = k2.ey / k2.mag;
       const nxn = x + h * dir * nx2;
       const nyn = y + h * dir * ny2;
       const ic = Math.round(nxn);
@@ -440,6 +420,61 @@ export function renderConductors(
       ctx.fillStyle = v > 0 ? "#791F1F" : v < 0 ? "#0C447C" : "#2C2C2A";
       ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
     }
+  }
+  ctx.restore();
+}
+
+export function renderTrace(
+  ctx: CanvasRenderingContext2D,
+  trace: TraceShape | null,
+  draft: TraceShape | null,
+  cellSize: number,
+): void {
+  ctx.save();
+  if (trace && trace.points.length >= 2) {
+    drawTracePath(ctx, trace.points, cellSize, false);
+  }
+  if (draft && draft.points.length >= 1) {
+    drawTracePath(ctx, draft.points, cellSize, true);
+  }
+  ctx.restore();
+}
+
+function drawTracePath(
+  ctx: CanvasRenderingContext2D,
+  points: ReadonlyArray<readonly [number, number]>,
+  cellSize: number,
+  dashed: boolean,
+): void {
+  ctx.save();
+  ctx.lineWidth = 2.4;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#FACC15";
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = 3;
+  if (dashed) ctx.setLineDash([5, 4]);
+  if (points.length >= 2) {
+    ctx.beginPath();
+    const p0 = points[0] as readonly [number, number];
+    ctx.moveTo(p0[0] * cellSize, p0[1] * cellSize);
+    for (let i = 1; i < points.length; i++) {
+      const p = points[i] as readonly [number, number];
+      ctx.lineTo(p[0] * cellSize, p[1] * cellSize);
+    }
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#FACC15";
+  ctx.strokeStyle = "#1f1f1f";
+  ctx.lineWidth = 1;
+  for (const p of [points[0], points[points.length - 1]]) {
+    if (!p) continue;
+    ctx.beginPath();
+    ctx.arc((p[0] as number) * cellSize, (p[1] as number) * cellSize, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
   }
   ctx.restore();
 }

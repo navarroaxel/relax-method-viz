@@ -1,4 +1,4 @@
-export type Tool = "pos" | "neg" | "gnd" | "era";
+export type Tool = "pos" | "neg" | "gnd" | "era" | "line" | "curve";
 
 export type BoundaryCondition = "dirichlet" | "neumann";
 

@@ -26,7 +26,17 @@ const ES = {
   "toolbar.tool_neg": "−V",
   "toolbar.tool_gnd": "Tierra (0)",
   "toolbar.tool_era": "Borrar",
+  "toolbar.tool_line": "Traza recta",
+  "toolbar.tool_curve": "Curva libre",
   "toolbar.custom_voltage": "personalizado",
+
+  "trace.title": "Perfil sobre la traza",
+  "trace.clear": "Borrar traza",
+  "trace.empty_hint":
+    "Elegí Traza recta (dos clics) o Curva libre (arrastrar) y dibujá sobre el lienzo.",
+  "trace.axis_v": "V",
+  "trace.axis_e": "|E|",
+  "trace.axis_s": "s (celdas)",
 
   "display.show": "Mostrar:",
   "display.heatmap": "Potencial",
@@ -114,7 +124,17 @@ const EN: Record<TranslationKey, string> = {
   "toolbar.tool_neg": "−V",
   "toolbar.tool_gnd": "Ground (0)",
   "toolbar.tool_era": "Erase",
+  "toolbar.tool_line": "Straight trace",
+  "toolbar.tool_curve": "Free curve",
   "toolbar.custom_voltage": "custom",
+
+  "trace.title": "Profile along the trace",
+  "trace.clear": "Clear trace",
+  "trace.empty_hint":
+    "Pick Straight trace (two clicks) or Free curve (drag) and draw on the canvas.",
+  "trace.axis_v": "V",
+  "trace.axis_e": "|E|",
+  "trace.axis_s": "s (cells)",
 
   "display.show": "Show:",
   "display.heatmap": "Potential",

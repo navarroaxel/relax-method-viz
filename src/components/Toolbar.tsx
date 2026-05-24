@@ -33,6 +33,8 @@ const TOOLS: ToolOption[] = [
   { id: "neg", color: "#0C447C", activeBg: "#0C447C", activeFg: "#ffffff" },
   { id: "gnd", color: "#2C2C2A", activeBg: "#2C2C2A", activeFg: "#ffffff" },
   { id: "era", color: "#52525b", activeBg: "#e5e7eb", activeFg: "#111827" },
+  { id: "line", color: "#CA8A04", activeBg: "#CA8A04", activeFg: "#ffffff" },
+  { id: "curve", color: "#CA8A04", activeBg: "#CA8A04", activeFg: "#ffffff" },
 ];
 
 export function Toolbar({
@@ -52,6 +54,8 @@ export function Toolbar({
       neg: t("toolbar.tool_neg"),
       gnd: t("toolbar.tool_gnd"),
       era: t("toolbar.tool_era"),
+      line: t("toolbar.tool_line"),
+      curve: t("toolbar.tool_curve"),
     }),
     [t],
   );

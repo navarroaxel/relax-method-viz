@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { applyFixedValues, idx, paintBrush, paintStroke } from "@/lib/grid";
-import { renderAll } from "@/lib/rendering";
+import { renderAll, renderTrace, type TraceShape } from "@/lib/rendering";
 import type { DisplayFlags, GridState, Tool } from "@/types";
 
 interface CanvasProps {
@@ -13,8 +13,12 @@ interface CanvasProps {
   brushSize: number;
   displaySize: number;
   renderTick: number;
+  trace: TraceShape | null;
+  traceDraft: TraceShape | null;
   onPaint: () => void;
   onPaintEnd?: () => void;
+  onTraceChange: (trace: TraceShape | null) => void;
+  onTraceDraftChange: (draft: TraceShape | null) => void;
   canvasRef?: RefObject<HTMLCanvasElement | null>;
 }
 
@@ -25,6 +29,8 @@ interface HoverInfo {
   E: number;
 }
 
+const CURVE_MIN_STEP = 0.5; // grid cells between recorded points
+
 export function Canvas({
   grid,
   display,
@@ -33,20 +39,26 @@ export function Canvas({
   brushSize,
   displaySize,
   renderTick,
+  trace,
+  traceDraft,
   onPaint,
   onPaintEnd,
+  onTraceChange,
+  onTraceDraftChange,
   canvasRef: externalCanvasRef,
 }: CanvasProps) {
   const internalCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasRef = externalCanvasRef ?? internalCanvasRef;
-  const isDrawingRef = useRef(false);
+  const isPaintingRef = useRef(false);
   const lastCellRef = useRef<{ i: number; j: number } | null>(null);
+  const isCurveDrawingRef = useRef(false);
+  const curvePointsRef = useRef<Array<[number, number]>>([]);
   const [hover, setHover] = useState<HoverInfo | null>(null);
 
-  const stateRef = useRef({ tool, voltage, brushSize, grid });
+  const stateRef = useRef({ tool, voltage, brushSize, grid, trace, traceDraft });
   useEffect(() => {
-    stateRef.current = { tool, voltage, brushSize, grid };
-  }, [tool, voltage, brushSize, grid]);
+    stateRef.current = { tool, voltage, brushSize, grid, trace, traceDraft };
+  }, [tool, voltage, brushSize, grid, trace, traceDraft]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -54,21 +66,40 @@ export function Canvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     renderAll(ctx, grid, display, displaySize);
-  }, [canvasRef, grid, display, displaySize, renderTick]);
+    const cellSize = displaySize / grid.N;
+    renderTrace(ctx, trace, traceDraft, cellSize);
+  }, [canvasRef, grid, display, displaySize, renderTick, trace, traceDraft]);
+
+  // Cancel any in-progress trace when the tool changes.
+  useEffect(() => {
+    isCurveDrawingRef.current = false;
+    curvePointsRef.current = [];
+    if (tool !== "line") onTraceDraftChange(null);
+  }, [tool, onTraceDraftChange]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const toCell = (clientX: number, clientY: number): { i: number; j: number } => {
+    const toFracCell = (
+      clientX: number,
+      clientY: number,
+    ): { x: number; y: number } => {
       const rect = canvas.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
       const { grid } = stateRef.current;
       const cellSize = rect.width / grid.N;
-      const i = Math.floor(x / cellSize);
-      const j = Math.floor(y / cellSize);
-      return { i, j };
+      return {
+        x: (clientX - rect.left) / cellSize,
+        y: (clientY - rect.top) / cellSize,
+      };
+    };
+
+    const toCell = (
+      clientX: number,
+      clientY: number,
+    ): { i: number; j: number } => {
+      const { x, y } = toFracCell(clientX, clientY);
+      return { i: Math.floor(x), j: Math.floor(y) };
     };
 
     const paintAt = (i: number, j: number) => {
@@ -106,51 +137,167 @@ export function Canvas({
       setHover({ i, j, V, E });
     };
 
+    // ---- trace handlers ------------------------------------------------
+    const handleLineDown = (x: number, y: number) => {
+      const { traceDraft } = stateRef.current;
+      const draftStart = traceDraft?.points[0];
+      if (!draftStart) {
+        onTraceDraftChange({ kind: "line", points: [[x, y]] });
+        return;
+      }
+      // Finalize: draft has the start point; this click is the end.
+      onTraceChange({
+        kind: "line",
+        points: [[draftStart[0], draftStart[1]], [x, y]],
+      });
+      onTraceDraftChange(null);
+    };
+
+    const handleLineMove = (x: number, y: number) => {
+      const { traceDraft } = stateRef.current;
+      const draftStart = traceDraft?.points[0];
+      if (!draftStart) return;
+      onTraceDraftChange({
+        kind: "line",
+        points: [[draftStart[0], draftStart[1]], [x, y]],
+      });
+    };
+
+    const handleCurveDown = (x: number, y: number) => {
+      isCurveDrawingRef.current = true;
+      curvePointsRef.current = [[x, y]];
+      onTraceChange(null);
+      onTraceDraftChange({ kind: "curve", points: [[x, y]] });
+    };
+
+    const handleCurveMove = (x: number, y: number) => {
+      if (!isCurveDrawingRef.current) return;
+      const pts = curvePointsRef.current;
+      const last = pts[pts.length - 1];
+      if (last && Math.hypot(x - last[0], y - last[1]) < CURVE_MIN_STEP) return;
+      pts.push([x, y]);
+      onTraceDraftChange({ kind: "curve", points: pts.slice() });
+    };
+
+    const handleCurveUp = () => {
+      if (!isCurveDrawingRef.current) return;
+      isCurveDrawingRef.current = false;
+      const pts = curvePointsRef.current;
+      if (pts.length >= 2) {
+        onTraceChange({ kind: "curve", points: pts });
+      }
+      curvePointsRef.current = [];
+      onTraceDraftChange(null);
+    };
+
+    // ---- pointer events -----------------------------------------------
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
-      isDrawingRef.current = true;
+      const { tool } = stateRef.current;
+      const { x, y } = toFracCell(e.clientX, e.clientY);
+      if (tool === "line") {
+        handleLineDown(x, y);
+        return;
+      }
+      if (tool === "curve") {
+        handleCurveDown(x, y);
+        return;
+      }
+      isPaintingRef.current = true;
       lastCellRef.current = null;
       const { i, j } = toCell(e.clientX, e.clientY);
       paintAt(i, j);
     };
+
     const onMouseMove = (e: MouseEvent) => {
-      if (isDrawingRef.current) {
-        const { i, j } = toCell(e.clientX, e.clientY);
-        paintAt(i, j);
+      const { tool } = stateRef.current;
+      if (tool === "line") {
+        const { x, y } = toFracCell(e.clientX, e.clientY);
+        handleLineMove(x, y);
         updateHover(e.clientX, e.clientY);
         return;
       }
+      if (tool === "curve") {
+        if (isCurveDrawingRef.current) {
+          const { x, y } = toFracCell(e.clientX, e.clientY);
+          handleCurveMove(x, y);
+        }
+        updateHover(e.clientX, e.clientY);
+        return;
+      }
+      if (isPaintingRef.current) {
+        const { i, j } = toCell(e.clientX, e.clientY);
+        paintAt(i, j);
+      }
       updateHover(e.clientX, e.clientY);
     };
+
+    const onMouseUp = () => {
+      const { tool } = stateRef.current;
+      if (tool === "curve") {
+        handleCurveUp();
+        return;
+      }
+      if (isPaintingRef.current) onPaintEnd?.();
+      isPaintingRef.current = false;
+      lastCellRef.current = null;
+    };
+
     const onCanvasMouseLeave = () => {
       setHover(null);
-    };
-    const onMouseUp = () => {
-      if (isDrawingRef.current) onPaintEnd?.();
-      isDrawingRef.current = false;
-      lastCellRef.current = null;
     };
 
     const onTouchStart = (e: TouchEvent) => {
       const t = e.touches[0];
       if (!t) return;
       e.preventDefault();
-      isDrawingRef.current = true;
+      const { tool } = stateRef.current;
+      const { x, y } = toFracCell(t.clientX, t.clientY);
+      if (tool === "line") {
+        handleLineDown(x, y);
+        return;
+      }
+      if (tool === "curve") {
+        handleCurveDown(x, y);
+        return;
+      }
+      isPaintingRef.current = true;
       lastCellRef.current = null;
       const { i, j } = toCell(t.clientX, t.clientY);
       paintAt(i, j);
     };
+
     const onTouchMove = (e: TouchEvent) => {
       const t = e.touches[0];
-      if (!t || !isDrawingRef.current) return;
+      if (!t) return;
       e.preventDefault();
+      const { tool } = stateRef.current;
+      if (tool === "line") {
+        const { x, y } = toFracCell(t.clientX, t.clientY);
+        handleLineMove(x, y);
+        return;
+      }
+      if (tool === "curve") {
+        if (isCurveDrawingRef.current) {
+          const { x, y } = toFracCell(t.clientX, t.clientY);
+          handleCurveMove(x, y);
+        }
+        return;
+      }
+      if (!isPaintingRef.current) return;
       const { i, j } = toCell(t.clientX, t.clientY);
       paintAt(i, j);
     };
+
     const onTouchEnd = (e: TouchEvent) => {
       e.preventDefault();
-      if (isDrawingRef.current) onPaintEnd?.();
-      isDrawingRef.current = false;
+      const { tool } = stateRef.current;
+      if (tool === "curve") {
+        handleCurveUp();
+        return;
+      }
+      if (isPaintingRef.current) onPaintEnd?.();
+      isPaintingRef.current = false;
       lastCellRef.current = null;
     };
 
@@ -173,7 +320,7 @@ export function Canvas({
       canvas.removeEventListener("touchend", onTouchEnd);
       canvas.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [canvasRef, onPaint, onPaintEnd]);
+  }, [canvasRef, onPaint, onPaintEnd, onTraceChange, onTraceDraftChange]);
 
   return (
     <div
