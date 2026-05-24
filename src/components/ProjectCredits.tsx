@@ -14,7 +14,7 @@ const MEMBERS = [
 export function ProjectCredits() {
   const { t } = useLanguage();
   return (
-    <section className="rounded-md border border-zinc-200 bg-white p-4 text-xs leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
+    <footer className="rounded-md border border-zinc-200 bg-white p-4 text-xs leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
       <header className="mb-3 border-b border-zinc-200 pb-2 dark:border-zinc-700">
         <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
           Trabajo Práctico · Teoría de los Campos · UTN · FRBA
@@ -47,6 +47,6 @@ export function ProjectCredits() {
           </ul>
         </div>
       </div>
-    </section>
+    </footer>
   );
 }

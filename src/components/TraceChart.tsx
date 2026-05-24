@@ -66,7 +66,12 @@ function useIsDarkMode(): boolean {
   return isDark;
 }
 
-export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps) {
+export function TraceChart({
+  samples,
+  vScale,
+  eScale,
+  onClear,
+}: TraceChartProps) {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDark = useIsDarkMode();
@@ -77,7 +82,8 @@ export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const dpr =
+      typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
     if (canvas.width !== WIDTH * dpr || canvas.height !== HEIGHT * dpr) {
       canvas.width = WIDTH * dpr;
       canvas.height = HEIGHT * dpr;
@@ -108,7 +114,11 @@ export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps
       <div className="relative w-full overflow-hidden">
         <canvas
           ref={canvasRef}
-          style={{ width: "100%", height: "auto", aspectRatio: `${WIDTH} / ${HEIGHT}` }}
+          style={{
+            width: "100%",
+            height: "auto",
+            aspectRatio: `${WIDTH} / ${HEIGHT}`,
+          }}
           className="block rounded bg-white dark:bg-zinc-950"
         />
         {!samples && (
@@ -163,8 +173,7 @@ function drawChart(
     plotX + (sMax > 0 ? (sv / sMax) * plotW : 0);
   const yOfV = (v: number): number =>
     plotY + plotH - ((v - vLow) / (vHigh - vLow)) * plotH;
-  const yOfE = (e: number): number =>
-    plotY + plotH - (e / eHigh) * plotH;
+  const yOfE = (e: number): number => plotY + plotH - (e / eHigh) * plotH;
 
   // Grid lines + tick labels.
   ctx.font = "11px ui-sans-serif, system-ui, -apple-system, sans-serif";
@@ -255,4 +264,3 @@ function drawChart(
   ctx.textAlign = "center";
   ctx.fillText(labels.axisS, plotX + plotW / 2, HEIGHT - 4);
 }
-

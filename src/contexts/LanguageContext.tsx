@@ -84,12 +84,16 @@ const ES = {
   "stats.iteration": "Iteración:",
   "stats.tolerance": "tolerancia",
 
-  "footer.part1":
+  "explanation.relax.part1":
     "El método de relajación resuelve ∇²V = 0 discretizando el plano en una grilla cuadrada y reemplazando iterativamente cada nodo no fijo por el promedio de sus cuatro vecinos. Con sobre-relajación sucesiva (SOR), cada nodo se actualiza como",
-  "footer.average": "promedio",
-  "footer.part2":
+  "explanation.relax.average": "promedio",
+  "explanation.relax.part2":
     ", con ω ≈ 1.9 para esta grilla. El campo se obtiene después por",
-  "footer.part3": "con diferencias centradas.",
+  "explanation.relax.part3": "con diferencias centradas.",
+  "explanation.trace":
+    "La herramienta de traza muestrea el potencial V(s) y la magnitud del campo |E| a lo largo de un segmento o curva libre. V se obtiene por interpolación bilineal entre celdas; |E| por diferencias centradas de −∇V. Si la traza tiene un solo punto se convierte en una sonda y registra V(t) y |E|(t) en función del tiempo.",
+  "explanation.ac":
+    "Con modulación AC, cada conductor fijo oscila como V = Vfix · sin(ωt + φ), con ω = 2π/T (T es el período en segundos) y φ una fase por celda configurable al pintar. Esto permite simular fuentes desfasadas — por ejemplo un dipolo con φ = 180° en uno de los polos. Mientras AC está activa, el campo nunca llega a régimen estacionario y el solver no se detiene por convergencia.",
 
   "credits.subtitle":
     "Cálculo de potenciales en forma numérica — Método de Relax",
@@ -192,11 +196,16 @@ const EN: Record<TranslationKey, string> = {
   "stats.iteration": "Iteration:",
   "stats.tolerance": "tolerance",
 
-  "footer.part1":
+  "explanation.relax.part1":
     "The relaxation method solves ∇²V = 0 by discretizing the plane onto a square grid and iteratively replacing each free node with the average of its four neighbors. With successive over-relaxation (SOR), each node is updated as",
-  "footer.average": "average",
-  "footer.part2": ", with ω ≈ 1.9 for this grid. The field is then obtained by",
-  "footer.part3": "using centered differences.",
+  "explanation.relax.average": "average",
+  "explanation.relax.part2":
+    ", with ω ≈ 1.9 for this grid. The field is then obtained by",
+  "explanation.relax.part3": "using centered differences.",
+  "explanation.trace":
+    "The trace tool samples the potential V(s) and the field magnitude |E| along a straight segment or freehand curve. V uses bilinear interpolation between cells; |E| comes from centered differences of −∇V. A single-point trace becomes a probe and records V(t) and |E|(t) over time.",
+  "explanation.ac":
+    "With AC modulation enabled, each fixed conductor oscillates as V = Vfix · sin(ωt + φ), with ω = 2π/T (T is the period in seconds) and φ a per-cell phase set while painting. This lets you simulate phase-shifted sources — e.g. a dipole with φ = 180° on one pole. While AC is on the field never settles, so the solver runs continuously instead of stopping at convergence.",
 
   "credits.subtitle":
     "Numerical potential computation — Relaxation Method",

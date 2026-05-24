@@ -6,6 +6,7 @@ import { Canvas } from "@/components/Canvas";
 import { DisplayToggles } from "@/components/DisplayToggles";
 import { ExportControls } from "@/components/ExportControls";
 import { Legend } from "@/components/Legend";
+import { MethodExplanation } from "@/components/MethodExplanation";
 import { PresetSelect } from "@/components/PresetSelect";
 import { ProjectCredits } from "@/components/ProjectCredits";
 import { RunControls } from "@/components/RunControls";
@@ -22,14 +23,25 @@ import { Surface3D } from "@/components/Surface3DDynamic";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
 import { TraceChart } from "@/components/TraceChart";
-import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/grid";
+import {
+  applyFixedValues,
+  clearAll,
+  createGrid,
+  resetPotential,
+} from "@/lib/grid";
 import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
 import { computeFieldStats, type TraceShape } from "@/lib/rendering";
 import { sampleE, sampleTrace, sampleV } from "@/lib/sampling";
 import { applyGeometryToGrid } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { BoundaryCondition, DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
+import type {
+  BoundaryCondition,
+  DisplayFlags,
+  GridState,
+  SavedGeometry,
+  Tool,
+} from "@/types";
 import type { WorkerInbound, WorkerOutbound } from "@/types/worker";
 
 const TRACE_SAMPLE_STEP = 0.5;
@@ -99,10 +111,11 @@ export function Simulator() {
     const f = new Uint8Array(grid.fixed);
     const v = new Float32Array(grid.Vfix);
     const p = new Float32Array(grid.phase);
-    post(
-      { type: "updateFixed", fixed: f, Vfix: v, phase: p },
-      [f.buffer, v.buffer, p.buffer],
-    );
+    post({ type: "updateFixed", fixed: f, Vfix: v, phase: p }, [
+      f.buffer,
+      v.buffer,
+      p.buffer,
+    ]);
   }, [grid, post]);
 
   useEffect(() => {
@@ -122,7 +135,12 @@ export function Simulator() {
       if (tr && tr.points.length === 1) {
         const p = tr.points[0] as readonly [number, number];
         const v = sampleV(grid.V, grid.N, p[0] as number, p[1] as number);
-        const eMag = sampleE(grid.V, grid.N, p[0] as number, p[1] as number).mag;
+        const eMag = sampleE(
+          grid.V,
+          grid.N,
+          p[0] as number,
+          p[1] as number,
+        ).mag;
         pushProbeSample(probeHistoryRef.current, performance.now(), v, eMag);
       }
       bumpRender();
@@ -445,7 +463,8 @@ export function Simulator() {
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
         <div className="flex flex-wrap gap-4">
           <span>
-            {t("stats.iteration")} <span className="font-mono">{iteration}</span>
+            {t("stats.iteration")}{" "}
+            <span className="font-mono">{iteration}</span>
           </span>
           <span>
             Δmax: <span className="font-mono">{deltaLabel}</span>
@@ -456,13 +475,7 @@ export function Simulator() {
           {DEFAULT_SOLVER_CONFIG.tolerance}
         </span>
       </div>
-      <footer className="rounded-md border border-zinc-200 bg-white p-3 text-xs leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-        {t("footer.part1")}{" "}
-        <span className="font-mono">V ← V + ω · ({t("footer.average")} − V)</span>
-        {t("footer.part2")}{" "}
-        <span className="font-mono">E = −∇V</span>{" "}
-        {t("footer.part3")}
-      </footer>
+      <MethodExplanation />
       <ProjectCredits />
       {dialogOpen && (
         <SaveLoadDialog
