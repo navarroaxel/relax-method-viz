@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { TraceSamples } from "@/lib/sampling";
@@ -12,15 +12,64 @@ interface TraceChartProps {
   onClear: () => void;
 }
 
-const V_COLOR = "#0C447C";
-const E_COLOR = "#791F1F";
+interface Palette {
+  bg: string;
+  border: string;
+  grid: string;
+  zero: string;
+  label: string;
+  vLine: string;
+  vLabel: string;
+  eLine: string;
+  eLabel: string;
+}
+
+const LIGHT_PALETTE: Palette = {
+  bg: "#f8fafc",
+  border: "#cbd5e1",
+  grid: "#e2e8f0",
+  zero: "#94a3b8",
+  label: "#475569",
+  vLine: "#0C447C",
+  vLabel: "#0C447C",
+  eLine: "#791F1F",
+  eLabel: "#791F1F",
+};
+
+const DARK_PALETTE: Palette = {
+  bg: "#0f0f12",
+  border: "#3f3f46",
+  grid: "#27272a",
+  zero: "#52525b",
+  label: "#d4d4d8",
+  vLine: "#60a5fa",
+  vLabel: "#93c5fd",
+  eLine: "#f87171",
+  eLabel: "#fca5a5",
+};
+
 const WIDTH = 580;
 const HEIGHT = 260;
 const MARGIN = { top: 18, right: 56, bottom: 36, left: 56 };
 
+function useIsDarkMode(): boolean {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const root = document.documentElement;
+    const sync = () => setIsDark(root.classList.contains("dark"));
+    sync();
+    const obs = new MutationObserver(sync);
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+  return isDark;
+}
+
 export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps) {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDark = useIsDarkMode();
+  const palette = isDark ? DARK_PALETTE : LIGHT_PALETTE;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,12 +82,12 @@ export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps
       canvas.height = HEIGHT * dpr;
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawChart(ctx, samples, vScale, eScale, {
+    drawChart(ctx, samples, vScale, eScale, palette, {
       axisV: t("trace.axis_v"),
       axisE: t("trace.axis_e"),
       axisS: t("trace.axis_s"),
     });
-  }, [samples, vScale, eScale, t]);
+  }, [samples, vScale, eScale, palette, t]);
 
   return (
     <div className="flex w-full max-w-3xl flex-col gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -82,6 +131,7 @@ function drawChart(
   samples: TraceSamples | null,
   vScale: number,
   eScale: number,
+  palette: Palette,
   labels: ChartLabels,
 ): void {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
@@ -90,9 +140,9 @@ function drawChart(
   const plotY = MARGIN.top;
   const plotW = WIDTH - MARGIN.left - MARGIN.right;
   const plotH = HEIGHT - MARGIN.top - MARGIN.bottom;
-  ctx.fillStyle = "#f8fafc";
+  ctx.fillStyle = palette.bg;
   ctx.fillRect(plotX, plotY, plotW, plotH);
-  ctx.strokeStyle = "#cbd5e1";
+  ctx.strokeStyle = palette.border;
   ctx.lineWidth = 1;
   ctx.strokeRect(plotX + 0.5, plotY + 0.5, plotW, plotH);
 
@@ -116,21 +166,20 @@ function drawChart(
     plotY + plotH - (e / eHigh) * plotH;
 
   // Grid lines + tick labels.
-  ctx.fillStyle = "#475569";
   ctx.font = "11px ui-sans-serif, system-ui, -apple-system, sans-serif";
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
-  ctx.strokeStyle = "#e2e8f0";
   ctx.lineWidth = 1;
 
   const vTicks = niceTicks(vLow, vHigh, 5);
   for (const tv of vTicks) {
     const y = yOfV(tv);
+    ctx.strokeStyle = palette.grid;
     ctx.beginPath();
     ctx.moveTo(plotX, y);
     ctx.lineTo(plotX + plotW, y);
     ctx.stroke();
-    ctx.fillStyle = V_COLOR;
+    ctx.fillStyle = palette.vLabel;
     ctx.fillText(formatNum(tv), plotX - 6, y);
   }
 
@@ -138,14 +187,14 @@ function drawChart(
   ctx.textAlign = "left";
   for (const te of eTicks) {
     const y = yOfE(te);
-    ctx.fillStyle = E_COLOR;
+    ctx.fillStyle = palette.eLabel;
     ctx.fillText(formatNum(te), plotX + plotW + 6, y);
   }
 
   // Zero line for V (if applicable) — emphasize.
   if (vLow < 0 && vHigh > 0) {
     const y0 = yOfV(0);
-    ctx.strokeStyle = "#94a3b8";
+    ctx.strokeStyle = palette.zero;
     ctx.beginPath();
     ctx.moveTo(plotX, y0);
     ctx.lineTo(plotX + plotW, y0);
@@ -154,12 +203,12 @@ function drawChart(
 
   // X ticks.
   const sTicks = niceTicks(0, sMax, 6);
-  ctx.fillStyle = "#475569";
+  ctx.fillStyle = palette.label;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   for (const ts of sTicks) {
     const x = xOf(ts);
-    ctx.strokeStyle = "#e2e8f0";
+    ctx.strokeStyle = palette.grid;
     ctx.beginPath();
     ctx.moveTo(x, plotY);
     ctx.lineTo(x, plotY + plotH);
@@ -169,7 +218,7 @@ function drawChart(
 
   // V curve.
   ctx.beginPath();
-  ctx.strokeStyle = V_COLOR;
+  ctx.strokeStyle = palette.vLine;
   ctx.lineWidth = 1.8;
   for (let k = 0; k < s.length; k++) {
     const x = xOf(s[k] as number);
@@ -181,7 +230,7 @@ function drawChart(
 
   // E curve.
   ctx.beginPath();
-  ctx.strokeStyle = E_COLOR;
+  ctx.strokeStyle = palette.eLine;
   ctx.lineWidth = 1.8;
   for (let k = 0; k < s.length; k++) {
     const x = xOf(s[k] as number);
@@ -192,16 +241,16 @@ function drawChart(
   ctx.stroke();
 
   // Axis labels.
-  ctx.fillStyle = V_COLOR;
+  ctx.fillStyle = palette.vLabel;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillText(labels.axisV, 8, plotY + 4);
 
-  ctx.fillStyle = E_COLOR;
+  ctx.fillStyle = palette.eLabel;
   ctx.textAlign = "right";
   ctx.fillText(labels.axisE, WIDTH - 8, plotY + 4);
 
-  ctx.fillStyle = "#475569";
+  ctx.fillStyle = palette.label;
   ctx.textAlign = "center";
   ctx.fillText(labels.axisS, plotX + plotW / 2, HEIGHT - 4);
 }
