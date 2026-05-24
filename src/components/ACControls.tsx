@@ -57,7 +57,7 @@ export function ACControls({
       </label>
       {enabled && (
         <span className="font-mono text-xs text-zinc-600 dark:text-zinc-300">
-          ωt = {cycleDeg}° · sin = {factor.toFixed(2)}
+          ωt = {cycleDeg}° · sin(ωt) = {factor.toFixed(2)}
         </span>
       )}
     </div>
