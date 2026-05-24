@@ -316,13 +316,15 @@ function drawAc(
     }
   }
 
-  // Top-left legend: per-curve label in its own color.
+  // Top-left legend: per-curve label in its own color, sitting just above
+  // the plot frame so it does not overlap the waveforms.
   ctx.font = "11px ui-sans-serif, system-ui, -apple-system, sans-serif";
   ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
+  ctx.textBaseline = "bottom";
+  const labelY = plotY - 3;
   if (phases.length === 0) {
     ctx.fillStyle = palette.phaseLines[0] ?? palette.vLabel;
-    ctx.fillText(labels.sinLabel, 8, plotY + 4);
+    ctx.fillText(labels.sinLabel, 8, labelY);
   } else {
     let lx = 8;
     for (let pIdx = 0; pIdx < phases.length; pIdx++) {
@@ -332,7 +334,7 @@ function drawAc(
       ctx.fillStyle = palette.phaseLines[
         pIdx % palette.phaseLines.length
       ] as string;
-      ctx.fillText(text, lx, plotY + 4);
+      ctx.fillText(text, lx, labelY);
       lx += ctx.measureText(text).width + 10;
     }
   }
