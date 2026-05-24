@@ -199,13 +199,11 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>("es");
-
-  useEffect(() => {
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === "undefined") return "es";
     const stored = localStorage.getItem(STORAGE_KEY);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored === "en" || stored === "es") setLanguage(stored);
-  }, []);
+    return stored === "en" || stored === "es" ? stored : "es";
+  });
 
   useEffect(() => {
     document.documentElement.lang = language;

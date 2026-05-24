@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Tool } from "@/types";
@@ -45,11 +45,6 @@ export function Toolbar({
 }: ToolbarProps) {
   const { t } = useLanguage();
   const [voltageText, setVoltageText] = useState(String(voltage));
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVoltageText(String(voltage));
-  }, [voltage]);
 
   const toolLabels = useMemo(
     () => ({
@@ -98,7 +93,11 @@ export function Toolbar({
           <select
             value={VOLTAGE_PRESETS.some((p) => p.value === voltage) ? voltage : ""}
             onChange={(e) => {
-              if (e.target.value !== "") onVoltageChange(Number(e.target.value));
+              if (e.target.value !== "") {
+                const v = Number(e.target.value);
+                onVoltageChange(v);
+                setVoltageText(String(v));
+              }
             }}
             className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
           >
