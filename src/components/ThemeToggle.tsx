@@ -47,10 +47,14 @@ export function ThemeToggle() {
 
   useEffect(() => {
     // Read external state (localStorage) on mount and reflect it in UI.
-    // The layout's inline script already applied the right .dark class before
-    // hydration, so this is only catching up the button label.
+    // We must also re-call applyMode here: the layout's inline script set the
+    // .dark class pre-hydration, but React hydration reconciles <html>'s
+    // className back to its SSR value and strips it. Re-asserting after mount
+    // restores the class so the dark theme actually sticks.
+    const stored = readStoredMode();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMode(readStoredMode());
+    setMode(stored);
+    applyMode(stored);
     setMounted(true);
   }, []);
 
