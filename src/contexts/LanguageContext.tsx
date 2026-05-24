@@ -5,12 +5,19 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
 } from "react";
 
 export type Language = "es" | "en";
 
 const STORAGE_KEY = "language";
+
+// useLayoutEffect warns during SSR. The provider is a client component, but
+// "use client" still renders on the server during static export — guard so we
+// silently fall back to useEffect there.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const ES = {
   "language.switch_aria": "Cambiar a inglés",
@@ -219,11 +226,17 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    if (typeof window === "undefined") return "es";
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored === "en" || stored === "es" ? stored : "es";
-  });
+  // Always initialize to "es" so the first client render matches the SSR
+  // HTML (static export bakes Spanish into the build). The stored preference
+  // is applied in a layout effect below — synchronously after hydration,
+  // before paint — so English users see English on first frame without a
+  // hydration mismatch.
+  const [language, setLanguage] = useState<Language>("es");
+
+  useIsomorphicLayoutEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "en" || stored === "es") setLanguage(stored);
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = language;
