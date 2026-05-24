@@ -9,9 +9,12 @@ interface ToolbarProps {
   tool: Tool;
   voltage: number;
   brushSize: number;
+  paintPhaseDeg: number;
+  showPhase: boolean;
   onToolChange: (t: Tool) => void;
   onVoltageChange: (v: number) => void;
   onBrushChange: (b: number) => void;
+  onPaintPhaseChange: (deg: number) => void;
 }
 
 const VOLTAGE_PRESETS: { value: number; label: string }[] = [
@@ -41,9 +44,12 @@ export function Toolbar({
   tool,
   voltage,
   brushSize,
+  paintPhaseDeg,
+  showPhase,
   onToolChange,
   onVoltageChange,
   onBrushChange,
+  onPaintPhaseChange,
 }: ToolbarProps) {
   const { t } = useLanguage();
   const [voltageText, setVoltageText] = useState(String(voltage));
@@ -135,6 +141,24 @@ export function Toolbar({
             className="w-32"
           />
         </label>
+        {showPhase && (
+          <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+            <span>{t("toolbar.phase")}</span>
+            <input
+              type="number"
+              min={-360}
+              max={360}
+              step={15}
+              value={paintPhaseDeg}
+              onChange={(e) => {
+                const n = Number(e.target.value);
+                if (Number.isFinite(n)) onPaintPhaseChange(n);
+              }}
+              className="w-20 rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+            />
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">°</span>
+          </label>
+        )}
       </div>
     </div>
   );

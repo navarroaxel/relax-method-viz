@@ -23,6 +23,7 @@ const ES = {
   "toolbar.tool": "Herramienta:",
   "toolbar.potential": "Potencial:",
   "toolbar.brush": "Pincel:",
+  "toolbar.phase": "Fase:",
   "toolbar.tool_pos": "+V",
   "toolbar.tool_neg": "−V",
   "toolbar.tool_gnd": "Tierra (0)",
@@ -54,6 +55,9 @@ const ES = {
   "run.boundary": "Contorno",
   "run.grid": "Grilla",
   "run.auto": "Auto",
+
+  "ac.enable": "Modulación AC",
+  "ac.period": "Período:",
 
   "preset.custom": "— Personalizado —",
   "preset.parallel": "Capacitor plano",
@@ -121,6 +125,7 @@ const EN: Record<TranslationKey, string> = {
   "toolbar.tool": "Tool:",
   "toolbar.potential": "Potential:",
   "toolbar.brush": "Brush:",
+  "toolbar.phase": "Phase:",
   "toolbar.tool_pos": "+V",
   "toolbar.tool_neg": "−V",
   "toolbar.tool_gnd": "Ground (0)",
@@ -152,6 +157,9 @@ const EN: Record<TranslationKey, string> = {
   "run.boundary": "Boundary",
   "run.grid": "Grid",
   "run.auto": "Auto",
+
+  "ac.enable": "AC modulation",
+  "ac.period": "Period:",
 
   "preset.custom": "— Custom —",
   "preset.parallel": "Parallel plate capacitor",
