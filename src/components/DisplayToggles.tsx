@@ -1,5 +1,6 @@
 "use client";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { DisplayFlags } from "@/types";
 
 interface DisplayTogglesProps {
@@ -8,9 +9,10 @@ interface DisplayTogglesProps {
 }
 
 export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-      <span className="font-medium">Mostrar:</span>
+      <span className="font-medium">{t("display.show")}</span>
       <label className="flex items-center gap-1.5">
         <input
           type="checkbox"
@@ -19,7 +21,7 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
             onChange({ ...display, heatmap: e.target.checked })
           }
         />
-        Potencial
+        {t("display.heatmap")}
       </label>
       <label className="flex items-center gap-1.5">
         <input
@@ -29,7 +31,7 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
             onChange({ ...display, equipotentials: e.target.checked })
           }
         />
-        Equipotenciales
+        {t("display.equipotentials")}
       </label>
       <label className="flex items-center gap-1.5">
         <input
@@ -43,7 +45,7 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
             })
           }
         />
-        Líneas de campo
+        {t("display.streamlines")}
       </label>
       <label className="flex items-center gap-1.5">
         <input
@@ -57,7 +59,7 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
             })
           }
         />
-        Campo E (flechas)
+        {t("display.arrows")}
       </label>
       <label className="flex items-center gap-1.5">
         <input
@@ -67,7 +69,7 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
             onChange({ ...display, surface3D: e.target.checked })
           }
         />
-        Superficie 3D
+        {t("display.surface3d")}
       </label>
     </div>
   );

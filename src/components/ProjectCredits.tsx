@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+
 const MEMBERS = [
   "COALI, Juan",
   "MORENO, Franco",
@@ -8,6 +12,7 @@ const MEMBERS = [
 ];
 
 export function ProjectCredits() {
+  const { t } = useLanguage();
   return (
     <section className="rounded-md border border-zinc-200 bg-white p-4 text-xs leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
       <header className="mb-3 border-b border-zinc-200 pb-2 dark:border-zinc-700">
@@ -15,27 +20,25 @@ export function ProjectCredits() {
           Trabajo Práctico · Teoría de los Campos · UTN · FRBA
         </p>
         <h2 className="mt-0.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-          Cálculo de potenciales en forma numérica — Método de Relax
+          {t("credits.subtitle")}
         </h2>
       </header>
       <p className="mb-3 dark:text-zinc-200">
-        Simulador interactivo desarrollado como apoyo didáctico para
-        visualizar la convergencia del método de relax (SOR) sobre
-        geometrías electrostáticas en 2D, en el marco de la cátedra.
+        {t("credits.description")}
       </p>
       <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         <div>
-          <h3 className="mb-1 font-medium text-zinc-700 dark:text-zinc-100">Docentes</h3>
+          <h3 className="mb-1 font-medium text-zinc-700 dark:text-zinc-100">{t("credits.teachers")}</h3>
           <dl className="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5">
-            <dt className="text-zinc-500 dark:text-zinc-200">Profesor Titular</dt>
+            <dt className="text-zinc-500 dark:text-zinc-200">{t("credits.full_professor")}</dt>
             <dd>Ing. RECCHINI, Jorge</dd>
-            <dt className="text-zinc-500 dark:text-zinc-200">Jefe de Trabajos Prácticos</dt>
+            <dt className="text-zinc-500 dark:text-zinc-200">{t("credits.lab_head")}</dt>
             <dd>Ing. MUIÑO, Federico</dd>
           </dl>
         </div>
         <div>
           <h3 className="mb-1 font-medium text-zinc-700 dark:text-zinc-100">
-            Integrantes del grupo
+            {t("credits.members")}
           </h3>
           <ul className="ml-4 list-disc">
             {MEMBERS.map((m) => (

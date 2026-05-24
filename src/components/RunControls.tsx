@@ -1,5 +1,6 @@
 "use client";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { BoundaryCondition } from "@/types";
 
 const GRID_SIZES = [80, 120, 200] as const;
@@ -33,6 +34,7 @@ export function RunControls({
   onAutoOmega,
   onChangeBoundary,
 }: RunControlsProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
       <button
@@ -40,7 +42,7 @@ export function RunControls({
         onClick={onToggleRun}
         className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
       >
-        {isRunning ? "Pausar" : "Calcular"}
+        {isRunning ? t("run.pause") : t("run.calculate")}
       </button>
       <button
         type="button"
@@ -48,7 +50,7 @@ export function RunControls({
         disabled={isRunning}
         className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
       >
-        Paso (50)
+        {t("run.step")}
       </button>
       <button
         type="button"
@@ -56,7 +58,7 @@ export function RunControls({
         disabled={isRunning}
         className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
       >
-        Reset V
+        {t("run.reset_v")}
       </button>
       <button
         type="button"
@@ -64,7 +66,7 @@ export function RunControls({
         disabled={isRunning}
         className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
       >
-        Limpiar
+        {t("run.clear")}
       </button>
       <label className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
         ω = <span className="w-10 font-mono">{omega.toFixed(3)}</span>
@@ -82,11 +84,11 @@ export function RunControls({
           onClick={onAutoOmega}
           className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
         >
-          Auto
+          {t("run.auto")}
         </button>
       </label>
       <label className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
-        Contorno
+        {t("run.boundary")}
         <select
           value={boundary}
           onChange={(e) => onChangeBoundary(e.target.value as BoundaryCondition)}
@@ -96,20 +98,20 @@ export function RunControls({
           <option value="neumann">Neumann (∂V/∂n = 0)</option>
         </select>
       </label>
-        <label className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
-            Grilla
-            <select
-                value={gridN}
-                onChange={(e) => onChangeN(Number(e.target.value))}
-                className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-            >
-                {GRID_SIZES.map((n) => (
-                    <option key={n} value={n}>
-                        {n}×{n}
-                    </option>
-                ))}
-            </select>
-        </label>
+      <label className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+        {t("run.grid")}
+        <select
+          value={gridN}
+          onChange={(e) => onChangeN(Number(e.target.value))}
+          className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        >
+          {GRID_SIZES.map((n) => (
+            <option key={n} value={n}>
+              {n}×{n}
+            </option>
+          ))}
+        </select>
+      </label>
     </div>
   );
 }
