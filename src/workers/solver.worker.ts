@@ -11,7 +11,12 @@ let grid: GridState | null = null;
 let running = false;
 let iteration = 0;
 let runToken = 0;
-let ac: AcConfig = { enabled: false, period: 200 };
+let ac: AcConfig = { enabled: false, periodSec: 2 };
+
+// Wall-clock accumulator. Phase advances only while the solver is actively
+// running so a pause freezes both the field and the AC angle.
+let acPhaseRad = 0;
+let lastTickWallMs: number | null = null;
 
 function snapshotV(g: GridState): Float32Array {
   return new Float32Array(g.V);
@@ -25,7 +30,7 @@ function emitProgress(deltaMax: number): void {
   if (!grid) return;
   const snap = snapshotV(grid);
   postOut(
-    { type: "progress", iteration, deltaMax, V: snap },
+    { type: "progress", iteration, deltaMax, V: snap, acPhaseRad },
     [snap.buffer],
   );
 }
@@ -34,28 +39,43 @@ function emitDone(deltaMax: number, converged: boolean): void {
   if (!grid) return;
   const snap = snapshotV(grid);
   postOut(
-    { type: "done", iteration, deltaMax, converged, V: snap },
+    { type: "done", iteration, deltaMax, converged, V: snap, acPhaseRad },
     [snap.buffer],
   );
 }
 
-function modulationOmegaT(): number {
-  // Cycles per iteration = 1 / period, so angular argument is 2π·iter/period.
-  return (2 * Math.PI * iteration) / Math.max(1, ac.period);
+function advancePhaseByWallClock(): void {
+  if (!ac.enabled) {
+    lastTickWallMs = null;
+    return;
+  }
+  const now = performance.now();
+  if (lastTickWallMs !== null && ac.periodSec > 0) {
+    const dtSec = (now - lastTickWallMs) / 1000;
+    acPhaseRad += (2 * Math.PI * dtSec) / ac.periodSec;
+  }
+  lastTickWallMs = now;
+}
+
+function resetAcPhase(): void {
+  acPhaseRad = 0;
+  lastTickWallMs = null;
 }
 
 function startRun(config: { omega: number; tolerance: number; maxIterations: number; reportEvery: number }): void {
   if (!grid) return;
   running = true;
   const myToken = ++runToken;
+  // Begin a fresh wall-clock segment so the first dt is zero, not "time
+  // since last run".
+  lastTickWallMs = ac.enabled ? performance.now() : null;
 
   const loop = () => {
     if (!running || myToken !== runToken || !grid) return;
+    advancePhaseByWallClock();
     let deltaMax = 0;
     for (let s = 0; s < config.reportEvery; s++) {
-      if (ac.enabled) {
-        applyModulatedFixed(grid, modulationOmegaT());
-      }
+      if (ac.enabled) applyModulatedFixed(grid, acPhaseRad);
       deltaMax = relaxStep(grid, config.omega);
       iteration++;
       // While AC is on the field never settles, so convergence/maxIterations
@@ -99,6 +119,7 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
       iteration = 0;
       running = false;
       runToken++;
+      resetAcPhase();
       break;
     }
     case "updateFixed": {
@@ -107,20 +128,25 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
       grid.Vfix = msg.Vfix;
       grid.phase = msg.phase;
       if (ac.enabled) {
-        applyModulatedFixed(grid, modulationOmegaT());
+        applyModulatedFixed(grid, acPhaseRad);
       } else {
         applyFixedValues(grid);
       }
       break;
     }
     case "setAC": {
+      const wasEnabled = ac.enabled;
       ac = { ...msg.ac };
       if (!grid) break;
-      // Re-stamp fixed cells immediately so the snapshot reflects the change
-      // even if the loop is paused.
-      if (ac.enabled) {
-        applyModulatedFixed(grid, modulationOmegaT());
-      } else {
+      // Toggling AC on starts a fresh wave from phase 0; toggling off snaps
+      // fixed cells back to their static amplitude. Period changes mid-run
+      // keep the accumulated phase so the wave doesn't jump.
+      if (ac.enabled && !wasEnabled) {
+        resetAcPhase();
+        if (running) lastTickWallMs = performance.now();
+        applyModulatedFixed(grid, acPhaseRad);
+      } else if (!ac.enabled && wasEnabled) {
+        lastTickWallMs = null;
         applyFixedValues(grid);
       }
       emitProgress(Number.POSITIVE_INFINITY);
@@ -134,6 +160,8 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
     case "pause": {
       running = false;
       runToken++;
+      // Drop the wall-clock anchor so the phase doesn't jump on resume.
+      lastTickWallMs = null;
       break;
     }
     case "reset": {
@@ -142,6 +170,7 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
       runToken++;
       grid.V.fill(0);
       iteration = 0;
+      resetAcPhase();
       if (ac.enabled) {
         applyModulatedFixed(grid, 0);
       } else {
@@ -152,11 +181,10 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
     }
     case "step": {
       if (!grid || running) break;
+      advancePhaseByWallClock();
       let deltaMax = 0;
       for (let s = 0; s < msg.count; s++) {
-        if (ac.enabled) {
-          applyModulatedFixed(grid, modulationOmegaT());
-        }
+        if (ac.enabled) applyModulatedFixed(grid, acPhaseRad);
         deltaMax = relaxStep(grid, msg.omega);
         iteration++;
       }

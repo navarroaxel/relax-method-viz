@@ -27,6 +27,8 @@ export type WorkerOutbound =
       iteration: number;
       deltaMax: number;
       V: Float32Array;
+      // Accumulated AC phase in radians (only advances while running).
+      acPhaseRad: number;
     }
   | {
       type: "done";
@@ -34,4 +36,5 @@ export type WorkerOutbound =
       deltaMax: number;
       converged: boolean;
       V: Float32Array;
+      acPhaseRad: number;
     };

@@ -41,7 +41,8 @@ export function Simulator() {
   const [brushSize, setBrushSize] = useState(2);
   const [paintPhaseDeg, setPaintPhaseDeg] = useState(0);
   const [acEnabled, setAcEnabled] = useState(false);
-  const [acPeriod, setAcPeriod] = useState(200);
+  const [acPeriodSec, setAcPeriodSec] = useState(2);
+  const [acPhaseRad, setAcPhaseRad] = useState(0);
   const [display, setDisplay] = useState<DisplayFlags>({
     heatmap: true,
     equipotentials: true,
@@ -92,6 +93,7 @@ export function Simulator() {
       grid.V = msg.V;
       setIteration(msg.iteration);
       setDeltaMax(msg.deltaMax);
+      setAcPhaseRad(msg.acPhaseRad);
       bumpRender();
       if (msg.type === "done") {
         setIsRunning(false);
@@ -121,8 +123,8 @@ export function Simulator() {
 
   // Push AC config to the worker whenever it changes (and after re-init).
   useEffect(() => {
-    post({ type: "setAC", ac: { enabled: acEnabled, period: acPeriod } });
-  }, [acEnabled, acPeriod, post, grid]);
+    post({ type: "setAC", ac: { enabled: acEnabled, periodSec: acPeriodSec } });
+  }, [acEnabled, acPeriodSec, post, grid]);
 
   const handleToggleRun = () => {
     setIsRunning((r) => {
@@ -327,10 +329,10 @@ export function Simulator() {
       />
       <ACControls
         enabled={acEnabled}
-        period={acPeriod}
-        iteration={iteration}
+        periodSec={acPeriodSec}
+        phaseRad={acPhaseRad}
         onToggleEnabled={setAcEnabled}
-        onChangePeriod={setAcPeriod}
+        onChangePeriodSec={setAcPeriodSec}
       />
       <ExportControls
         onOpenSaveLoad={() => setDialogOpen(true)}

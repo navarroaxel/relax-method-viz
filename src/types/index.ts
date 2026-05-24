@@ -47,6 +47,6 @@ export interface DisplayFlags {
 
 export interface AcConfig {
   enabled: boolean;
-  // Solver iterations per full cycle of sin().
-  period: number;
+  // Wall-clock seconds for one full cycle of sin().
+  periodSec: number;
 }

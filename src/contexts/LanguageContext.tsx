@@ -58,7 +58,6 @@ const ES = {
 
   "ac.enable": "Modulación AC",
   "ac.period": "Período:",
-  "ac.iter_per_cycle": "iter/ciclo",
 
   "preset.custom": "— Personalizado —",
   "preset.parallel": "Capacitor plano",
@@ -161,7 +160,6 @@ const EN: Record<TranslationKey, string> = {
 
   "ac.enable": "AC modulation",
   "ac.period": "Period:",
-  "ac.iter_per_cycle": "iter/cycle",
 
   "preset.custom": "— Custom —",
   "preset.parallel": "Parallel plate capacitor",
