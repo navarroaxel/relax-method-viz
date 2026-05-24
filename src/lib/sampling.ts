@@ -126,9 +126,6 @@ export interface TraceSamples {
   V: Float32Array;
   E: Float32Array;
   sMax: number;
-  vMin: number;
-  vMax: number;
-  eMax: number;
 }
 
 // Walk a polyline (points in grid units, fractional allowed) with uniform
@@ -157,9 +154,6 @@ export function sampleTrace(
   const sArr = new Float32Array(count);
   const vArr = new Float32Array(count);
   const eArr = new Float32Array(count);
-  let vMin = Number.POSITIVE_INFINITY;
-  let vMax = Number.NEGATIVE_INFINITY;
-  let eMax = 0;
 
   let segIdx = 0;
   let segStart = 0;
@@ -178,23 +172,10 @@ export function sampleTrace(
     const b = points[segIdx + 1] as readonly [number, number];
     const x = a[0] + local * (b[0] - a[0]);
     const y = a[1] + local * (b[1] - a[1]);
-    const v = sampleV(grid.V, grid.N, x, y);
-    const e = sampleE(grid.V, grid.N, x, y).mag;
     sArr[k] = target;
-    vArr[k] = v;
-    eArr[k] = e;
-    if (v < vMin) vMin = v;
-    if (v > vMax) vMax = v;
-    if (e > eMax) eMax = e;
+    vArr[k] = sampleV(grid.V, grid.N, x, y);
+    eArr[k] = sampleE(grid.V, grid.N, x, y).mag;
   }
 
-  return {
-    s: sArr,
-    V: vArr,
-    E: eArr,
-    sMax: total,
-    vMin: Number.isFinite(vMin) ? vMin : 0,
-    vMax: Number.isFinite(vMax) ? vMax : 0,
-    eMax,
-  };
+  return { s: sArr, V: vArr, E: eArr, sMax: total };
 }

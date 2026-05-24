@@ -31,6 +31,25 @@ export function computeVmax(V: Float32Array): number {
   return max > 0 ? max : 1;
 }
 
+// Max |E| over the interior of the grid (central differences). Used to give
+// the trace chart a stable Y-axis scale that matches the heatmap/streamlines.
+export function computeEmax(V: Float32Array, N: number): number {
+  let max = 0;
+  for (let i = 1; i < N - 1; i++) {
+    for (let j = 1; j < N - 1; j++) {
+      const vR = V[idx(i + 1, j, N)] as number;
+      const vL = V[idx(i - 1, j, N)] as number;
+      const vD = V[idx(i, j + 1, N)] as number;
+      const vU = V[idx(i, j - 1, N)] as number;
+      const ex = -(vR - vL) * 0.5;
+      const ey = -(vD - vU) * 0.5;
+      const m = Math.hypot(ex, ey);
+      if (m > max) max = m;
+    }
+  }
+  return max > 0 ? max : 1;
+}
+
 export function renderHeatmap(
   ctx: CanvasRenderingContext2D,
   V: Float32Array,

@@ -7,6 +7,8 @@ import type { TraceSamples } from "@/lib/sampling";
 
 interface TraceChartProps {
   samples: TraceSamples | null;
+  vScale: number;
+  eScale: number;
   onClear: () => void;
 }
 
@@ -16,7 +18,7 @@ const WIDTH = 580;
 const HEIGHT = 260;
 const MARGIN = { top: 18, right: 56, bottom: 36, left: 56 };
 
-export function TraceChart({ samples, onClear }: TraceChartProps) {
+export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps) {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -31,12 +33,12 @@ export function TraceChart({ samples, onClear }: TraceChartProps) {
       canvas.height = HEIGHT * dpr;
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawChart(ctx, samples, {
+    drawChart(ctx, samples, vScale, eScale, {
       axisV: t("trace.axis_v"),
       axisE: t("trace.axis_e"),
       axisS: t("trace.axis_s"),
     });
-  }, [samples, t]);
+  }, [samples, vScale, eScale, t]);
 
   return (
     <div className="flex w-full max-w-3xl flex-col gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -78,6 +80,8 @@ interface ChartLabels {
 function drawChart(
   ctx: CanvasRenderingContext2D,
   samples: TraceSamples | null,
+  vScale: number,
+  eScale: number,
   labels: ChartLabels,
 ): void {
   ctx.clearRect(0, 0, WIDTH, HEIGHT);
@@ -94,27 +98,15 @@ function drawChart(
 
   if (!samples) return;
 
-  const { s, V, E, sMax, vMin, vMax, eMax } = samples;
+  const { s, V, E, sMax } = samples;
 
-  // V axis: symmetric around 0 if there's a sign change, otherwise tight.
-  const absV = Math.max(Math.abs(vMin), Math.abs(vMax));
-  let vLow: number;
-  let vHigh: number;
-  if (vMin < 0 && vMax > 0) {
-    vLow = -absV;
-    vHigh = absV;
-  } else if (absV === 0) {
-    vLow = -1;
-    vHigh = 1;
-  } else {
-    vLow = vMin;
-    vHigh = vMax;
-    if (vLow === vHigh) {
-      vLow -= 1;
-      vHigh += 1;
-    }
-  }
-  const eHigh = eMax > 0 ? eMax * 1.05 : 1;
+  // Axes anchored to the field's global scale (same as heatmap), so a
+  // near-constant trace looks near-constant — instead of being amplified by
+  // an auto-fit Y range. Symmetric around 0 for V, [0, eScale] for |E|.
+  const vBound = vScale > 0 ? vScale : 1;
+  const vLow = -vBound;
+  const vHigh = vBound;
+  const eHigh = eScale > 0 ? eScale : 1;
 
   const xOf = (sv: number): number =>
     plotX + (sMax > 0 ? (sv / sMax) * plotW : 0);
