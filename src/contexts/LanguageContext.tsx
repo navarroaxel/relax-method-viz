@@ -257,6 +257,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = language;
+    // The lang init script in layout.tsx hides the body for non-Spanish
+    // users to avoid a flash from the statically baked Spanish HTML. React
+    // has now committed translations in the correct language — reveal it.
+    document.documentElement.removeAttribute("data-lang-pending");
   }, [language]);
 
   const toggle = useCallback(() => {

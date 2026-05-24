@@ -12,3 +12,11 @@
 body {
   font-family: var(--font-sans);
 }
+
+/* Hide content for non-Spanish users until React swaps translations, so
+ * English users do not see a flash of Spanish from the statically exported
+ * HTML. Set by the lang init script in layout.tsx, cleared by the
+ * LanguageProvider on mount. */
+html[data-lang-pending] body {
+  visibility: hidden;
+}
