@@ -508,13 +508,13 @@ export function renderAll(
   grid: GridState,
   display: DisplayFlags,
   displaySize: number,
+  vmax: number,
 ): void {
   const { V, fixed, Vfix, N } = grid;
   const cellSize = displaySize / N;
   ctx.clearRect(0, 0, displaySize, displaySize);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, displaySize, displaySize);
-  const { vmax } = computeFieldStats(V, N);
   if (display.heatmap) renderHeatmap(ctx, V, N, vmax, displaySize);
   if (display.equipotentials)
     renderEquipotentials(ctx, V, N, vmax, cellSize);

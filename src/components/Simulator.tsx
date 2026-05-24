@@ -322,6 +322,7 @@ export function Simulator() {
           brushSize={brushSize}
           displaySize={DISPLAY_SIZE}
           renderTick={renderTick}
+          vmax={vmax}
           trace={trace}
           traceDraft={traceDraft}
           onPaint={handlePaint}

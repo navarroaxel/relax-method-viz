@@ -13,6 +13,7 @@ interface CanvasProps {
   brushSize: number;
   displaySize: number;
   renderTick: number;
+  vmax: number;
   trace: TraceShape | null;
   traceDraft: TraceShape | null;
   onPaint: () => void;
@@ -39,6 +40,7 @@ export function Canvas({
   brushSize,
   displaySize,
   renderTick,
+  vmax,
   trace,
   traceDraft,
   onPaint,
@@ -65,10 +67,10 @@ export function Canvas({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    renderAll(ctx, grid, display, displaySize);
+    renderAll(ctx, grid, display, displaySize, vmax);
     const cellSize = displaySize / grid.N;
     renderTrace(ctx, trace, traceDraft, cellSize);
-  }, [canvasRef, grid, display, displaySize, renderTick, trace, traceDraft]);
+  }, [canvasRef, grid, display, displaySize, renderTick, vmax, trace, traceDraft]);
 
   // Cancel any in-progress trace when the tool changes.
   useEffect(() => {
