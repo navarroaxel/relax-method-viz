@@ -47,6 +47,7 @@ export function Toolbar({
   const [voltageText, setVoltageText] = useState(String(voltage));
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVoltageText(String(voltage));
   }, [voltage]);
 
