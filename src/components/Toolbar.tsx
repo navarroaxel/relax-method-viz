@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Tool } from "@/types";
 
 interface ToolbarProps {
@@ -20,41 +23,16 @@ const VOLTAGE_PRESETS: { value: number; label: string }[] = [
 
 interface ToolOption {
   id: Tool;
-  label: string;
   color: string;
   activeBg: string;
   activeFg: string;
 }
 
 const TOOLS: ToolOption[] = [
-  {
-    id: "pos",
-    label: "+V",
-    color: "#791F1F",
-    activeBg: "#791F1F",
-    activeFg: "#ffffff",
-  },
-  {
-    id: "neg",
-    label: "−V",
-    color: "#0C447C",
-    activeBg: "#0C447C",
-    activeFg: "#ffffff",
-  },
-  {
-    id: "gnd",
-    label: "Tierra (0)",
-    color: "#2C2C2A",
-    activeBg: "#2C2C2A",
-    activeFg: "#ffffff",
-  },
-  {
-    id: "era",
-    label: "Borrar",
-    color: "#52525b",
-    activeBg: "#e5e7eb",
-    activeFg: "#111827",
-  },
+  { id: "pos", color: "#791F1F", activeBg: "#791F1F", activeFg: "#ffffff" },
+  { id: "neg", color: "#0C447C", activeBg: "#0C447C", activeFg: "#ffffff" },
+  { id: "gnd", color: "#2C2C2A", activeBg: "#2C2C2A", activeFg: "#ffffff" },
+  { id: "era", color: "#52525b", activeBg: "#e5e7eb", activeFg: "#111827" },
 ];
 
 export function Toolbar({
@@ -65,10 +43,27 @@ export function Toolbar({
   onVoltageChange,
   onBrushChange,
 }: ToolbarProps) {
+  const { t } = useLanguage();
+  const [voltageText, setVoltageText] = useState(String(voltage));
+
+  useEffect(() => {
+    setVoltageText(String(voltage));
+  }, [voltage]);
+
+  const toolLabels = useMemo(
+    () => ({
+      pos: t("toolbar.tool_pos"),
+      neg: t("toolbar.tool_neg"),
+      gnd: t("toolbar.tool_gnd"),
+      era: t("toolbar.tool_era"),
+    }),
+    [t],
+  );
+
   return (
     <div className="flex flex-col gap-3 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Herramienta:</span>
+        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t("toolbar.tool")}</span>
         {TOOLS.map((t) => {
           const active = t.id === tool;
           return (
@@ -91,28 +86,41 @@ export function Toolbar({
                     }
               }
             >
-              {t.label}
+              {toolLabels[t.id]}
             </button>
           );
         })}
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <span>Voltaje:</span>
+          <span>{t("toolbar.potential")}</span>
           <select
-            value={voltage}
-            onChange={(e) => onVoltageChange(Number(e.target.value))}
+            value={VOLTAGE_PRESETS.some((p) => p.value === voltage) ? voltage : ""}
+            onChange={(e) => {
+              if (e.target.value !== "") onVoltageChange(Number(e.target.value));
+            }}
             className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
           >
+            <option value="">{t("toolbar.custom_voltage")}</option>
             {VOLTAGE_PRESETS.map(({ value, label }) => (
               <option key={value} value={value}>
                 {label}
               </option>
             ))}
           </select>
+          <input
+            type="number"
+            value={voltageText}
+            onChange={(e) => {
+              setVoltageText(e.target.value);
+              const n = Number(e.target.value);
+              if (e.target.value !== "" && isFinite(n)) onVoltageChange(n);
+            }}
+            className="w-28 rounded border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+          />
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <span className="w-20">Pincel: {brushSize}</span>
+          <span className="w-20">{t("toolbar.brush")} {brushSize}</span>
           <input
             type="range"
             min={1}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   deleteGeometry,
   exportToJSON,
@@ -41,6 +42,7 @@ export function SaveLoadDialog({
   grid,
   onLoad,
 }: SaveLoadDialogProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [geometries, setGeometries] = useState<SavedGeometry[]>(() =>
     listGeometries(),
@@ -85,7 +87,7 @@ export function SaveLoadDialog({
   const handleSave = () => {
     const n = name.trim();
     if (!n) {
-      setErrorMsg("Poné un nombre para guardar.");
+      setErrorMsg(t("dialog.error_name"));
       return;
     }
     saveGeometry(n, grid);
@@ -118,13 +120,13 @@ export function SaveLoadDialog({
       const text = await file.text();
       const geom = importFromJSON(text);
       if (!geom) {
-        setErrorMsg("Archivo JSON inválido.");
+        setErrorMsg(t("dialog.error_json"));
         return;
       }
       onLoad(geom);
       onClose();
     } catch {
-      setErrorMsg("No se pudo leer el archivo.");
+      setErrorMsg(t("dialog.error_read"));
     }
   };
 
@@ -147,13 +149,13 @@ export function SaveLoadDialog({
             id="save-load-dialog-title"
             className="text-lg font-semibold text-zinc-900 dark:text-zinc-100"
           >
-            Guardar / Cargar geometría
+            {t("dialog.title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-md px-2 py-1 text-sm text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-            aria-label="Cerrar"
+            aria-label={t("dialog.close_aria")}
           >
             ✕
           </button>
@@ -164,7 +166,7 @@ export function SaveLoadDialog({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre"
+            placeholder={t("dialog.name_placeholder")}
             autoFocus
             className="flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           />
@@ -173,17 +175,17 @@ export function SaveLoadDialog({
             onClick={handleSave}
             className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
           >
-            Guardar
+            {t("dialog.save")}
           </button>
           <button
             type="button"
             onClick={handleExportJSON}
             className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
           >
-            Exportar JSON
+            {t("dialog.export_json")}
           </button>
           <label className="cursor-pointer rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700">
-            Importar JSON
+            {t("dialog.import_json")}
             <input
               type="file"
               accept="application/json,.json"
@@ -206,7 +208,7 @@ export function SaveLoadDialog({
         <div className="max-h-80 overflow-y-auto rounded-md border border-zinc-200 dark:border-zinc-700">
           {geometries.length === 0 ? (
             <p className="p-3 text-sm text-zinc-500 dark:text-zinc-400">
-              No hay geometrías guardadas todavía.
+              {t("dialog.empty")}
             </p>
           ) : (
             <ul className="divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -218,7 +220,7 @@ export function SaveLoadDialog({
                   <div className="flex flex-col">
                     <span className="font-medium text-zinc-900 dark:text-zinc-100">{g.name}</span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {formatDate(g.createdAt)} · {g.cells.length} celdas · N=
+                      {formatDate(g.createdAt)} · {g.cells.length} {t("dialog.cells")} · N=
                       {g.N}
                     </span>
                   </div>
@@ -228,14 +230,14 @@ export function SaveLoadDialog({
                       onClick={() => handleLoad(g)}
                       className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
                     >
-                      Cargar
+                      {t("dialog.load")}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(g.name)}
                       className="rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:bg-zinc-800 dark:text-red-300 dark:hover:bg-red-950/40"
                     >
-                      Borrar
+                      {t("dialog.delete")}
                     </button>
                   </div>
                 </li>

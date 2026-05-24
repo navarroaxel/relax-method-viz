@@ -1,14 +1,17 @@
 "use client";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface LegendProps {
   vmax: number;
 }
 
 export function Legend({ vmax }: LegendProps) {
+  const { t } = useLanguage();
   const vmaxLabel = vmax > 0 ? vmax.toFixed(0) : "—";
   return (
     <div className="flex flex-col gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-      <span className="font-medium">Referencia</span>
+      <span className="font-medium">{t("legend.title")}</span>
       <div className="flex flex-col gap-1">
         <div
           className="h-3 w-full rounded-sm border border-zinc-300 dark:border-zinc-700"
@@ -43,7 +46,7 @@ export function Legend({ vmax }: LegendProps) {
             className="inline-block h-3 w-3 rounded-sm"
             style={{ backgroundColor: "#2C2C2A" }}
           />
-          Tierra
+          {t("legend.ground")}
         </span>
       </div>
     </div>

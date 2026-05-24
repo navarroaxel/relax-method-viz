@@ -1,11 +1,17 @@
+"use client";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export function GitHubLink() {
+  const { t } = useLanguage();
+  const label = t("github.aria");
   return (
     <a
       href="https://github.com/navarroaxel/relax-method-viz"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Repositorio en GitHub"
-      title="Repositorio en GitHub"
+      aria-label={label}
+      title={label}
       className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
     >
       <svg aria-hidden viewBox="0 0 16 16" fill="currentColor" className="size-3.5">

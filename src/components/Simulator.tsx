@@ -10,6 +10,7 @@ import { ProjectCredits } from "@/components/ProjectCredits";
 import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
 import { GitHubLink } from "@/components/GitHubLink";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { Surface3D } from "@/components/Surface3DDynamic";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
@@ -18,6 +19,7 @@ import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
 import { computeVmax } from "@/lib/rendering";
 import { applyGeometryToGrid } from "@/lib/storage";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { BoundaryCondition, DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
 import type { WorkerInbound, WorkerOutbound } from "@/types/worker";
 
@@ -46,6 +48,8 @@ export function Simulator() {
   const [renderTick, setRenderTick] = useState(0);
   const [presetId, setPresetId] = useState<PresetId | "custom">("custom");
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const { t } = useLanguage();
 
   const bumpRender = useCallback(() => setRenderTick((t) => t + 1), []);
 
@@ -238,16 +242,16 @@ export function Simulator() {
       <header className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-            Campo Eléctrico — Método de Relax
+            {t("page.title")}
           </h1>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <GitHubLink />
             <ThemeToggle />
           </div>
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-200">
-          Dibujá conductores en el lienzo, asignales un potencial, y mirá cómo
-          se forma el campo electrostático mientras el solver SOR converge.
+          {t("page.description")}
         </p>
       </header>
       <Toolbar
@@ -301,25 +305,23 @@ export function Simulator() {
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
         <div className="flex flex-wrap gap-4">
           <span>
-            Iteración: <span className="font-mono">{iteration}</span>
+            {t("stats.iteration")} <span className="font-mono">{iteration}</span>
           </span>
           <span>
             Δmax: <span className="font-mono">{deltaLabel}</span>
           </span>
         </div>
         <span className="text-zinc-500 dark:text-zinc-400">
-          ω = {omega} · tolerancia ={" "}
+          ω = {omega} · {t("stats.tolerance")} ={" "}
           {DEFAULT_SOLVER_CONFIG.tolerance}
         </span>
       </div>
       <footer className="rounded-md border border-zinc-200 bg-white p-3 text-xs leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-        El método de relajación resuelve ∇²V = 0 discretizando el plano en una
-        grilla cuadrada y reemplazando iterativamente cada nodo no fijo por el
-        promedio de sus cuatro vecinos. Con sobre-relajación sucesiva (SOR),
-        cada nodo se actualiza como{" "}
-        <span className="font-mono">V ← V + ω · (promedio − V)</span>, con ω ≈
-        1.9 para esta grilla. El campo se obtiene después por{" "}
-        <span className="font-mono">E = −∇V</span> con diferencias centradas.
+        {t("footer.part1")}{" "}
+        <span className="font-mono">V ← V + ω · ({t("footer.average")} − V)</span>
+        {t("footer.part2")}{" "}
+        <span className="font-mono">E = −∇V</span>{" "}
+        {t("footer.part3")}
       </footer>
       <ProjectCredits />
       {dialogOpen && (
