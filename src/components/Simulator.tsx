@@ -6,13 +6,9 @@ import { Canvas } from "@/components/Canvas";
 import { DisplayToggles } from "@/components/DisplayToggles";
 import { ExportControls } from "@/components/ExportControls";
 import { Legend } from "@/components/Legend";
-import { MethodExplanation } from "@/components/MethodExplanation";
 import { PresetSelect } from "@/components/PresetSelect";
-import { ProjectCredits } from "@/components/ProjectCredits";
 import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
-import { GitHubLink } from "@/components/GitHubLink";
-import { LanguageToggle } from "@/components/LanguageToggle";
 import {
   makeProbeHistory,
   pushProbeSample,
@@ -20,7 +16,6 @@ import {
   type ProbeHistory,
 } from "@/components/StripChart";
 import { Surface3D } from "@/components/Surface3DDynamic";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
 import { TraceChart } from "@/components/TraceChart";
 import {
@@ -371,22 +366,7 @@ export function Simulator() {
   const isProfile = trace !== null && trace.points.length >= 2;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
-      <header className="flex flex-col gap-2">
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-            {t("page.title")}
-          </h1>
-          <div className="flex items-center gap-2">
-            <LanguageToggle />
-            <GitHubLink />
-            <ThemeToggle />
-          </div>
-        </div>
-        <p className="text-sm text-zinc-600 dark:text-zinc-200">
-          {t("page.description")}
-        </p>
-      </header>
+    <>
       <Toolbar
         tool={tool}
         voltage={voltage}
@@ -498,8 +478,6 @@ export function Simulator() {
           {DEFAULT_SOLVER_CONFIG.tolerance}
         </span>
       </div>
-      <MethodExplanation />
-      <ProjectCredits />
       {dialogOpen && (
         <SaveLoadDialog
           onClose={() => setDialogOpen(false)}
@@ -507,6 +485,6 @@ export function Simulator() {
           onLoad={handleLoadGeometry}
         />
       )}
-    </main>
+    </>
   );
 }
