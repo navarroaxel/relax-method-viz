@@ -35,10 +35,16 @@ const ES = {
   "trace.title": "Perfil sobre la traza",
   "trace.clear": "Borrar traza",
   "trace.empty_hint":
-    "Elegí Traza recta (dos clics) o Curva libre (arrastrar) y dibujá sobre el lienzo.",
+    "Elegí Traza recta (dos clics, o el mismo clic dos veces para una sonda) o Curva libre (arrastrar) y dibujá sobre el lienzo.",
   "trace.axis_v": "V",
   "trace.axis_e": "|E|",
   "trace.axis_s": "s (celdas)",
+
+  "stripchart.ac.title": "Onda AC — sin(ωt)",
+  "stripchart.probe.title": "Sonda V(t), |E|(t)",
+  "stripchart.axis_t": "t (s)",
+  "stripchart.probe.empty_hint":
+    "Esperando muestras… ejecutá la simulación para registrar V y |E| en el punto sondeado.",
 
   "display.show": "Mostrar:",
   "display.heatmap": "Potencial",
@@ -137,10 +143,16 @@ const EN: Record<TranslationKey, string> = {
   "trace.title": "Profile along the trace",
   "trace.clear": "Clear trace",
   "trace.empty_hint":
-    "Pick Straight trace (two clicks) or Free curve (drag) and draw on the canvas.",
+    "Pick Straight trace (two clicks, or click the same spot twice to drop a probe) or Free curve (drag) and draw on the canvas.",
   "trace.axis_v": "V",
   "trace.axis_e": "|E|",
   "trace.axis_s": "s (cells)",
+
+  "stripchart.ac.title": "AC waveform — sin(ωt)",
+  "stripchart.probe.title": "Probe V(t), |E|(t)",
+  "stripchart.axis_t": "t (s)",
+  "stripchart.probe.empty_hint":
+    "Waiting for samples… run the simulation to record V and |E| at the probed point.",
 
   "display.show": "Show:",
   "display.heatmap": "Potential",

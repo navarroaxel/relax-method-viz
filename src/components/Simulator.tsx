@@ -12,6 +12,12 @@ import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
 import { GitHubLink } from "@/components/GitHubLink";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import {
+  makeProbeHistory,
+  pushProbeSample,
+  StripChart,
+  type ProbeHistory,
+} from "@/components/StripChart";
 import { Surface3D } from "@/components/Surface3DDynamic";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
@@ -20,7 +26,7 @@ import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/gr
 import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
 import { computeFieldStats, type TraceShape } from "@/lib/rendering";
-import { sampleTrace } from "@/lib/sampling";
+import { sampleE, sampleTrace, sampleV } from "@/lib/sampling";
 import { applyGeometryToGrid } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { BoundaryCondition, DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
@@ -59,8 +65,26 @@ export function Simulator() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [trace, setTrace] = useState<TraceShape | null>(null);
   const [traceDraft, setTraceDraft] = useState<TraceShape | null>(null);
+  const probeHistoryRef = useRef<ProbeHistory>(makeProbeHistory());
+  const traceRef = useRef<TraceShape | null>(trace);
+  useEffect(() => {
+    traceRef.current = trace;
+  }, [trace]);
 
   const { t } = useLanguage();
+
+  const clearProbeHistory = useCallback(() => {
+    probeHistoryRef.current = makeProbeHistory();
+  }, []);
+
+  const handleTraceChange = useCallback(
+    (next: TraceShape | null) => {
+      // Replacing the trace invalidates the previous probe history.
+      clearProbeHistory();
+      setTrace(next);
+    },
+    [clearProbeHistory],
+  );
 
   const bumpRender = useCallback(() => setRenderTick((t) => t + 1), []);
 
@@ -94,6 +118,13 @@ export function Simulator() {
       setIteration(msg.iteration);
       setDeltaMax(msg.deltaMax);
       setAcPhaseRad(msg.acPhaseRad);
+      const tr = traceRef.current;
+      if (tr && tr.points.length === 1) {
+        const p = tr.points[0] as readonly [number, number];
+        const v = sampleV(grid.V, grid.N, p[0] as number, p[1] as number);
+        const eMag = sampleE(grid.V, grid.N, p[0] as number, p[1] as number).mag;
+        pushProbeSample(probeHistoryRef.current, performance.now(), v, eMag);
+      }
       bumpRender();
       if (msg.type === "done") {
         setIsRunning(false);
@@ -126,6 +157,11 @@ export function Simulator() {
     post({ type: "setAC", ac: { enabled: acEnabled, periodSec: acPeriodSec } });
   }, [acEnabled, acPeriodSec, post, grid]);
 
+  // Toggling AC changes V(t) regime — old samples mix DC and AC physics.
+  useEffect(() => {
+    clearProbeHistory();
+  }, [acEnabled, clearProbeHistory]);
+
   const handleToggleRun = () => {
     setIsRunning((r) => {
       const next = !r;
@@ -151,6 +187,7 @@ export function Simulator() {
     resetPotential(grid);
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
+    clearProbeHistory();
     post({ type: "reset" });
     bumpRender();
   };
@@ -167,6 +204,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
   };
 
   const handleChangeBoundary = (b: BoundaryCondition) => {
@@ -188,6 +226,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -204,6 +243,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -237,6 +277,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -270,18 +311,24 @@ export function Simulator() {
   );
 
   const traceSamples = useMemo(
-    () => (trace ? sampleTrace(grid, trace.points, TRACE_SAMPLE_STEP) : null),
+    () =>
+      trace && trace.points.length >= 2
+        ? sampleTrace(grid, trace.points, TRACE_SAMPLE_STEP)
+        : null,
     // grid.V is mutated in place; renderTick is the change signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [trace, grid, renderTick],
   );
 
   const handleClearTrace = useCallback(() => {
+    clearProbeHistory();
     setTrace(null);
     setTraceDraft(null);
-  }, []);
+  }, [clearProbeHistory]);
 
   const isTraceTool = tool === "line" || tool === "curve";
+  const isProbe = trace !== null && trace.points.length === 1;
+  const isProfile = trace !== null && trace.points.length >= 2;
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -353,12 +400,33 @@ export function Simulator() {
           traceDraft={traceDraft}
           onPaint={handlePaint}
           onPaintEnd={handlePaintEnd}
-          onTraceChange={setTrace}
+          onTraceChange={handleTraceChange}
           onTraceDraftChange={setTraceDraft}
           canvasRef={canvasRef}
         />
       </div>
-      {(trace || isTraceTool) && (
+      {acEnabled && (
+        <div className="flex justify-center">
+          <StripChart
+            mode="ac"
+            acPhaseRad={acPhaseRad}
+            acPeriodSec={acPeriodSec}
+          />
+        </div>
+      )}
+      {isProbe && (
+        <div className="flex justify-center">
+          <StripChart
+            mode="probe"
+            historyRef={probeHistoryRef}
+            renderTick={renderTick}
+            vScale={vmax}
+            eScale={emax}
+            onClear={handleClearTrace}
+          />
+        </div>
+      )}
+      {(isProfile || (isTraceTool && !isProbe)) && (
         <div className="flex justify-center">
           <TraceChart
             samples={traceSamples}
