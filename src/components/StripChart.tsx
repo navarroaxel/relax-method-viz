@@ -29,6 +29,9 @@ interface StripChartProps {
   // AC mode:
   acPhaseRad?: number;
   acPeriodSec?: number;
+  // Distinct per-cell phase offsets currently present on live conductors
+  // (radians, normalized to [0, 2π)). Empty → render a single sin(ωt) curve.
+  acPhases?: number[];
   // Probe mode:
   historyRef?: RefObject<ProbeHistory>;
   vScale?: number;
@@ -48,6 +51,8 @@ interface Palette {
   vLabel: string;
   eLine: string;
   eLabel: string;
+  // Phase-curve colors cycled by index in AC mode.
+  phaseLines: string[];
 }
 
 const LIGHT_PALETTE: Palette = {
@@ -60,6 +65,7 @@ const LIGHT_PALETTE: Palette = {
   vLabel: "#0C447C",
   eLine: "#791F1F",
   eLabel: "#791F1F",
+  phaseLines: ["#0C447C", "#791F1F", "#1B5E20", "#5B21B6", "#B45309"],
 };
 
 const DARK_PALETTE: Palette = {
@@ -72,6 +78,7 @@ const DARK_PALETTE: Palette = {
   vLabel: "#93c5fd",
   eLine: "#f87171",
   eLabel: "#fca5a5",
+  phaseLines: ["#60a5fa", "#f87171", "#86efac", "#c4b5fd", "#fbbf24"],
 };
 
 const WIDTH = 580;
@@ -102,6 +109,7 @@ export function StripChart(props: StripChartProps) {
     mode,
     acPhaseRad,
     acPeriodSec,
+    acPhases,
     historyRef,
     vScale,
     eScale,
@@ -120,9 +128,14 @@ export function StripChart(props: StripChartProps) {
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (mode === "ac") {
-      drawAc(ctx, acPhaseRad ?? 0, acPeriodSec ?? 1, palette, {
-        axisT: t("stripchart.axis_t"),
-      });
+      drawAc(
+        ctx,
+        acPhaseRad ?? 0,
+        acPeriodSec ?? 1,
+        acPhases ?? [],
+        palette,
+        { axisT: t("stripchart.axis_t") },
+      );
     } else {
       drawProbe(
         ctx,
@@ -146,6 +159,7 @@ export function StripChart(props: StripChartProps) {
     mode,
     acPhaseRad,
     acPeriodSec,
+    acPhases,
     historyRef,
     vScale,
     eScale,
@@ -235,6 +249,7 @@ function drawAc(
   ctx: CanvasRenderingContext2D,
   acPhaseRad: number,
   acPeriodSec: number,
+  phases: number[],
   palette: Palette,
   labels: AcLabels,
 ): void {
@@ -267,32 +282,54 @@ function drawAc(
 
   drawTimeAxis(ctx, plotX, plotY, plotW, plotH, palette, labels.axisT);
 
-  // Plot sin(acPhaseRad - 2π·Δt/period) for Δt in [-WINDOW_SEC..0].
-  // At the right edge (Δt = 0) the value is sin(acPhaseRad). To the left
-  // (negative Δt) the wave is what was happening in the past, so we subtract
-  // the corresponding phase increment.
+  // One curve per distinct conductor phase φ. Each curve plots
+  // sin(acPhaseRad + ω·Δt + φ) for Δt in [-WINDOW_SEC..0]; the right edge
+  // (Δt = 0) is "now". With no phases supplied we fall back to a single
+  // reference sin(ωt).
+  const curves = phases.length > 0 ? phases : [0];
   if (acPeriodSec > 0) {
     const omega = (2 * Math.PI) / acPeriodSec;
     const STEPS = 240;
-    ctx.beginPath();
-    ctx.strokeStyle = palette.vLine;
-    ctx.lineWidth = 1.8;
-    for (let s = 0; s <= STEPS; s++) {
-      const dt = -WINDOW_SEC + (s / STEPS) * WINDOW_SEC;
-      const v = Math.sin(acPhaseRad + omega * dt);
-      const x = plotX + ((dt + WINDOW_SEC) / WINDOW_SEC) * plotW;
-      const y = yOf(v);
-      if (s === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    for (let pIdx = 0; pIdx < curves.length; pIdx++) {
+      const phi = curves[pIdx] as number;
+      const color = palette.phaseLines[
+        pIdx % palette.phaseLines.length
+      ] as string;
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.8;
+      for (let s = 0; s <= STEPS; s++) {
+        const dt = -WINDOW_SEC + (s / STEPS) * WINDOW_SEC;
+        const v = Math.sin(acPhaseRad + omega * dt + phi);
+        const x = plotX + ((dt + WINDOW_SEC) / WINDOW_SEC) * plotW;
+        const y = yOf(v);
+        if (s === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
   }
 
-  // Title-like axis label inside the plot top-left ("sin(ωt)").
-  ctx.fillStyle = palette.vLabel;
+  // Top-left legend: per-curve label in its own color.
+  ctx.font = "11px ui-sans-serif, system-ui, -apple-system, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText("sin(ωt)", 8, plotY + 4);
+  if (phases.length === 0) {
+    ctx.fillStyle = palette.phaseLines[0] ?? palette.vLabel;
+    ctx.fillText("sin(ωt)", 8, plotY + 4);
+  } else {
+    let lx = 8;
+    for (let pIdx = 0; pIdx < phases.length; pIdx++) {
+      const phi = phases[pIdx] as number;
+      const deg = Math.round((phi * 180) / Math.PI);
+      const text = `φ=${deg}°`;
+      ctx.fillStyle = palette.phaseLines[
+        pIdx % palette.phaseLines.length
+      ] as string;
+      ctx.fillText(text, lx, plotY + 4);
+      lx += ctx.measureText(text).width + 10;
+    }
+  }
 }
 
 interface ProbeLabels {

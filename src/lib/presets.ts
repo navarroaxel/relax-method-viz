@@ -32,8 +32,9 @@ function setDisc(
   cj: number,
   r: number,
   v: number,
+  phaseRad: number = 0,
 ): void {
-  const { N, fixed, Vfix } = g;
+  const { N, fixed, Vfix, phase } = g;
   const r2 = r * r;
   const iMin = Math.max(0, Math.floor(ci - r));
   const iMax = Math.min(N - 1, Math.ceil(ci + r));
@@ -47,6 +48,7 @@ function setDisc(
         const k = idx(i, j, N);
         fixed[k] = 1;
         Vfix[k] = v;
+        phase[k] = phaseRad;
       }
     }
   }
@@ -113,6 +115,7 @@ export type PresetId =
   | "faraday"
   | "tip"
   | "subconductors"
+  | "threephase"
   | "conductors";
 
 interface Preset {
@@ -201,6 +204,21 @@ export const PRESETS: Record<PresetId, Preset> = {
       applyFixedValues(g);
     },
   },
+  threephase: {
+    label: "Línea trifásica + neutro",
+    apply: (g) => {
+      clearAll(g);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      const V1 = Math.sqrt(2 / 3) * 500_000;
+      const PHI = (2 * Math.PI) / 3;
+      setRect(g, 0, sc(75), sc(80), sc(78), 0);
+      setDisc(g, sc(36), sc(26), sc(2), V1, 0);
+      setDisc(g, sc(44), sc(26), sc(2), V1, PHI);
+      setDisc(g, sc(36), sc(34), sc(2), V1, 2 * PHI);
+      setDisc(g, sc(44), sc(34), sc(2), 0);
+      applyFixedValues(g);
+    },
+  },
   tip: {
     label: "Punta vs plano",
     apply: (g) => {
@@ -221,5 +239,6 @@ export const PRESET_ORDER: PresetId[] = [
   "faraday",
   "tip",
   "subconductors",
+  "threephase",
   "conductors",
 ];

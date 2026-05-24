@@ -74,6 +74,7 @@ const ES = {
   "preset.tip": "Punta vs plano",
   "preset.conductors": "Placas conductoras",
   "preset.subconductors": "Línea 4 subconductores",
+  "preset.threephase": "Línea trifásica + neutro",
 
   "export.save_load": "Guardar / Cargar",
   "export.png": "Exportar PNG",
@@ -186,6 +187,7 @@ const EN: Record<TranslationKey, string> = {
   "preset.tip": "Tip vs plane",
   "preset.conductors": "Conducting plates",
   "preset.subconductors": "4-subconductor line",
+  "preset.threephase": "Three-phase line + neutral",
 
   "export.save_load": "Save / Load",
   "export.png": "Export PNG",
