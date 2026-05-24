@@ -11,6 +11,7 @@ interface CanvasProps {
   tool: Tool;
   voltage: number;
   brushSize: number;
+  paintPhaseRad: number;
   displaySize: number;
   renderTick: number;
   vmax: number;
@@ -38,6 +39,7 @@ export function Canvas({
   tool,
   voltage,
   brushSize,
+  paintPhaseRad,
   displaySize,
   renderTick,
   vmax,
@@ -57,10 +59,10 @@ export function Canvas({
   const curvePointsRef = useRef<Array<[number, number]>>([]);
   const [hover, setHover] = useState<HoverInfo | null>(null);
 
-  const stateRef = useRef({ tool, voltage, brushSize, grid, trace, traceDraft });
+  const stateRef = useRef({ tool, voltage, brushSize, paintPhaseRad, grid, trace, traceDraft });
   useEffect(() => {
-    stateRef.current = { tool, voltage, brushSize, grid, trace, traceDraft };
-  }, [tool, voltage, brushSize, grid, trace, traceDraft]);
+    stateRef.current = { tool, voltage, brushSize, paintPhaseRad, grid, trace, traceDraft };
+  }, [tool, voltage, brushSize, paintPhaseRad, grid, trace, traceDraft]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -105,12 +107,12 @@ export function Canvas({
     };
 
     const paintAt = (i: number, j: number) => {
-      const { grid, tool, voltage, brushSize } = stateRef.current;
+      const { grid, tool, voltage, brushSize, paintPhaseRad } = stateRef.current;
       const last = lastCellRef.current;
       if (last) {
-        paintStroke(grid, last.i, last.j, i, j, brushSize, tool, voltage);
+        paintStroke(grid, last.i, last.j, i, j, brushSize, tool, voltage, paintPhaseRad);
       } else {
-        paintBrush(grid, i, j, brushSize, tool, voltage);
+        paintBrush(grid, i, j, brushSize, tool, voltage, paintPhaseRad);
       }
       applyFixedValues(grid);
       lastCellRef.current = { i, j };

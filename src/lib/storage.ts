@@ -1,5 +1,5 @@
 import { applyFixedValues, clearAll, idx } from "@/lib/grid";
-import type { GridState, SavedGeometry } from "@/types";
+import type { GridState, SavedCell, SavedGeometry } from "@/types";
 
 const STORAGE_KEY = "campo-electrico:v1";
 
@@ -33,14 +33,20 @@ function writeRoot(root: StorageRoot): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(root));
 }
 
-function gridToCells(grid: GridState): Array<[number, number, number]> {
-  const { N, fixed, Vfix } = grid;
-  const cells: Array<[number, number, number]> = [];
+function gridToCells(grid: GridState): SavedCell[] {
+  const { N, fixed, Vfix, phase } = grid;
+  const cells: SavedCell[] = [];
   for (let i = 0; i < N; i++) {
     for (let j = 0; j < N; j++) {
       const k = idx(i, j, N);
       if (fixed[k] === 1) {
-        cells.push([i, j, Vfix[k] as number]);
+        const ph = phase[k] as number;
+        if (ph !== 0) {
+          // Degrees on the wire, radians in memory — keeps the JSON readable.
+          cells.push([i, j, Vfix[k] as number, (ph * 180) / Math.PI]);
+        } else {
+          cells.push([i, j, Vfix[k] as number]);
+        }
       }
     }
   }
@@ -59,10 +65,13 @@ function isSavedGeometry(value: unknown): value is SavedGeometry {
   if (typeof v.createdAt !== "number" || !Number.isFinite(v.createdAt) || v.createdAt < 0) return false;
   if (!Array.isArray(v.cells) || v.cells.length > N * N) return false;
   for (const cell of v.cells) {
-    if (!Array.isArray(cell) || cell.length !== 3) return false;
+    if (!Array.isArray(cell) || (cell.length !== 3 && cell.length !== 4)) return false;
     if (typeof cell[0] !== "number" || !Number.isInteger(cell[0]) || cell[0] < 0 || cell[0] >= N) return false;
     if (typeof cell[1] !== "number" || !Number.isInteger(cell[1]) || cell[1] < 0 || cell[1] >= N) return false;
     if (typeof cell[2] !== "number" || !Number.isFinite(cell[2]) || Math.abs(cell[2]) > MAX_ABS_V) return false;
+    if (cell.length === 4) {
+      if (typeof cell[3] !== "number" || !Number.isFinite(cell[3])) return false;
+    }
   }
   return true;
 }
@@ -123,12 +132,16 @@ export function applyGeometryToGrid(
   geometry: SavedGeometry,
 ): void {
   clearAll(grid);
-  const { N, fixed, Vfix } = grid;
-  for (const [i, j, V] of geometry.cells) {
+  const { N, fixed, Vfix, phase } = grid;
+  for (const cell of geometry.cells) {
+    const [i, j, V] = cell;
     if (i < 0 || i >= N || j < 0 || j >= N) continue;
     const k = idx(i, j, N);
     fixed[k] = 1;
     Vfix[k] = V;
+    if (cell.length === 4) {
+      phase[k] = (cell[3] * Math.PI) / 180;
+    }
   }
   applyFixedValues(grid);
 }

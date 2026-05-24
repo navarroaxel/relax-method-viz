@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ACControls } from "@/components/ACControls";
 import { Canvas } from "@/components/Canvas";
 import { DisplayToggles } from "@/components/DisplayToggles";
 import { ExportControls } from "@/components/ExportControls";
@@ -38,6 +39,9 @@ export function Simulator() {
   const [tool, setTool] = useState<Tool>("pos");
   const [voltage, setVoltage] = useState(100);
   const [brushSize, setBrushSize] = useState(2);
+  const [paintPhaseDeg, setPaintPhaseDeg] = useState(0);
+  const [acEnabled, setAcEnabled] = useState(false);
+  const [acPeriod, setAcPeriod] = useState(200);
   const [display, setDisplay] = useState<DisplayFlags>({
     heatmap: true,
     equipotentials: true,
@@ -69,9 +73,10 @@ export function Simulator() {
   const postUpdateFixed = useCallback(() => {
     const f = new Uint8Array(grid.fixed);
     const v = new Float32Array(grid.Vfix);
+    const p = new Float32Array(grid.phase);
     post(
-      { type: "updateFixed", fixed: f, Vfix: v },
-      [f.buffer, v.buffer],
+      { type: "updateFixed", fixed: f, Vfix: v, phase: p },
+      [f.buffer, v.buffer, p.buffer],
     );
   }, [grid, post]);
 
@@ -95,6 +100,7 @@ export function Simulator() {
 
     const f = new Uint8Array(grid.fixed);
     const v = new Float32Array(grid.Vfix);
+    const p = new Float32Array(grid.phase);
     w.postMessage(
       {
         type: "init",
@@ -102,8 +108,9 @@ export function Simulator() {
         boundary: grid.boundary,
         fixed: f,
         Vfix: v,
+        phase: p,
       },
-      [f.buffer, v.buffer],
+      [f.buffer, v.buffer, p.buffer],
     );
 
     return () => {
@@ -111,6 +118,11 @@ export function Simulator() {
       workerRef.current = null;
     };
   }, [grid, bumpRender]);
+
+  // Push AC config to the worker whenever it changes (and after re-init).
+  useEffect(() => {
+    post({ type: "setAC", ac: { enabled: acEnabled, period: acPeriod } });
+  }, [acEnabled, acPeriod, post, grid]);
 
   const handleToggleRun = () => {
     setIsRunning((r) => {
@@ -160,6 +172,7 @@ export function Simulator() {
     const newGrid = createGrid(grid.N, b);
     newGrid.fixed.set(grid.fixed);
     newGrid.Vfix.set(grid.Vfix);
+    newGrid.phase.set(grid.phase);
     applyFixedValues(newGrid);
     setGrid(newGrid);
     setIteration(0);
@@ -289,9 +302,12 @@ export function Simulator() {
         tool={tool}
         voltage={voltage}
         brushSize={brushSize}
+        paintPhaseDeg={paintPhaseDeg}
+        showPhase={acEnabled}
         onToolChange={setTool}
         onVoltageChange={setVoltage}
         onBrushChange={setBrushSize}
+        onPaintPhaseChange={setPaintPhaseDeg}
       />
       <PresetSelect value={presetId} onApply={handleApplyPreset} />
       <DisplayToggles display={display} onChange={setDisplay} />
@@ -309,6 +325,13 @@ export function Simulator() {
         onAutoOmega={handleAutoOmega}
         onChangeBoundary={handleChangeBoundary}
       />
+      <ACControls
+        enabled={acEnabled}
+        period={acPeriod}
+        iteration={iteration}
+        onToggleEnabled={setAcEnabled}
+        onChangePeriod={setAcPeriod}
+      />
       <ExportControls
         onOpenSaveLoad={() => setDialogOpen(true)}
         onExportPNG={handleExportPNG}
@@ -320,6 +343,7 @@ export function Simulator() {
           tool={tool}
           voltage={voltage}
           brushSize={brushSize}
+          paintPhaseRad={(paintPhaseDeg * Math.PI) / 180}
           displaySize={DISPLAY_SIZE}
           renderTick={renderTick}
           vmax={vmax}

@@ -1,4 +1,4 @@
-import type { BoundaryCondition, SolverConfig } from "@/types";
+import type { AcConfig, BoundaryCondition, SolverConfig } from "@/types";
 
 export type WorkerInbound =
   | {
@@ -7,12 +7,19 @@ export type WorkerInbound =
       boundary: BoundaryCondition;
       fixed: Uint8Array;
       Vfix: Float32Array;
+      phase: Float32Array;
     }
   | { type: "run"; config: SolverConfig }
   | { type: "pause" }
   | { type: "reset" }
   | { type: "step"; omega: number; count: number }
-  | { type: "updateFixed"; fixed: Uint8Array; Vfix: Float32Array };
+  | {
+      type: "updateFixed";
+      fixed: Uint8Array;
+      Vfix: Float32Array;
+      phase: Float32Array;
+    }
+  | { type: "setAC"; ac: AcConfig };
 
 export type WorkerOutbound =
   | {

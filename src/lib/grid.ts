@@ -18,6 +18,7 @@ export function createGrid(
     V: new Float32Array(size),
     fixed: new Uint8Array(size),
     Vfix: new Float32Array(size),
+    phase: new Float32Array(size),
     boundary,
   };
 }
@@ -60,8 +61,9 @@ export function paintCell(
   j: number,
   tool: Tool,
   voltage: number,
+  phaseRad: number = 0,
 ): void {
-  const { N, fixed, Vfix, V } = grid;
+  const { N, fixed, Vfix, V, phase } = grid;
   if (i < 0 || i >= N || j < 0 || j >= N) return;
   const k = idx(i, j, N);
   switch (tool) {
@@ -69,21 +71,25 @@ export function paintCell(
       fixed[k] = 1;
       Vfix[k] = voltage;
       V[k] = voltage;
+      phase[k] = phaseRad;
       break;
     case "neg":
       fixed[k] = 1;
       Vfix[k] = -voltage;
       V[k] = -voltage;
+      phase[k] = phaseRad;
       break;
     case "gnd":
       fixed[k] = 1;
       Vfix[k] = 0;
       V[k] = 0;
+      phase[k] = 0;
       break;
     case "era":
       fixed[k] = 0;
       Vfix[k] = 0;
       V[k] = 0;
+      phase[k] = 0;
       break;
   }
 }
@@ -95,11 +101,12 @@ export function paintBrush(
   radius: number,
   tool: Tool,
   voltage: number,
+  phaseRad: number = 0,
 ): void {
   const r = Math.max(0, Math.floor(radius) - 1);
   for (let di = -r; di <= r; di++) {
     for (let dj = -r; dj <= r; dj++) {
-      paintCell(grid, ci + di, cj + dj, tool, voltage);
+      paintCell(grid, ci + di, cj + dj, tool, voltage, phaseRad);
     }
   }
 }
@@ -115,6 +122,7 @@ export function paintStroke(
   radius: number,
   tool: Tool,
   voltage: number,
+  phaseRad: number = 0,
 ): void {
   const di = Math.abs(i1 - i0);
   const dj = Math.abs(j1 - j0);
@@ -124,7 +132,7 @@ export function paintStroke(
   let i = i0;
   let j = j0;
   while (true) {
-    paintBrush(grid, i, j, radius, tool, voltage);
+    paintBrush(grid, i, j, radius, tool, voltage, phaseRad);
     if (i === i1 && j === j1) break;
     const e2 = 2 * err;
     if (e2 > -dj) {
@@ -147,4 +155,16 @@ export function clearAll(grid: GridState): void {
   grid.V.fill(0);
   grid.fixed.fill(0);
   grid.Vfix.fill(0);
+  grid.phase.fill(0);
+}
+
+// Set V on fixed cells to Vfix*sin(omegaT + phase). Used by the solver each
+// sweep when AC modulation is enabled.
+export function applyModulatedFixed(grid: GridState, omegaT: number): void {
+  const { V, Vfix, fixed, phase } = grid;
+  for (let k = 0; k < V.length; k++) {
+    if (fixed[k] === 1) {
+      V[k] = (Vfix[k] as number) * Math.sin(omegaT + (phase[k] as number));
+    }
+  }
 }

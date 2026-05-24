@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 
-import { applyFixedValues } from "@/lib/grid";
+import { applyFixedValues, applyModulatedFixed } from "@/lib/grid";
 import { relaxStep } from "@/lib/relaxation";
-import type { GridState } from "@/types";
+import type { AcConfig, GridState } from "@/types";
 import type { WorkerInbound, WorkerOutbound } from "@/types/worker";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -11,6 +11,7 @@ let grid: GridState | null = null;
 let running = false;
 let iteration = 0;
 let runToken = 0;
+let ac: AcConfig = { enabled: false, period: 200 };
 
 function snapshotV(g: GridState): Float32Array {
   return new Float32Array(g.V);
@@ -38,6 +39,11 @@ function emitDone(deltaMax: number, converged: boolean): void {
   );
 }
 
+function modulationOmegaT(): number {
+  // Cycles per iteration = 1 / period, so angular argument is 2π·iter/period.
+  return (2 * Math.PI * iteration) / Math.max(1, ac.period);
+}
+
 function startRun(config: { omega: number; tolerance: number; maxIterations: number; reportEvery: number }): void {
   if (!grid) return;
   running = true;
@@ -47,17 +53,24 @@ function startRun(config: { omega: number; tolerance: number; maxIterations: num
     if (!running || myToken !== runToken || !grid) return;
     let deltaMax = 0;
     for (let s = 0; s < config.reportEvery; s++) {
+      if (ac.enabled) {
+        applyModulatedFixed(grid, modulationOmegaT());
+      }
       deltaMax = relaxStep(grid, config.omega);
       iteration++;
-      if (deltaMax < config.tolerance) {
-        running = false;
-        emitDone(deltaMax, true);
-        return;
-      }
-      if (iteration >= config.maxIterations) {
-        running = false;
-        emitDone(deltaMax, false);
-        return;
+      // While AC is on the field never settles, so convergence/maxIterations
+      // stops are skipped — the user pauses manually.
+      if (!ac.enabled) {
+        if (deltaMax < config.tolerance) {
+          running = false;
+          emitDone(deltaMax, true);
+          return;
+        }
+        if (iteration >= config.maxIterations) {
+          running = false;
+          emitDone(deltaMax, false);
+          return;
+        }
       }
     }
     emitProgress(deltaMax);
@@ -80,6 +93,7 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
         V: new Float32Array(size),
         fixed: msg.fixed,
         Vfix: msg.Vfix,
+        phase: msg.phase,
       };
       applyFixedValues(grid);
       iteration = 0;
@@ -91,7 +105,25 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
       if (!grid) break;
       grid.fixed = msg.fixed;
       grid.Vfix = msg.Vfix;
-      applyFixedValues(grid);
+      grid.phase = msg.phase;
+      if (ac.enabled) {
+        applyModulatedFixed(grid, modulationOmegaT());
+      } else {
+        applyFixedValues(grid);
+      }
+      break;
+    }
+    case "setAC": {
+      ac = { ...msg.ac };
+      if (!grid) break;
+      // Re-stamp fixed cells immediately so the snapshot reflects the change
+      // even if the loop is paused.
+      if (ac.enabled) {
+        applyModulatedFixed(grid, modulationOmegaT());
+      } else {
+        applyFixedValues(grid);
+      }
+      emitProgress(Number.POSITIVE_INFINITY);
       break;
     }
     case "run": {
@@ -109,8 +141,12 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
       running = false;
       runToken++;
       grid.V.fill(0);
-      applyFixedValues(grid);
       iteration = 0;
+      if (ac.enabled) {
+        applyModulatedFixed(grid, 0);
+      } else {
+        applyFixedValues(grid);
+      }
       emitProgress(Number.POSITIVE_INFINITY);
       break;
     }
@@ -118,6 +154,9 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
       if (!grid || running) break;
       let deltaMax = 0;
       for (let s = 0; s < msg.count; s++) {
+        if (ac.enabled) {
+          applyModulatedFixed(grid, modulationOmegaT());
+        }
         deltaMax = relaxStep(grid, msg.omega);
         iteration++;
       }
@@ -126,4 +165,3 @@ self.onmessage = (e: MessageEvent<WorkerInbound>) => {
     }
   }
 };
-
