@@ -14,14 +14,18 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { Surface3D } from "@/components/Surface3DDynamic";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
+import { TraceChart } from "@/components/TraceChart";
 import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/grid";
 import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
-import { computeVmax } from "@/lib/rendering";
+import { computeFieldStats, type TraceShape } from "@/lib/rendering";
+import { sampleTrace } from "@/lib/sampling";
 import { applyGeometryToGrid } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { BoundaryCondition, DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
 import type { WorkerInbound, WorkerOutbound } from "@/types/worker";
+
+const TRACE_SAMPLE_STEP = 0.5;
 
 const DISPLAY_SIZE = 480;
 const MANUAL_STEP = 50;
@@ -48,6 +52,8 @@ export function Simulator() {
   const [renderTick, setRenderTick] = useState(0);
   const [presetId, setPresetId] = useState<PresetId | "custom">("custom");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [trace, setTrace] = useState<TraceShape | null>(null);
+  const [traceDraft, setTraceDraft] = useState<TraceShape | null>(null);
 
   const { t } = useLanguage();
 
@@ -145,6 +151,8 @@ export function Simulator() {
     setPresetId("custom");
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
+    setTrace(null);
+    setTraceDraft(null);
   };
 
   const handleChangeBoundary = (b: BoundaryCondition) => {
@@ -163,6 +171,8 @@ export function Simulator() {
     setPresetId("custom");
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
+    setTrace(null);
+    setTraceDraft(null);
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -177,6 +187,8 @@ export function Simulator() {
     setPresetId(id);
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
+    setTrace(null);
+    setTraceDraft(null);
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -208,6 +220,8 @@ export function Simulator() {
     setPresetId("custom");
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
+    setTrace(null);
+    setTraceDraft(null);
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -233,9 +247,26 @@ export function Simulator() {
     ? deltaMax.toExponential(2)
     : "—";
 
-  // grid.V is mutated in place; renderTick is the change signal.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const vmax = useMemo(() => computeVmax(grid.V), [grid, renderTick]);
+  const { vmax, emax } = useMemo(
+    () => computeFieldStats(grid.V, grid.N),
+    // grid.V is mutated in place; renderTick is the change signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [grid, renderTick],
+  );
+
+  const traceSamples = useMemo(
+    () => (trace ? sampleTrace(grid, trace.points, TRACE_SAMPLE_STEP) : null),
+    // grid.V is mutated in place; renderTick is the change signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [trace, grid, renderTick],
+  );
+
+  const handleClearTrace = useCallback(() => {
+    setTrace(null);
+    setTraceDraft(null);
+  }, []);
+
+  const isTraceTool = tool === "line" || tool === "curve";
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -291,11 +322,26 @@ export function Simulator() {
           brushSize={brushSize}
           displaySize={DISPLAY_SIZE}
           renderTick={renderTick}
+          vmax={vmax}
+          trace={trace}
+          traceDraft={traceDraft}
           onPaint={handlePaint}
           onPaintEnd={handlePaintEnd}
+          onTraceChange={setTrace}
+          onTraceDraftChange={setTraceDraft}
           canvasRef={canvasRef}
         />
       </div>
+      {(trace || isTraceTool) && (
+        <div className="flex justify-center">
+          <TraceChart
+            samples={traceSamples}
+            vScale={vmax}
+            eScale={emax}
+            onClear={handleClearTrace}
+          />
+        </div>
+      )}
       {display.surface3D && (
         <div className="flex justify-center">
           <Surface3D grid={grid} renderTick={renderTick} vmax={vmax} />

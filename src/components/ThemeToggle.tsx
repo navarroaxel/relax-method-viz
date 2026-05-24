@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// useLayoutEffect warns during SSR. ThemeToggle is a client component, but
+// "use client" components still render on the server — guard so we silently
+// fall back to useEffect there.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 type ThemeMode = "auto" | "light" | "dark";
 
@@ -45,12 +51,16 @@ export function ThemeToggle() {
     dark: `${prefix} Dark`,
   };
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     // Read external state (localStorage) on mount and reflect it in UI.
-    // The layout's inline script already applied the right .dark class before
-    // hydration, so this is only catching up the button label.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMode(readStoredMode());
+    // We must also re-call applyMode here: the layout's inline script set the
+    // .dark class pre-hydration, but React hydration reconciles <html>'s
+    // className back to its SSR value and strips it. A layout effect runs
+    // synchronously after the hydration commit but before the browser paints,
+    // so the class is restored without a visible flash.
+    const stored = readStoredMode();
+    setMode(stored);
+    applyMode(stored);
     setMounted(true);
   }, []);
 

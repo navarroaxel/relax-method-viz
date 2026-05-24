@@ -5,12 +5,19 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
 } from "react";
 
 export type Language = "es" | "en";
 
 const STORAGE_KEY = "language";
+
+// useLayoutEffect warns during SSR. The provider is a client component, but
+// "use client" still renders on the server during static export — guard so we
+// silently fall back to useEffect there.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const ES = {
   "language.switch_aria": "Cambiar a inglés",
@@ -26,7 +33,17 @@ const ES = {
   "toolbar.tool_neg": "−V",
   "toolbar.tool_gnd": "Tierra (0)",
   "toolbar.tool_era": "Borrar",
+  "toolbar.tool_line": "Traza recta",
+  "toolbar.tool_curve": "Curva libre",
   "toolbar.custom_voltage": "personalizado",
+
+  "trace.title": "Perfil sobre la traza",
+  "trace.clear": "Borrar traza",
+  "trace.empty_hint":
+    "Elegí Traza recta (dos clics) o Curva libre (arrastrar) y dibujá sobre el lienzo.",
+  "trace.axis_v": "V",
+  "trace.axis_e": "|E|",
+  "trace.axis_s": "s (celdas)",
 
   "display.show": "Mostrar:",
   "display.heatmap": "Potencial",
@@ -114,7 +131,17 @@ const EN: Record<TranslationKey, string> = {
   "toolbar.tool_neg": "−V",
   "toolbar.tool_gnd": "Ground (0)",
   "toolbar.tool_era": "Erase",
+  "toolbar.tool_line": "Straight trace",
+  "toolbar.tool_curve": "Free curve",
   "toolbar.custom_voltage": "custom",
+
+  "trace.title": "Profile along the trace",
+  "trace.clear": "Clear trace",
+  "trace.empty_hint":
+    "Pick Straight trace (two clicks) or Free curve (drag) and draw on the canvas.",
+  "trace.axis_v": "V",
+  "trace.axis_e": "|E|",
+  "trace.axis_s": "s (cells)",
 
   "display.show": "Show:",
   "display.heatmap": "Potential",
@@ -199,11 +226,17 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    if (typeof window === "undefined") return "es";
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored === "en" || stored === "es" ? stored : "es";
-  });
+  // Always initialize to "es" so the first client render matches the SSR
+  // HTML (static export bakes Spanish into the build). The stored preference
+  // is applied in a layout effect below — synchronously after hydration,
+  // before paint — so English users see English on first frame without a
+  // hydration mismatch.
+  const [language, setLanguage] = useState<Language>("es");
+
+  useIsomorphicLayoutEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "en" || stored === "es") setLanguage(stored);
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = language;

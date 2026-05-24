@@ -1,6 +1,12 @@
 import { divergentColor } from "@/lib/colormap";
 import { idx } from "@/lib/grid";
+import { sampleEForStreamline } from "@/lib/sampling";
 import type { DisplayFlags, GridState } from "@/types";
+
+export interface TraceShape {
+  kind: "line" | "curve";
+  points: ReadonlyArray<readonly [number, number]>;
+}
 
 let heatmapBuffer: HTMLCanvasElement | null = null;
 let heatmapBufferN = 0;
@@ -15,14 +21,38 @@ function getHeatmapBuffer(N: number): HTMLCanvasElement {
   return heatmapBuffer;
 }
 
-export function computeVmax(V: Float32Array): number {
-  let max = 0;
-  for (let k = 0; k < V.length; k++) {
-    const v = V[k] as number;
-    const a = v < 0 ? -v : v;
-    if (a > max) max = a;
+export interface FieldStats {
+  vmax: number; // max |V| over the full grid
+  emax: number; // max |E| (central differences) over interior cells
+}
+
+// Single-pass field summary. Used by both the rendering pipeline (heatmap /
+// equipotentials need vmax) and the trace chart (which needs both as fixed
+// axis scales). Returning them together keeps the two ranges tightly aligned
+// — they're always computed from the same snapshot of V — and one walk over
+// V is cache-friendlier than scanning it twice.
+export function computeFieldStats(V: Float32Array, N: number): FieldStats {
+  let vmax = 0;
+  let emax = 0;
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const v = V[idx(i, j, N)] as number;
+      const a = v < 0 ? -v : v;
+      if (a > vmax) vmax = a;
+      // |E| via central differences is only defined on interior cells.
+      if (i > 0 && i < N - 1 && j > 0 && j < N - 1) {
+        const vR = V[idx(i + 1, j, N)] as number;
+        const vL = V[idx(i - 1, j, N)] as number;
+        const vD = V[idx(i, j + 1, N)] as number;
+        const vU = V[idx(i, j - 1, N)] as number;
+        const ex = -(vR - vL) * 0.5;
+        const ey = -(vD - vU) * 0.5;
+        const m = Math.hypot(ex, ey);
+        if (m > emax) emax = m;
+      }
+    }
   }
-  return max > 0 ? max : 1;
+  return { vmax: vmax > 0 ? vmax : 1, emax: emax > 0 ? emax : 1 };
 }
 
 export function renderHeatmap(
@@ -281,38 +311,6 @@ export function renderStreamlines(
   const arrowSpacingPx = 80;
   const headSize = 4;
 
-  // Bilinear field sampler. (x, y) in grid units; returns [ex, ey, mag].
-  // mag === 0 is the "stop" signal: either out of bounds, or one of the
-  // four enclosing corner cells touches the boundary or a conductor.
-  const sampleE = (x: number, y: number): [number, number, number] => {
-    const i0 = Math.floor(x);
-    const j0 = Math.floor(y);
-    if (i0 < 1 || j0 < 1 || i0 >= N - 2 || j0 >= N - 2) return [0, 0, 0];
-    const fx = x - i0;
-    const fy = y - j0;
-    const corner = (ii: number, jj: number): [number, number] | null => {
-      if ((fixed[idx(ii, jj, N)] as number) === 1) return null;
-      const vR = V[idx(ii + 1, jj, N)] as number;
-      const vL = V[idx(ii - 1, jj, N)] as number;
-      const vD = V[idx(ii, jj + 1, N)] as number;
-      const vU = V[idx(ii, jj - 1, N)] as number;
-      return [-(vR - vL) * 0.5, -(vD - vU) * 0.5];
-    };
-    const c00 = corner(i0, j0);
-    const c10 = corner(i0 + 1, j0);
-    const c01 = corner(i0, j0 + 1);
-    const c11 = corner(i0 + 1, j0 + 1);
-    if (!c00 || !c10 || !c01 || !c11) return [0, 0, 0];
-    const w00 = (1 - fx) * (1 - fy);
-    const w10 = fx * (1 - fy);
-    const w01 = (1 - fx) * fy;
-    const w11 = fx * fy;
-    const ex = w00 * c00[0] + w10 * c10[0] + w01 * c01[0] + w11 * c11[0];
-    const ey = w00 * c00[1] + w10 * c10[1] + w01 * c01[1] + w11 * c11[1];
-    const mag = Math.hypot(ex, ey);
-    return [ex, ey, mag];
-  };
-
   const trace = (x0: number, y0: number, dir: 1 | -1): number[] => {
     const pts: number[] = [x0 * cellSize, y0 * cellSize];
     let x = x0;
@@ -320,14 +318,20 @@ export function renderStreamlines(
     let lastIc = Math.round(x0);
     let lastJc = Math.round(y0);
     for (let step = 0; step < maxSteps; step++) {
-      const k1 = sampleE(x, y);
-      if (k1[2] === 0) break;
-      const nx1 = k1[0] / k1[2];
-      const ny1 = k1[1] / k1[2];
-      const k2 = sampleE(x + 0.5 * h * dir * nx1, y + 0.5 * h * dir * ny1);
-      if (k2[2] === 0) break;
-      const nx2 = k2[0] / k2[2];
-      const ny2 = k2[1] / k2[2];
+      const k1 = sampleEForStreamline(V, fixed, N, x, y);
+      if (k1.mag === 0) break;
+      const nx1 = k1.ex / k1.mag;
+      const ny1 = k1.ey / k1.mag;
+      const k2 = sampleEForStreamline(
+        V,
+        fixed,
+        N,
+        x + 0.5 * h * dir * nx1,
+        y + 0.5 * h * dir * ny1,
+      );
+      if (k2.mag === 0) break;
+      const nx2 = k2.ex / k2.mag;
+      const ny2 = k2.ey / k2.mag;
       const nxn = x + h * dir * nx2;
       const nyn = y + h * dir * ny2;
       const ic = Math.round(nxn);
@@ -444,18 +448,73 @@ export function renderConductors(
   ctx.restore();
 }
 
+export function renderTrace(
+  ctx: CanvasRenderingContext2D,
+  trace: TraceShape | null,
+  draft: TraceShape | null,
+  cellSize: number,
+): void {
+  ctx.save();
+  if (trace && trace.points.length >= 2) {
+    drawTracePath(ctx, trace.points, cellSize, false);
+  }
+  if (draft && draft.points.length >= 1) {
+    drawTracePath(ctx, draft.points, cellSize, true);
+  }
+  ctx.restore();
+}
+
+function drawTracePath(
+  ctx: CanvasRenderingContext2D,
+  points: ReadonlyArray<readonly [number, number]>,
+  cellSize: number,
+  dashed: boolean,
+): void {
+  ctx.save();
+  ctx.lineWidth = 2.4;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#FACC15";
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = 3;
+  if (dashed) ctx.setLineDash([5, 4]);
+  if (points.length >= 2) {
+    ctx.beginPath();
+    const p0 = points[0] as readonly [number, number];
+    ctx.moveTo(p0[0] * cellSize, p0[1] * cellSize);
+    for (let i = 1; i < points.length; i++) {
+      const p = points[i] as readonly [number, number];
+      ctx.lineTo(p[0] * cellSize, p[1] * cellSize);
+    }
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#FACC15";
+  ctx.strokeStyle = "#1f1f1f";
+  ctx.lineWidth = 1;
+  for (const p of [points[0], points[points.length - 1]]) {
+    if (!p) continue;
+    ctx.beginPath();
+    ctx.arc((p[0] as number) * cellSize, (p[1] as number) * cellSize, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export function renderAll(
   ctx: CanvasRenderingContext2D,
   grid: GridState,
   display: DisplayFlags,
   displaySize: number,
+  vmax: number,
 ): void {
   const { V, fixed, Vfix, N } = grid;
   const cellSize = displaySize / N;
   ctx.clearRect(0, 0, displaySize, displaySize);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, displaySize, displaySize);
-  const vmax = computeVmax(V);
   if (display.heatmap) renderHeatmap(ctx, V, N, vmax, displaySize);
   if (display.equipotentials)
     renderEquipotentials(ctx, V, N, vmax, cellSize);
