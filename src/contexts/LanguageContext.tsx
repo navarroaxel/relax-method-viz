@@ -5,19 +5,13 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 export type Language = "es" | "en";
 
 const STORAGE_KEY = "language";
-
-// useLayoutEffect warns during SSR. The provider is a client component, but
-// "use client" still renders on the server during static export — guard so we
-// silently fall back to useEffect there.
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+const STORE_EVENT = "relax-viz:language-change";
 
 const ES = {
   "language.switch_aria": "Cambiar a inglés",
@@ -217,6 +211,31 @@ const translations: Record<Language, Record<TranslationKey, string>> = {
   en: EN,
 };
 
+function detectBrowserLanguage(): Language {
+  if (typeof navigator === "undefined") return "es";
+  return navigator.language.toLowerCase().startsWith("es") ? "es" : "en";
+}
+
+function readLanguage(): Language {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === "en" || stored === "es") return stored;
+  return detectBrowserLanguage();
+}
+
+function writeLanguage(lang: Language) {
+  localStorage.setItem(STORAGE_KEY, lang);
+  window.dispatchEvent(new Event(STORE_EVENT));
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener(STORE_EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(STORE_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
 interface LanguageContextValue {
   language: Language;
   toggle: () => void;
@@ -226,28 +245,26 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Always initialize to "es" so the first client render matches the SSR
-  // HTML (static export bakes Spanish into the build). The stored preference
-  // is applied in a layout effect below — synchronously after hydration,
-  // before paint — so English users see English on first frame without a
-  // hydration mismatch.
-  const [language, setLanguage] = useState<Language>("es");
-
-  useIsomorphicLayoutEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "en" || stored === "es") setLanguage(stored);
-  }, []);
+  // useSyncExternalStore handles the SSR/hydration split: the server snapshot
+  // ("es") matches the static export HTML, and on the client React reads the
+  // real value from localStorage/navigator synchronously during hydration —
+  // before paint — with no hydration warning.
+  const language = useSyncExternalStore<Language>(
+    subscribe,
+    readLanguage,
+    () => "es",
+  );
 
   useEffect(() => {
     document.documentElement.lang = language;
+    // The lang init script in layout.tsx hides the body for non-Spanish
+    // users to avoid a flash from the statically baked Spanish HTML. React
+    // has now committed translations in the correct language — reveal it.
+    document.documentElement.removeAttribute("data-lang-pending");
   }, [language]);
 
   const toggle = useCallback(() => {
-    setLanguage((prev) => {
-      const next = prev === "es" ? "en" : "es";
-      localStorage.setItem(STORAGE_KEY, next);
-      return next;
-    });
+    writeLanguage(readLanguage() === "es" ? "en" : "es");
   }, []);
 
   const t = useCallback(
