@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatNum, niceTicks } from "@/lib/chartUtils";
 import type { TraceSamples } from "@/lib/sampling";
 
 interface TraceChartProps {
@@ -65,7 +66,12 @@ function useIsDarkMode(): boolean {
   return isDark;
 }
 
-export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps) {
+export function TraceChart({
+  samples,
+  vScale,
+  eScale,
+  onClear,
+}: TraceChartProps) {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDark = useIsDarkMode();
@@ -76,7 +82,8 @@ export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const dpr =
+      typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
     if (canvas.width !== WIDTH * dpr || canvas.height !== HEIGHT * dpr) {
       canvas.width = WIDTH * dpr;
       canvas.height = HEIGHT * dpr;
@@ -107,7 +114,11 @@ export function TraceChart({ samples, vScale, eScale, onClear }: TraceChartProps
       <div className="relative w-full overflow-hidden">
         <canvas
           ref={canvasRef}
-          style={{ width: "100%", height: "auto", aspectRatio: `${WIDTH} / ${HEIGHT}` }}
+          style={{
+            width: "100%",
+            height: "auto",
+            aspectRatio: `${WIDTH} / ${HEIGHT}`,
+          }}
           className="block rounded bg-white dark:bg-zinc-950"
         />
         {!samples && (
@@ -162,8 +173,7 @@ function drawChart(
     plotX + (sMax > 0 ? (sv / sMax) * plotW : 0);
   const yOfV = (v: number): number =>
     plotY + plotH - ((v - vLow) / (vHigh - vLow)) * plotH;
-  const yOfE = (e: number): number =>
-    plotY + plotH - (e / eHigh) * plotH;
+  const yOfE = (e: number): number => plotY + plotH - (e / eHigh) * plotH;
 
   // Grid lines + tick labels.
   ctx.font = "11px ui-sans-serif, system-ui, -apple-system, sans-serif";
@@ -253,32 +263,4 @@ function drawChart(
   ctx.fillStyle = palette.label;
   ctx.textAlign = "center";
   ctx.fillText(labels.axisS, plotX + plotW / 2, HEIGHT - 4);
-}
-
-function niceTicks(lo: number, hi: number, count: number): number[] {
-  if (!(hi > lo)) return [lo];
-  const span = hi - lo;
-  const raw = span / Math.max(1, count);
-  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const norm = raw / mag;
-  let step: number;
-  if (norm < 1.5) step = mag;
-  else if (norm < 3) step = 2 * mag;
-  else if (norm < 7) step = 5 * mag;
-  else step = 10 * mag;
-  const first = Math.ceil(lo / step) * step;
-  const out: number[] = [];
-  for (let v = first; v <= hi + step * 1e-6; v += step) {
-    out.push(Math.abs(v) < step * 1e-9 ? 0 : v);
-  }
-  return out;
-}
-
-function formatNum(v: number): string {
-  const a = Math.abs(v);
-  if (a === 0) return "0";
-  if (a >= 1000 || a < 0.01) return v.toExponential(1);
-  if (a >= 100) return v.toFixed(0);
-  if (a >= 10) return v.toFixed(1);
-  return v.toFixed(2);
 }

@@ -455,7 +455,7 @@ export function renderTrace(
   cellSize: number,
 ): void {
   ctx.save();
-  if (trace && trace.points.length >= 2) {
+  if (trace && trace.points.length >= 1) {
     drawTracePath(ctx, trace.points, cellSize, false);
   }
   if (draft && draft.points.length >= 1) {
@@ -493,12 +493,31 @@ function drawTracePath(
   ctx.fillStyle = "#FACC15";
   ctx.strokeStyle = "#1f1f1f";
   ctx.lineWidth = 1;
-  for (const p of [points[0], points[points.length - 1]]) {
-    if (!p) continue;
+  if (points.length === 1) {
+    const p = points[0] as readonly [number, number];
+    const cx = (p[0] as number) * cellSize;
+    const cy = (p[1] as number) * cellSize;
+    // Crosshair so a single-point probe is easier to spot than a tiny dot.
     ctx.beginPath();
-    ctx.arc((p[0] as number) * cellSize, (p[1] as number) * cellSize, 4, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    ctx.strokeStyle = "#1f1f1f";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx - 9, cy);
+    ctx.lineTo(cx + 9, cy);
+    ctx.moveTo(cx, cy - 9);
+    ctx.lineTo(cx, cy + 9);
+    ctx.stroke();
+  } else {
+    for (const p of [points[0], points[points.length - 1]]) {
+      if (!p) continue;
+      ctx.beginPath();
+      ctx.arc((p[0] as number) * cellSize, (p[1] as number) * cellSize, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

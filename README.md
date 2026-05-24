@@ -32,6 +32,18 @@ field vectors develop in real time as the solver converges.
   walls are non-conductive, so the field can only have a component
   parallel to them. Switch to Dirichlet (V = 0 at walls — grounded
   enclosure) for comparison without losing the current conductor layout.
+- **Trace tool**: drop a straight segment or freehand curve on the
+  canvas to read `V(s)` and `|E|(s)` along the path in a dual-axis
+  Canvas2D chart (bilinear sampling of `V`, centered differences for
+  `|E|`). Click the same cell twice (or mousedown without dragging on
+  the curve tool) to drop a single-point **probe** that records
+  `V(t)` and `|E|(t)` over time in a scrolling 10-second strip chart.
+- **AC modulation**: drive every fixed conductor as
+  `V = Vfix · sin(ωt + φ)` with a user-selectable period (0.1–60 s)
+  and a per-cell phase set while painting (so dipoles, three-phase
+  configurations, etc. are one-click setups). A second strip chart
+  plots the reference `sin(ωt)` waveform so the modulation is visible
+  at a glance.
 - **Save / load**: name and persist geometries in `localStorage`,
   export/import as JSON, export the rendered canvas as PNG.
 - **Static export**: produces a fully static `out/` directory with no
@@ -75,6 +87,20 @@ transferable `ArrayBuffer` support.
    canvas as `campo.png`.
 7. Hover over any cell to read its grid coordinates, potential `V`, and
    field magnitude `|E|` from a small overlay in the canvas corner.
+8. **Trace tool**: pick **Traza recta** (straight) or **Curva libre**
+   (freehand) from the toolbar. Two distinct clicks (straight) or a
+   drag (curve) build a polyline — the `V(s)` / `|E|(s)` profile shows
+   up below the canvas. Click the **same cell twice** with the straight
+   tool, or click without dragging with the curve tool, to drop a
+   single-point probe; the chart then becomes a scrolling 10-second
+   time series of `V(t)` and `|E|(t)` at that point.
+9. **AC modulation**: tick **Modulación AC**, pick a period in seconds.
+   Every fixed cell oscillates as `Vfix · sin(ωt + φ)`. Use the
+   **Fase** field while painting to set per-cell `φ` (e.g. paint one
+   pole of a dipole at 0° and the other at 180°). A separate strip
+   chart shows the reference `sin(ωt)` waveform scrolling over the
+   last 10 seconds. Pausing the run freezes both strip charts; Reset V
+   clears the probe buffer.
 
 ## Presets
 
@@ -162,38 +188,53 @@ src/
   app/                     Next.js App Router shell (layout + page)
   components/
     Simulator.tsx          Top-level state + worker plumbing
-    Canvas.tsx             480×480 canvas, paint + touch + hover
+    Canvas.tsx             480×480 canvas, paint + touch + hover + trace input
     Surface3D.tsx          Three.js mesh of V(x, y), orbit-controlled
     Surface3DDynamic.tsx   Next dynamic-import wrapper around Surface3D
-    Toolbar.tsx            Tool picker, voltage / brush sliders
+    Toolbar.tsx            Tool picker, voltage / brush / paint-phase
     PresetSelect.tsx       Dropdown of the eight preset geometries
     DisplayToggles.tsx     Per-layer checkboxes (heatmap / equipotentials /
                            streamlines / arrows / 3D surface)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grid size / boundary
+    ACControls.tsx         AC enable + period + live ωt / sin(ωt) readout
     ExportControls.tsx     Save-load + PNG export buttons
     SaveLoadDialog.tsx     localStorage manager + JSON import/export
     Legend.tsx             Colormap legend + conductor color key
+    TraceChart.tsx         V(s) / |E|(s) profile chart (2+ point trace)
+    StripChart.tsx         AC sin(ωt) waveform + probe V(t) / |E|(t)
+                           scrolling 10-s strip chart (1-point trace)
+    MethodExplanation.tsx  Footer block with relaxation / trace / AC notes
+    ProjectCredits.tsx     Page <footer> with course / team credits
+    LanguageToggle.tsx     ES / EN switch (useSyncExternalStore)
+    ThemeToggle.tsx        Light / dark / system theme switch
+    GitHubLink.tsx         Repo link
   lib/
-    grid.ts                GridState, idx, paintBrush/Stroke
+    grid.ts                GridState, idx, paintBrush/Stroke, applyModulatedFixed
     relaxation.ts          relaxStep (SOR sweep), DEFAULT_SOLVER_CONFIG
-    rendering.ts           Heatmap / equipotentials / arrows / streamlines / conductors
+    rendering.ts           Heatmap / equipotentials / arrows / streamlines / trace
+    sampling.ts            sampleV, sampleE, sampleTrace (bilinear interp)
+    chartUtils.ts          niceTicks, formatNum (shared by Trace + StripChart)
     colormap.ts            Divergent blue-white-red lerp
-    presets.ts             Six geometry helpers + registry
+    presets.ts             Geometry helpers + registry
     storage.ts             localStorage + JSON import/export
   workers/
-    solver.worker.ts       SOR loop, runs off the main thread
+    solver.worker.ts       SOR loop + AC phase accumulator, off the main thread
+  contexts/
+    LanguageContext.tsx    ES / EN translations + provider
   types/
-    index.ts               Shared shape types
+    index.ts               Shared shape types (GridState, AcConfig, TraceShape, ...)
     worker.ts              Worker message protocol
 ```
 
 The **solver runs in a Web Worker**. The worker holds its own
-`V / fixed / Vfix` and emits transferable `Float32Array` snapshots of
-`V` to the main thread every few iterations. Painting during a run
-sends `updateFixed` messages so the worker re-applies fixed values
-between sweeps without restarting the loop. A `runToken` counter
-cancels stale loop iterations after `pause` / `reset` / `init`, so
-there are no orphaned progress messages.
+`V / fixed / Vfix / phase` and emits transferable `Float32Array`
+snapshots of `V` plus the current `acPhaseRad` to the main thread
+every few iterations. Painting during a run sends `updateFixed`
+messages so the worker re-applies fixed values between sweeps without
+restarting the loop; `setAC` toggles AC mode and tweaks the period
+mid-flight. A `runToken` counter cancels stale loop iterations after
+`pause` / `reset` / `init`, so there are no orphaned progress
+messages.
 
 ## Performance
 

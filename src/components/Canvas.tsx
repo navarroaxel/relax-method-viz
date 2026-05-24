@@ -149,11 +149,21 @@ export function Canvas({
         onTraceDraftChange({ kind: "line", points: [[x, y]] });
         return;
       }
-      // Finalize: draft has the start point; this click is the end.
-      onTraceChange({
-        kind: "line",
-        points: [[draftStart[0], draftStart[1]], [x, y]],
-      });
+      // Second click on (approximately) the start cell commits a probe;
+      // otherwise commits a 2-point line.
+      const dx = x - (draftStart[0] as number);
+      const dy = y - (draftStart[1] as number);
+      if (Math.hypot(dx, dy) < 0.5) {
+        onTraceChange({
+          kind: "line",
+          points: [[draftStart[0], draftStart[1]]],
+        });
+      } else {
+        onTraceChange({
+          kind: "line",
+          points: [[draftStart[0], draftStart[1]], [x, y]],
+        });
+      }
       onTraceDraftChange(null);
     };
 
@@ -188,6 +198,9 @@ export function Canvas({
       isCurveDrawingRef.current = false;
       const pts = curvePointsRef.current;
       if (pts.length >= 2) {
+        onTraceChange({ kind: "curve", points: pts });
+      } else if (pts.length === 1) {
+        // Mousedown without drag — commit as a probe (1-point trace).
         onTraceChange({ kind: "curve", points: pts });
       }
       curvePointsRef.current = [];

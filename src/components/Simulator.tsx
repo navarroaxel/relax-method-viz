@@ -6,24 +6,42 @@ import { Canvas } from "@/components/Canvas";
 import { DisplayToggles } from "@/components/DisplayToggles";
 import { ExportControls } from "@/components/ExportControls";
 import { Legend } from "@/components/Legend";
+import { MethodExplanation } from "@/components/MethodExplanation";
 import { PresetSelect } from "@/components/PresetSelect";
 import { ProjectCredits } from "@/components/ProjectCredits";
 import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
 import { GitHubLink } from "@/components/GitHubLink";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import {
+  makeProbeHistory,
+  pushProbeSample,
+  StripChart,
+  type ProbeHistory,
+} from "@/components/StripChart";
 import { Surface3D } from "@/components/Surface3DDynamic";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Toolbar } from "@/components/Toolbar";
 import { TraceChart } from "@/components/TraceChart";
-import { applyFixedValues, clearAll, createGrid, resetPotential } from "@/lib/grid";
+import {
+  applyFixedValues,
+  clearAll,
+  createGrid,
+  resetPotential,
+} from "@/lib/grid";
 import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
 import { computeFieldStats, type TraceShape } from "@/lib/rendering";
-import { sampleTrace } from "@/lib/sampling";
+import { sampleE, sampleTrace, sampleV } from "@/lib/sampling";
 import { applyGeometryToGrid } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { BoundaryCondition, DisplayFlags, GridState, SavedGeometry, Tool } from "@/types";
+import type {
+  BoundaryCondition,
+  DisplayFlags,
+  GridState,
+  SavedGeometry,
+  Tool,
+} from "@/types";
 import type { WorkerInbound, WorkerOutbound } from "@/types/worker";
 
 const TRACE_SAMPLE_STEP = 0.5;
@@ -59,8 +77,26 @@ export function Simulator() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [trace, setTrace] = useState<TraceShape | null>(null);
   const [traceDraft, setTraceDraft] = useState<TraceShape | null>(null);
+  const probeHistoryRef = useRef<ProbeHistory>(makeProbeHistory());
+  const traceRef = useRef<TraceShape | null>(trace);
+  useEffect(() => {
+    traceRef.current = trace;
+  }, [trace]);
 
   const { t } = useLanguage();
+
+  const clearProbeHistory = useCallback(() => {
+    probeHistoryRef.current = makeProbeHistory();
+  }, []);
+
+  const handleTraceChange = useCallback(
+    (next: TraceShape | null) => {
+      // Replacing the trace invalidates the previous probe history.
+      clearProbeHistory();
+      setTrace(next);
+    },
+    [clearProbeHistory],
+  );
 
   const bumpRender = useCallback(() => setRenderTick((t) => t + 1), []);
 
@@ -75,10 +111,11 @@ export function Simulator() {
     const f = new Uint8Array(grid.fixed);
     const v = new Float32Array(grid.Vfix);
     const p = new Float32Array(grid.phase);
-    post(
-      { type: "updateFixed", fixed: f, Vfix: v, phase: p },
-      [f.buffer, v.buffer, p.buffer],
-    );
+    post({ type: "updateFixed", fixed: f, Vfix: v, phase: p }, [
+      f.buffer,
+      v.buffer,
+      p.buffer,
+    ]);
   }, [grid, post]);
 
   useEffect(() => {
@@ -94,6 +131,18 @@ export function Simulator() {
       setIteration(msg.iteration);
       setDeltaMax(msg.deltaMax);
       setAcPhaseRad(msg.acPhaseRad);
+      const tr = traceRef.current;
+      if (tr && tr.points.length === 1) {
+        const p = tr.points[0] as readonly [number, number];
+        const v = sampleV(grid.V, grid.N, p[0] as number, p[1] as number);
+        const eMag = sampleE(
+          grid.V,
+          grid.N,
+          p[0] as number,
+          p[1] as number,
+        ).mag;
+        pushProbeSample(probeHistoryRef.current, performance.now(), v, eMag);
+      }
       bumpRender();
       if (msg.type === "done") {
         setIsRunning(false);
@@ -126,6 +175,11 @@ export function Simulator() {
     post({ type: "setAC", ac: { enabled: acEnabled, periodSec: acPeriodSec } });
   }, [acEnabled, acPeriodSec, post, grid]);
 
+  // Toggling AC changes V(t) regime — old samples mix DC and AC physics.
+  useEffect(() => {
+    clearProbeHistory();
+  }, [acEnabled, clearProbeHistory]);
+
   const handleToggleRun = () => {
     setIsRunning((r) => {
       const next = !r;
@@ -151,6 +205,7 @@ export function Simulator() {
     resetPotential(grid);
     setIteration(0);
     setDeltaMax(Number.POSITIVE_INFINITY);
+    clearProbeHistory();
     post({ type: "reset" });
     bumpRender();
   };
@@ -167,6 +222,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
   };
 
   const handleChangeBoundary = (b: BoundaryCondition) => {
@@ -188,6 +244,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -204,6 +261,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -237,6 +295,7 @@ export function Simulator() {
     setDeltaMax(Number.POSITIVE_INFINITY);
     setTrace(null);
     setTraceDraft(null);
+    clearProbeHistory();
     postUpdateFixed();
     post({ type: "reset" });
     bumpRender();
@@ -270,18 +329,24 @@ export function Simulator() {
   );
 
   const traceSamples = useMemo(
-    () => (trace ? sampleTrace(grid, trace.points, TRACE_SAMPLE_STEP) : null),
+    () =>
+      trace && trace.points.length >= 2
+        ? sampleTrace(grid, trace.points, TRACE_SAMPLE_STEP)
+        : null,
     // grid.V is mutated in place; renderTick is the change signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [trace, grid, renderTick],
   );
 
   const handleClearTrace = useCallback(() => {
+    clearProbeHistory();
     setTrace(null);
     setTraceDraft(null);
-  }, []);
+  }, [clearProbeHistory]);
 
   const isTraceTool = tool === "line" || tool === "curve";
+  const isProbe = trace !== null && trace.points.length === 1;
+  const isProfile = trace !== null && trace.points.length >= 2;
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -353,12 +418,33 @@ export function Simulator() {
           traceDraft={traceDraft}
           onPaint={handlePaint}
           onPaintEnd={handlePaintEnd}
-          onTraceChange={setTrace}
+          onTraceChange={handleTraceChange}
           onTraceDraftChange={setTraceDraft}
           canvasRef={canvasRef}
         />
       </div>
-      {(trace || isTraceTool) && (
+      {acEnabled && (
+        <div className="flex justify-center">
+          <StripChart
+            mode="ac"
+            acPhaseRad={acPhaseRad}
+            acPeriodSec={acPeriodSec}
+          />
+        </div>
+      )}
+      {isProbe && (
+        <div className="flex justify-center">
+          <StripChart
+            mode="probe"
+            historyRef={probeHistoryRef}
+            renderTick={renderTick}
+            vScale={vmax}
+            eScale={emax}
+            onClear={handleClearTrace}
+          />
+        </div>
+      )}
+      {(isProfile || (isTraceTool && !isProbe)) && (
         <div className="flex justify-center">
           <TraceChart
             samples={traceSamples}
@@ -377,7 +463,8 @@ export function Simulator() {
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
         <div className="flex flex-wrap gap-4">
           <span>
-            {t("stats.iteration")} <span className="font-mono">{iteration}</span>
+            {t("stats.iteration")}{" "}
+            <span className="font-mono">{iteration}</span>
           </span>
           <span>
             Δmax: <span className="font-mono">{deltaLabel}</span>
@@ -388,13 +475,7 @@ export function Simulator() {
           {DEFAULT_SOLVER_CONFIG.tolerance}
         </span>
       </div>
-      <footer className="rounded-md border border-zinc-200 bg-white p-3 text-xs leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
-        {t("footer.part1")}{" "}
-        <span className="font-mono">V ← V + ω · ({t("footer.average")} − V)</span>
-        {t("footer.part2")}{" "}
-        <span className="font-mono">E = −∇V</span>{" "}
-        {t("footer.part3")}
-      </footer>
+      <MethodExplanation />
       <ProjectCredits />
       {dialogOpen && (
         <SaveLoadDialog
