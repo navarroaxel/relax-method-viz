@@ -59,7 +59,7 @@ export function Simulator() {
   const [brushSize, setBrushSize] = useState(2);
   const [paintPhaseDeg, setPaintPhaseDeg] = useState(0);
   const [acEnabled, setAcEnabled] = useState(false);
-  const [acPeriodSec, setAcPeriodSec] = useState(2);
+  const [acPeriodSec, setAcPeriodSec] = useState(5);
   const [acPhaseRad, setAcPhaseRad] = useState(0);
   const [display, setDisplay] = useState<DisplayFlags>({
     heatmap: true,
@@ -328,6 +328,28 @@ export function Simulator() {
     [grid, renderTick],
   );
 
+  const acPhases = useMemo(() => {
+    if (!acEnabled) return [];
+    const { fixed, Vfix, phase } = grid;
+    const TWO_PI = 2 * Math.PI;
+    const seen = new Set<number>();
+    const out: number[] = [];
+    for (let k = 0; k < fixed.length; k++) {
+      if (fixed[k] !== 1) continue;
+      if (Vfix[k] === 0) continue;
+      const ph = phase[k] as number;
+      const norm = ((ph % TWO_PI) + TWO_PI) % TWO_PI;
+      const key = Math.round(norm * 1000);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(norm);
+    }
+    out.sort((a, b) => a - b);
+    return out;
+    // grid arrays are mutated in place; renderTick is the change signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grid, renderTick, acEnabled]);
+
   const traceSamples = useMemo(
     () =>
       trace && trace.points.length >= 2
@@ -429,6 +451,7 @@ export function Simulator() {
             mode="ac"
             acPhaseRad={acPhaseRad}
             acPeriodSec={acPeriodSec}
+            acPhases={acPhases}
           />
         </div>
       )}

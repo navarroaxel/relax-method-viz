@@ -40,7 +40,9 @@ const ES = {
   "trace.axis_e": "|E|",
   "trace.axis_s": "s (celdas)",
 
-  "stripchart.ac.title": "Onda AC — sin(ωt)",
+  "stripchart.ac.title": "Ondas AC — sin(ωt + φ)",
+  "stripchart.ac.sin_label": "sin(ωt)",
+  "stripchart.ac.phase_prefix": "φ",
   "stripchart.probe.title": "Sonda V(t), |E|(t)",
   "stripchart.axis_t": "t (s)",
   "stripchart.probe.empty_hint":
@@ -74,6 +76,7 @@ const ES = {
   "preset.tip": "Punta vs plano",
   "preset.conductors": "Placas conductoras",
   "preset.subconductors": "Línea 4 subconductores",
+  "preset.threephase": "Línea trifásica + neutro",
 
   "export.save_load": "Guardar / Cargar",
   "export.png": "Exportar PNG",
@@ -152,7 +155,9 @@ const EN: Record<TranslationKey, string> = {
   "trace.axis_e": "|E|",
   "trace.axis_s": "s (cells)",
 
-  "stripchart.ac.title": "AC waveform — sin(ωt)",
+  "stripchart.ac.title": "AC waveforms — sin(ωt + φ)",
+  "stripchart.ac.sin_label": "sin(ωt)",
+  "stripchart.ac.phase_prefix": "φ",
   "stripchart.probe.title": "Probe V(t), |E|(t)",
   "stripchart.axis_t": "t (s)",
   "stripchart.probe.empty_hint":
@@ -186,6 +191,7 @@ const EN: Record<TranslationKey, string> = {
   "preset.tip": "Tip vs plane",
   "preset.conductors": "Conducting plates",
   "preset.subconductors": "4-subconductor line",
+  "preset.threephase": "Three-phase line + neutral",
 
   "export.save_load": "Save / Load",
   "export.png": "Export PNG",
