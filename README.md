@@ -1,16 +1,26 @@
 # Electrostatic Field Simulator — Relaxation Method
 
-A client-side web app that visualizes the 2D electrostatic field by solving
-Laplace's equation `∇²V = 0` with successive over-relaxation (SOR) on a
-user-selectable grid (80×80, 120×120, or 200×200). Draw conductors by hand
-or load classic textbook geometries, watch the potential, equipotentials, and
-field vectors develop in real time as the solver converges.
+A client-side web app that visualizes the electrostatic field — in **2D**
+(80×80 / 120×120 / 200×200) or **3D** (40³ / 60³ / 80³ voxel cube) — by
+solving Laplace's equation `∇²V = 0` with successive over-relaxation (SOR).
+Draw conductors by hand or load classic textbook geometries, watch the
+potential, equipotentials, and field vectors / streamlines develop in real
+time as the solver converges.
 
 ## Features
 
-- **Eight built-in geometries**: flat capacitor, dipole, simplified
+- **2D / 3D toggle in the header**: switch between the 2D canvas and a
+  full 3D voxel-domain view at any time; the choice is remembered in
+  `localStorage`.
+- **Eight built-in 2D geometries**: flat capacitor, dipole, simplified
   lightning rod, coaxial cable, Faraday cage, tip-vs-plane, L-shaped
   conducting plates, 4-subconductor HV bundle.
+- **Six built-in 3D geometries**: parallel plates, dipole, coaxial
+  cable, simplified lightning rod, Faraday cage, 4-subconductor HV
+  bundle.
+- **3D voxel drawing**: place wires, plates, spheres, and cylinders by
+  two-click anchoring on an axis-aligned slice plane; scrub the slice
+  position with the bottom slider, orbit the camera with the mouse.
 - **Freehand drawing**: paint conductors with four tools (`+V`, `−V`,
   ground, erase), voltage preset (100 V / 220 V / 100 kV / √(2/3)×500 kV)
   and brush size (1–6), mouse and touch supported.
@@ -20,14 +30,17 @@ field vectors develop in real time as the solver converges.
   field-line streamlines (RK2 integration through the bilinearly
   sampled field). Each layer toggles independently; arrows and
   streamlines are mutually exclusive.
-- **Optional 3D surface view**: render `V(x, y)` as a Three.js mesh
-  with the same divergent colormap, orbit-controlled camera; runs
-  alongside the 2D canvas and updates live as the solver iterates.
-- **Live solver**: SOR (`ω ≈ 1.9`) runs in a dedicated **Web Worker** so
-  the UI never blocks. Iteration count and `Δmax` update in real time;
-  the loop stops automatically at `Δmax < 10⁻³`.
-- **Grid size**: switch between 80×80, 120×120, and 200×200 at runtime;
-  the **Auto** button recomputes the optimal ω for the current N.
+- **Optional 3D surface view (in 2D mode)**: render `V(x, y)` as a
+  Three.js mesh with the same divergent colormap, orbit-controlled
+  camera; runs alongside the 2D canvas and updates live as the solver
+  iterates.
+- **Live solver**: SOR (`ω ≈ 1.9`) runs in a dedicated **Web Worker**
+  for both 2D and 3D modes, so the UI never blocks. Iteration count
+  and `Δmax` update in real time; the loop stops automatically at
+  `Δmax < 10⁻³`.
+- **Grid size**: 2D switches between 80×80, 120×120, and 200×200; 3D
+  between 40³, 60³, and 80³ — both at runtime, and the **Auto** button
+  recomputes the optimal ω for the current N.
 - **Boundary conditions**: defaults to Neumann (∂V/∂n = 0) — the region
   walls are non-conductive, so the field can only have a component
   parallel to them. Switch to Dirichlet (V = 0 at walls — grounded
@@ -67,6 +80,12 @@ transferable `ArrayBuffer` support.
 
 ## Using the app
 
+The header has a **2D / 3D** toggle (top-right, next to language /
+GitHub / theme). The two modes share the page chrome but otherwise
+have independent toolbars, presets, and solvers.
+
+### 2D mode
+
 1. Pick a tool (`+V`, `−V`, `Tierra`, or `Borrar`), choose a voltage preset,
    and set the brush size.
 2. Either draw conductors on the canvas or select a preset from the
@@ -102,7 +121,30 @@ transferable `ArrayBuffer` support.
    last 10 seconds. Pausing the run freezes both strip charts; Reset V
    clears the probe buffer.
 
+### 3D mode
+
+1. Pick a primitive — **Cable** (wire), **Placa** (axis-aligned slab),
+   **Esfera**, **Cilindro** — or **Borrar** to wipe a region. Set the
+   voltage (positive / negative / ground, voltage preset, or custom
+   number), the **Grosor** (plate depth / wire radius), the **Radio**
+   (sphere / cylinder), and the **Eje del corte** (which axis the
+   slice plane is perpendicular to).
+2. Two-click placement on the slice plane: the first click anchors,
+   a yellow dashed ghost line follows the cursor, the second click
+   commits. `Escape` cancels mid-stroke.
+3. The bottom slider scrubs the slice index along the chosen axis
+   so you can place primitives at any depth; mouse-drag orbits the
+   camera when no anchor is pending.
+4. Toggle **Equipotenciales** and **Líneas de campo** to show
+   marching-squares contours on the slice and full-volume 3D
+   streamlines through `E`, respectively.
+5. **Calcular / Pausar / Paso (20) / Reset V / Limpiar / Grilla**
+   behave exactly as in 2D mode. Presets load via the **Preajuste**
+   dropdown.
+
 ## Presets
+
+### 2D
 
 | Preset ID        | Label                     | What you should see after **Calcular**                                                          |
 | ---------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -114,6 +156,17 @@ transferable `ArrayBuffer` support.
 | `tip`            | Punta vs plano            | Triangular tip at +80 V over a grounded plate — high field density near the apex.               |
 | `conductors`     | Placas conductoras        | L-shaped geometry (horizontal +100 kV plate, vertical −100 kV plate); fringe fields at edges.  |
 | `subconductors`  | Línea 4 subconductores    | 2×2 bundle of discs at √(2/3)×500 kV over a ground plane — models a 4-subconductor HV bundle.  |
+
+### 3D
+
+| Preset ID       | Label                            | Geometry                                                                                |
+| --------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
+| `parallel`      | Placas paralelas (3D)            | Two horizontal slabs at ±100 V perpendicular to Y — 3D parallel-plate capacitor.       |
+| `dipole`        | Dipolo (3D)                      | Two small ±100 V slabs on opposite sides — symmetric dipole field.                     |
+| `coax`          | Cable coaxial (3D)               | Grounded outer cylinder + inner conductor at +80 V along the axis.                     |
+| `lightning`     | Pararrayos simplificado (3D)     | Top plate +100 kV, grounded floor + grounded vertical rod — field concentrates on tip. |
+| `faraday`       | Jaula de Faraday (3D)            | Driven plate + grounded floor + grounded closed box — interior shielded.               |
+| `subconductors` | Línea 4 subconductores (3D)      | Ground plane + 2×2 cylinder bundle at √(2/3)×500 kV — full 3D version of the bundle.   |
 
 ## The math
 
@@ -132,7 +185,9 @@ V[i,j] = (V[i+1,j] + V[i−1,j] + V[i,j+1] + V[i,j−1]) / 4
 ```
 
 Each non-fixed node is the average of its four neighbors (the mean-value
-property of harmonic functions).
+property of harmonic functions). In **3D mode** the same construction
+extends to a 6-neighbor stencil — `V[i,j,k]` becomes the average of
+its `±x / ±y / ±z` neighbors, divided by 6.
 
 **SOR (successive over-relaxation)** accelerates the Gauss-Seidel iteration:
 
@@ -181,19 +236,31 @@ Ey = −(V[i,j+1] − V[i,j−1]) / 2
 - **Conductors** are painted last, opaquely (`#791F1F` for `+V`,
   `#0C447C` for `−V`, `#2C2C2A` for ground).
 
+In **3D mode** the picture changes: a Three.js (`@react-three/fiber`)
+scene renders the `[-0.5, 0.5]³` domain as a wireframe cube with
+**conductors as instanced voxel boxes** (one `InstancedMesh` colored
+by `Vfix` with the same divergent colormap, capped at 80k instances),
+plus a **textured slice plane** (the axis-perpendicular cross-section
+of `V`, painted via `CanvasTexture` and optionally overlaid with
+marching-squares contours) and **full-volume 3D streamlines** traced
+through `E = −∇V`. The slice axis and index, equipotential overlay,
+and streamlines are independently toggleable.
+
 ## Architecture
 
 ```
 src/
   app/                     Next.js App Router shell (layout + page)
   components/
-    Simulator.tsx          Top-level state + worker plumbing
+    SimulatorRoot.tsx      Page chrome (header + footer) + 2D/3D dispatch
+    ModeToggle.tsx         2D / 3D switch (in the header)
+    Simulator.tsx          2D: top-level state + worker plumbing
     Canvas.tsx             480×480 canvas, paint + touch + hover + trace input
-    Surface3D.tsx          Three.js mesh of V(x, y), orbit-controlled
+    Surface3D.tsx          2D-mode optional Three.js mesh of V(x, y)
     Surface3DDynamic.tsx   Next dynamic-import wrapper around Surface3D
-    Toolbar.tsx            Tool picker, voltage / brush / paint-phase
-    PresetSelect.tsx       Dropdown of the eight preset geometries
-    DisplayToggles.tsx     Per-layer checkboxes (heatmap / equipotentials /
+    Toolbar.tsx            2D tool picker, voltage / brush / paint-phase
+    PresetSelect.tsx       Dropdown of the eight 2D preset geometries
+    DisplayToggles.tsx     2D per-layer checkboxes (heatmap / equipotentials /
                            streamlines / arrows / 3D surface)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grid size / boundary
     ACControls.tsx         AC enable + period + live ωt / sin(ωt) readout
@@ -203,6 +270,10 @@ src/
     TraceChart.tsx         V(s) / |E|(s) profile chart (2+ point trace)
     StripChart.tsx         AC sin(ωt) waveform + probe V(t) / |E|(t)
                            scrolling 10-s strip chart (1-point trace)
+    Simulator3D.tsx        3D: top-level state + worker plumbing
+    Toolbar3D.tsx          3D primitive picker, voltage / thickness / radius / slice axis
+    Viewport3D.tsx         r3f canvas: voxel instances + slice plane + 3D streamlines
+    Viewport3DDynamic.tsx  Next dynamic-import wrapper around Viewport3D
     MethodExplanation.tsx  Footer block with relaxation / trace / AC notes
     ProjectCredits.tsx     Page <footer> with course / team credits
     LanguageToggle.tsx     ES / EN switch (useSyncExternalStore)
@@ -210,31 +281,40 @@ src/
     GitHubLink.tsx         Repo link
   lib/
     grid.ts                GridState, idx, paintBrush/Stroke, applyModulatedFixed
-    relaxation.ts          relaxStep (SOR sweep), DEFAULT_SOLVER_CONFIG
+    relaxation.ts          relaxStep (2D SOR sweep), DEFAULT_SOLVER_CONFIG
     rendering.ts           Heatmap / equipotentials / arrows / streamlines / trace
     sampling.ts            sampleV, sampleE, sampleTrace (bilinear interp)
     chartUtils.ts          niceTicks, formatNum (shared by Trace + StripChart)
     colormap.ts            Divergent blue-white-red lerp
-    presets.ts             Geometry helpers + registry
+    presets.ts             2D geometry helpers + registry (eight presets)
     storage.ts             localStorage + JSON import/export
+    grid3d.ts              Grid3DState, idx3, applyBoundary3D / applyFixedValues3D
+    relaxation3d.ts        relaxStep3D (6-neighbor SOR), DEFAULT_SOLVER_CONFIG_3D
+    rendering3d.ts         sampleSlice, paintSliceRGBA, marching-squares contours,
+                           computeStreamlines3D (full-volume 3D field lines)
+    primitives3d.ts        Voxel rasterizers (wire / plate / sphere / cylinder)
+    presets3d.ts           3D geometry registry (six presets)
   workers/
-    solver.worker.ts       SOR loop + AC phase accumulator, off the main thread
+    solver.worker.ts       2D SOR loop + AC phase accumulator
+    solver3d.worker.ts     3D SOR loop (no AC)
   contexts/
     LanguageContext.tsx    ES / EN translations + provider
   types/
-    index.ts               Shared shape types (GridState, AcConfig, TraceShape, ...)
-    worker.ts              Worker message protocol
+    index.ts               2D shape types (GridState, AcConfig, TraceShape, ...)
+    worker.ts              2D worker message protocol
+    grid3d.ts              3D shape types (Grid3DState, Primitive3D, Tool3D, SliceAxis)
+    worker3d.ts            3D worker message protocol
 ```
 
-The **solver runs in a Web Worker**. The worker holds its own
-`V / fixed / Vfix / phase` and emits transferable `Float32Array`
-snapshots of `V` plus the current `acPhaseRad` to the main thread
-every few iterations. Painting during a run sends `updateFixed`
-messages so the worker re-applies fixed values between sweeps without
-restarting the loop; `setAC` toggles AC mode and tweaks the period
-mid-flight. A `runToken` counter cancels stale loop iterations after
-`pause` / `reset` / `init`, so there are no orphaned progress
-messages.
+The **solver runs in a Web Worker** for both modes. Each worker holds
+its own copy of the field arrays and emits transferable `Float32Array`
+snapshots of `V` to the main thread every few iterations. Painting
+during a run sends `updateFixed` messages so the worker re-applies
+fixed values between sweeps without restarting the loop. In 2D,
+`setAC` toggles AC mode and tweaks the period mid-flight, and the
+worker streams `acPhaseRad` along with each progress event. A
+`runToken` counter cancels stale loop iterations after `pause` /
+`reset` / `init`, so there are no orphaned progress messages.
 
 ## Performance
 
@@ -277,10 +357,11 @@ vercel --prod
 
 ## Limitations
 
-- Two-dimensional only; no magnetic media.
-- Fixed-step square grid (no adaptive refinement).
+- No magnetic media.
+- Fixed-step square grid / cubic voxel grid (no adaptive refinement).
 - Laplace only — no charge density `ρ` (no Poisson equation support).
 - Uniform permittivity (no dielectric regions).
+- AC modulation is 2D-only.
 
 ## License
 

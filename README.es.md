@@ -1,17 +1,28 @@
 # Simulador de campo eléctrico — método de relajación
 
-Aplicación web cliente-side que visualiza el campo electrostático en 2D
-resolviendo la ecuación de Laplace `∇²V = 0` con sobre-relajación
-sucesiva (SOR) sobre una grilla seleccionable por el usuario (80×80,
-120×120 o 200×200). Dibujá conductores a mano o cargá geometrías
-clásicas de libro y mirá cómo se forma el potencial, las equipotenciales
-y los vectores de campo mientras el solver converge en tiempo real.
+Aplicación web cliente-side que visualiza el campo electrostático — en
+**2D** (80×80 / 120×120 / 200×200) o **3D** (cubos de 40³ / 60³ / 80³
+vóxeles) — resolviendo la ecuación de Laplace `∇²V = 0` con
+sobre-relajación sucesiva (SOR). Dibujá conductores a mano o cargá
+geometrías clásicas de libro y mirá cómo se forma el potencial, las
+equipotenciales y los vectores de campo / líneas de campo en tiempo
+real mientras el solver converge.
 
 ## Qué hace
 
-- **Ocho geometrías predefinidas**: capacitor plano, dipolo, pararrayos
-  simplificado, cable coaxial, jaula de Faraday, punta vs plano, placas
-  conductoras en L, bundle de 4 subconductores AT.
+- **Switch 2D / 3D en el header**: alterná entre el lienzo 2D y la
+  vista 3D de dominio volumétrico cuando quieras; la elección queda
+  persistida en `localStorage`.
+- **Ocho geometrías 2D predefinidas**: capacitor plano, dipolo,
+  pararrayos simplificado, cable coaxial, jaula de Faraday, punta vs
+  plano, placas conductoras en L, bundle de 4 subconductores AT.
+- **Seis geometrías 3D predefinidas**: placas paralelas, dipolo, cable
+  coaxial, pararrayos simplificado, jaula de Faraday, bundle de 4
+  subconductores AT.
+- **Dibujo 3D por vóxeles**: colocá cables, placas, esferas y
+  cilindros con un modelo de dos clics anclados sobre un plano de
+  corte; el slider de abajo del viewport mueve el corte, el mouse
+  orbita la cámara.
 - **Dibujo a mano alzada**: cuatro herramientas (`+V`, `−V`, tierra,
   borrar), preset de voltaje (100 V / 220 V / 100 kV / √(2/3)×500 kV),
   pincel ajustable (1–6), soporte para mouse y touch.
@@ -21,14 +32,17 @@ y los vectores de campo mientras el solver converge en tiempo real.
   diferencias centradas) y líneas de campo (integración RK2 sobre el
   campo muestreado por interpolación bilineal). Cada capa se activa o
   desactiva por separado; flechas y líneas son mutuamente excluyentes.
-- **Vista 3D opcional**: render de `V(x, y)` como malla Three.js con
-  el mismo colormap divergente y cámara orbital; corre en paralelo al
-  lienzo 2D y se actualiza en vivo mientras el solver itera.
+- **Vista 3D opcional (en modo 2D)**: render de `V(x, y)` como malla
+  Three.js con el mismo colormap divergente y cámara orbital; corre
+  en paralelo al lienzo 2D y se actualiza en vivo mientras el solver
+  itera.
 - **Solver en vivo**: SOR (`ω ≈ 1.9`) corre en un **Web Worker**
-  dedicado, así la UI no se traba. La iteración y `Δmax` se actualizan
-  en tiempo real; el loop se detiene solo cuando `Δmax < 10⁻³`.
-- **Tamaño de grilla**: cambiá entre 80×80, 120×120 y 200×200 en tiempo
-  de ejecución; el botón **Auto** recalcula el ω óptimo para cada N.
+  dedicado en ambos modos, así la UI no se traba. La iteración y
+  `Δmax` se actualizan en tiempo real; el loop se detiene solo cuando
+  `Δmax < 10⁻³`.
+- **Tamaño de grilla**: en 2D, cambiá entre 80×80, 120×120 y 200×200;
+  en 3D, entre 40³, 60³ y 80³ — todo en tiempo de ejecución, y el
+  botón **Auto** recalcula el ω óptimo para cada N.
 - **Condiciones de contorno**: el default es Neumann (∂V/∂n = 0) — las
   paredes de la región no son conductoras, así que el campo solo puede
   tener componente paralela al borde. Se puede cambiar a Dirichlet
@@ -71,6 +85,12 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 
 ## Cómo se usa
 
+El header tiene un switch **2D / 3D** (arriba a la derecha, al lado
+del idioma / GitHub / tema). Los dos modos comparten el cromo de la
+página pero tienen toolbars, presets y solvers independientes.
+
+### Modo 2D
+
 1. Elegí una herramienta (`+V`, `−V`, `Tierra` o `Borrar`), seleccioná
    un preset de voltaje y ajustá el pincel.
 2. Dibujá conductores en el lienzo o seleccioná un preset desde el
@@ -108,7 +128,30 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
    scrolleando sobre los últimos 10 segundos. Pausar congela ambos
    strip charts; Reset V vacía el buffer de la sonda.
 
+### Modo 3D
+
+1. Elegí una primitiva — **Cable**, **Placa** (slab axis-aligned),
+   **Esfera**, **Cilindro** — o **Borrar** para limpiar una región.
+   Configurá el voltaje (positivo / negativo / tierra, preset o número
+   personalizado), el **Grosor** (profundidad de placa o radio de
+   cable), el **Radio** (esfera / cilindro) y el **Eje del corte** (a
+   qué eje es perpendicular el plano de corte).
+2. Modelo de dos clics sobre el plano de corte: el primer clic ancla,
+   una línea fantasma amarilla punteada sigue al cursor, el segundo
+   clic confirma. `Escape` cancela a mitad del trazo.
+3. El slider de abajo desplaza el índice del corte por su eje, así
+   podés colocar primitivas a cualquier profundidad; arrastrar con el
+   mouse orbita la cámara cuando no hay ancla pendiente.
+4. Tildá **Equipotenciales** y **Líneas de campo** para superponer
+   contornos por marching squares sobre el corte y líneas de campo
+   3D que recorren todo el volumen de `E`.
+5. **Calcular / Pausar / Paso (20) / Reset V / Limpiar / Grilla**
+   funcionan igual que en 2D. Los presets se cargan desde el dropdown
+   **Preajuste**.
+
 ## Presets
+
+### 2D
 
 | ID               | Etiqueta                  | Qué se ve después de **Calcular**                                                               |
 | ---------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -120,6 +163,17 @@ Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 | `tip`            | Punta vs plano            | Punta triangular a +80 V sobre plano aterrado — alta concentración de campo en el vértice.      |
 | `conductors`     | Placas conductoras        | Geometría en L (placa horizontal +100 kV, placa vertical −100 kV); campos de franja en bordes.  |
 | `subconductors`  | Línea 4 subconductores    | Bundle 2×2 de discos a √(2/3)×500 kV sobre plano de tierra — modela línea AT real.             |
+
+### 3D
+
+| ID              | Etiqueta                       | Geometría                                                                                  |
+| --------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `parallel`      | Placas paralelas (3D)          | Dos slabs horizontales a ±100 V perpendiculares a Y — capacitor de placas en volumen.     |
+| `dipole`        | Dipolo (3D)                    | Dos slabs chicos a ±100 V en lados opuestos — campo dipolar simétrico.                    |
+| `coax`          | Cable coaxial (3D)             | Cilindro exterior aterrado + conductor interno a +80 V a lo largo del eje.                |
+| `lightning`     | Pararrayos simplificado (3D)   | Placa superior +100 kV, piso aterrado + varilla vertical aterrada — campo en la punta.    |
+| `faraday`       | Jaula de Faraday (3D)          | Placa excitada + piso aterrado + caja cerrada aterrada — interior apantallado.            |
+| `subconductors` | Línea 4 subconductores (3D)    | Plano de tierra + bundle 2×2 de cilindros a √(2/3)×500 kV — versión 3D del bundle.        |
 
 ## La matemática
 
@@ -138,7 +192,9 @@ V[i,j] = (V[i+1,j] + V[i−1,j] + V[i,j+1] + V[i,j−1]) / 4
 ```
 
 Cada nodo no fijo es el promedio de sus cuatro vecinos (propiedad del
-valor medio de las funciones armónicas).
+valor medio de las funciones armónicas). En **modo 3D**, la misma
+construcción se extiende a un stencil de 6 vecinos — `V[i,j,k]` queda
+como el promedio de sus vecinos `±x / ±y / ±z`, dividido por 6.
 
 **SOR (sobre-relajación sucesiva)** acelera la iteración de Gauss-Seidel:
 
@@ -188,19 +244,33 @@ Ey = −(V[i,j+1] − V[i,j−1]) / 2
 - **Conductores** pintados al final, opacos (`#791F1F` para `+V`,
   `#0C447C` para `−V`, `#2C2C2A` para tierra).
 
+En **modo 3D** el panorama cambia: una escena Three.js
+(`@react-three/fiber`) renderiza el dominio `[-0.5, 0.5]³` como un
+wireframe cúbico con los **conductores como cajas de vóxeles
+instanciadas** (un `InstancedMesh` coloreado por `Vfix` con el mismo
+colormap divergente, hasta 80k instancias), más un **plano de corte
+texturizado** (la sección perpendicular al eje elegido de `V`,
+pintada vía `CanvasTexture` y con superposición opcional de contornos
+por marching squares) y **líneas de campo 3D de volumen completo**
+trazadas sobre `E = −∇V`. El eje y el índice del corte, la
+superposición de equipotenciales y las líneas de campo se prenden y
+apagan por separado.
+
 ## Arquitectura
 
 ```
 src/
   app/                     Shell de Next.js App Router (layout + page)
   components/
-    Simulator.tsx          Estado top-level + plumbing del worker
+    SimulatorRoot.tsx      Cromo de la página (header + footer) + dispatch 2D/3D
+    ModeToggle.tsx         Switch 2D / 3D (en el header)
+    Simulator.tsx          2D: estado top-level + plumbing del worker
     Canvas.tsx             Canvas 480×480, paint + touch + hover + traza
-    Surface3D.tsx          Malla Three.js de V(x, y), con cámara orbital
+    Surface3D.tsx          Malla 3D opcional del modo 2D (V(x, y) en Three.js)
     Surface3DDynamic.tsx   Wrapper de dynamic-import de Next sobre Surface3D
-    Toolbar.tsx            Herramientas, sliders de voltaje / pincel / fase
-    PresetSelect.tsx       Dropdown de los ocho presets
-    DisplayToggles.tsx     Checkboxes por capa (heatmap / equipotenciales /
+    Toolbar.tsx            2D: herramientas, sliders de voltaje / pincel / fase
+    PresetSelect.tsx       Dropdown de los ocho presets 2D
+    DisplayToggles.tsx     Checkboxes por capa 2D (heatmap / equipotenciales /
                            líneas de campo / flechas / superficie 3D)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grilla / contorno
     ACControls.tsx         Activar AC + período + lectura ωt / sin(ωt) en vivo
@@ -210,6 +280,10 @@ src/
     TraceChart.tsx         Gráfico de perfil V(s) / |E|(s) (traza de 2+ puntos)
     StripChart.tsx         Onda AC sin(ωt) + sonda V(t) / |E|(t) en franja
                            temporal de 10 s (traza de 1 punto)
+    Simulator3D.tsx        3D: estado top-level + plumbing del worker
+    Toolbar3D.tsx          3D: primitivas, voltaje / grosor / radio / eje del corte
+    Viewport3D.tsx         Canvas r3f: vóxeles instanciados + plano de corte + líneas 3D
+    Viewport3DDynamic.tsx  Wrapper de dynamic-import de Next sobre Viewport3D
     MethodExplanation.tsx  Bloque de notas (relajación / traza / AC)
     ProjectCredits.tsx     <footer> de la página con créditos de cátedra y equipo
     LanguageToggle.tsx     Switch ES / EN (useSyncExternalStore)
@@ -217,31 +291,41 @@ src/
     GitHubLink.tsx         Link al repo
   lib/
     grid.ts                GridState, idx, paintBrush/Stroke, applyModulatedFixed
-    relaxation.ts          relaxStep (barrida SOR), DEFAULT_SOLVER_CONFIG
+    relaxation.ts          relaxStep (barrida 2D SOR), DEFAULT_SOLVER_CONFIG
     rendering.ts           Heatmap / equipotenciales / flechas / líneas de campo / traza
     sampling.ts            sampleV, sampleE, sampleTrace (interpolación bilineal)
     chartUtils.ts          niceTicks, formatNum (compartidos por Trace + StripChart)
     colormap.ts            Lerp divergente azul-blanco-rojo
-    presets.ts             Helpers de geometría + registro
+    presets.ts             Helpers de geometría 2D + registro (ocho presets)
     storage.ts             localStorage + import/export JSON
+    grid3d.ts              Grid3DState, idx3, applyBoundary3D / applyFixedValues3D
+    relaxation3d.ts        relaxStep3D (SOR 6 vecinos), DEFAULT_SOLVER_CONFIG_3D
+    rendering3d.ts         sampleSlice, paintSliceRGBA, contornos por marching squares,
+                           computeStreamlines3D (líneas de campo 3D de volumen completo)
+    primitives3d.ts        Rasterizadores de vóxeles (cable / placa / esfera / cilindro)
+    presets3d.ts           Registro de presets 3D (seis presets)
   workers/
-    solver.worker.ts       Loop SOR + acumulador de fase AC, fuera del main thread
+    solver.worker.ts       Loop SOR 2D + acumulador de fase AC
+    solver3d.worker.ts     Loop SOR 3D (sin AC)
   contexts/
     LanguageContext.tsx    Traducciones ES / EN + provider
   types/
-    index.ts               Tipos compartidos (GridState, AcConfig, TraceShape, ...)
-    worker.ts              Protocolo de mensajes del worker
+    index.ts               Tipos 2D (GridState, AcConfig, TraceShape, ...)
+    worker.ts              Protocolo de mensajes del worker 2D
+    grid3d.ts              Tipos 3D (Grid3DState, Primitive3D, Tool3D, SliceAxis)
+    worker3d.ts            Protocolo de mensajes del worker 3D
 ```
 
-El **solver corre en un Web Worker**. El worker mantiene su propia
-copia de `V / fixed / Vfix / phase` y emite snapshots transferibles
-de `V` más el `acPhaseRad` actual al main thread cada pocas
-iteraciones. Pintar mientras el solver itera dispara mensajes
-`updateFixed`; el worker re-aplica los valores fijos entre barridas
-sin reiniciar el loop. `setAC` activa el modo AC y ajusta el período
-en caliente. Un contador `runToken` descarta iteraciones huérfanas
-después de `pause` / `reset` / `init`, así no quedan mensajes de
-progreso obsoletos en vuelo.
+El **solver corre en un Web Worker** en ambos modos. Cada worker
+mantiene su propia copia de los arrays del campo y emite snapshots
+transferibles de `V` al main thread cada pocas iteraciones. Pintar
+mientras el solver itera dispara mensajes `updateFixed`; el worker
+re-aplica los valores fijos entre barridas sin reiniciar el loop. En
+2D, `setAC` activa el modo AC y ajusta el período en caliente, y el
+worker emite `acPhaseRad` junto con cada evento de progreso. Un
+contador `runToken` descarta iteraciones huérfanas después de
+`pause` / `reset` / `init`, así no quedan mensajes de progreso
+obsoletos en vuelo.
 
 ## Performance
 
@@ -285,10 +369,12 @@ vercel --prod
 
 ## Limitaciones conocidas
 
-- Solo 2D; sin medios magnéticos.
-- Grilla cuadrada de paso fijo (sin refinamiento adaptativo).
+- Sin medios magnéticos.
+- Grilla cuadrada / cubo de vóxeles de paso fijo (sin refinamiento
+  adaptativo).
 - Solo Laplace — sin densidad de carga `ρ` (sin soporte para Poisson).
 - Permitividad uniforme (sin regiones dieléctricas).
+- La modulación AC existe solo en el modo 2D.
 
 ## Licencia
 

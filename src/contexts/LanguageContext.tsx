@@ -124,6 +124,31 @@ const ES = {
   "github.aria": "Repositorio en GitHub",
 
   "theme.label": "Tema:",
+
+  "mode.2d": "2D",
+  "mode.3d": "3D",
+
+  "toolbar3d.tool": "Primitiva:",
+  "toolbar3d.tool_wire": "Cable",
+  "toolbar3d.tool_plate": "Placa",
+  "toolbar3d.tool_sphere": "Esfera",
+  "toolbar3d.tool_cylinder": "Cilindro",
+  "toolbar3d.tool_era": "Borrar",
+  "toolbar3d.potential": "Potencial:",
+  "toolbar3d.custom_voltage": "personalizado",
+  "toolbar3d.thickness": "Grosor:",
+  "toolbar3d.radius": "Radio:",
+  "toolbar3d.slice_axis": "Eje del corte:",
+
+  "viewport3d.anchor_hint": "1/2 — segundo clic para confirmar",
+
+  "preset3d.label": "Preajuste:",
+  "preset3d.parallel": "Placas paralelas (3D)",
+  "preset3d.dipole": "Dipolo (3D)",
+  "preset3d.coax": "Cable coaxial (3D)",
+  "preset3d.lightning": "Pararrayos simplificado (3D)",
+  "preset3d.faraday": "Jaula de Faraday (3D)",
+  "preset3d.subconductors": "Línea 4 subconductores (3D)",
 } as const;
 
 type TranslationKey = keyof typeof ES;
@@ -239,6 +264,31 @@ const EN: Record<TranslationKey, string> = {
   "github.aria": "GitHub repository",
 
   "theme.label": "Theme:",
+
+  "mode.2d": "2D",
+  "mode.3d": "3D",
+
+  "toolbar3d.tool": "Primitive:",
+  "toolbar3d.tool_wire": "Wire",
+  "toolbar3d.tool_plate": "Plate",
+  "toolbar3d.tool_sphere": "Sphere",
+  "toolbar3d.tool_cylinder": "Cylinder",
+  "toolbar3d.tool_era": "Erase",
+  "toolbar3d.potential": "Potential:",
+  "toolbar3d.custom_voltage": "custom",
+  "toolbar3d.thickness": "Thickness:",
+  "toolbar3d.radius": "Radius:",
+  "toolbar3d.slice_axis": "Slice axis:",
+
+  "viewport3d.anchor_hint": "1/2 — second click to confirm",
+
+  "preset3d.label": "Preset:",
+  "preset3d.parallel": "Parallel plates (3D)",
+  "preset3d.dipole": "Dipole (3D)",
+  "preset3d.coax": "Coaxial cable (3D)",
+  "preset3d.lightning": "Lightning rod (3D)",
+  "preset3d.faraday": "Faraday cage (3D)",
+  "preset3d.subconductors": "4-subconductor bundle (3D)",
 };
 
 const translations: Record<Language, Record<TranslationKey, string>> = {
