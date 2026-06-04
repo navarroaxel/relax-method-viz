@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./Providers";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Campo Eléctrico — Método de Relax",
@@ -58,6 +59,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
