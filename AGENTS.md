@@ -22,7 +22,7 @@ npx tsc --noEmit
 
 **Stack**: Next.js 16 (App Router, static export), React 19, TypeScript strict + `noUncheckedIndexedAccess`, Tailwind CSS v4. No testing framework. The entire build output is a static `out/` directory — no server runtime.
 
-**App shell**: `SimulatorRoot.tsx` owns the page chrome — the `<main>` wrapper, the header (title, description, `ModeToggle` + language/GitHub/theme toggles), and the footer (`MethodExplanation`, `ProjectCredits`). It reads `relax-viz:mode` (`"2d" | "3d"`) from `localStorage` via `useSyncExternalStore` (SSR defaults to `"2d"` to match the static export) and renders either `<Simulator />` or `<Simulator3D />` between the header and footer — both are fragments, so their children become siblings of the shared chrome.
+**App shell**: `SimulatorRoot.tsx` owns the page chrome — the `<main>` wrapper, the header (title, description, GitHub link + `SettingsPanel` popover that holds the 2D/3D mode, language, and theme controls), and the footer (`MethodExplanation`, `ProjectCredits`). It reads `relax-viz:mode` (`"2d" | "3d"`) from `localStorage` via `useSyncExternalStore` (SSR defaults to `"2d"` to match the static export) and renders either `<Simulator />` or `<Simulator3D />` between the header and footer — both are fragments, so their children become siblings of the shared chrome.
 
 **Grid indexing**:
 - 2D: `idx(i, j, N) = i * N + j` where `i` is column (x, rightward) and `j` is row (y, downward). This is column-major; `ImageData` is row-major `(y * N + x) * 4`, so heatmap rendering iterates `(y, x)` rather than `(i, j)`.
