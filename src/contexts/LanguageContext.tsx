@@ -128,6 +128,12 @@ const ES = {
   "mode.2d": "2D",
   "mode.3d": "3D",
 
+  "settings.aria": "Ajustes",
+  "settings.section_display": "Visualización",
+  "settings.section_interface": "Interfaz",
+  "settings.mode_label": "Modo",
+  "settings.lang_label": "Idioma",
+
   "toolbar3d.tool": "Primitiva:",
   "toolbar3d.tool_wire": "Cable",
   "toolbar3d.tool_plate": "Placa",
@@ -267,6 +273,12 @@ const EN: Record<TranslationKey, string> = {
 
   "mode.2d": "2D",
   "mode.3d": "3D",
+
+  "settings.aria": "Settings",
+  "settings.section_display": "Display",
+  "settings.section_interface": "Interface",
+  "settings.mode_label": "Mode",
+  "settings.lang_label": "Language",
 
   "toolbar3d.tool": "Primitive:",
   "toolbar3d.tool_wire": "Wire",

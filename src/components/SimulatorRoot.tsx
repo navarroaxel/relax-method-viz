@@ -2,13 +2,11 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 import { GitHubLink } from "@/components/GitHubLink";
-import { LanguageToggle } from "@/components/LanguageToggle";
 import { MethodExplanation } from "@/components/MethodExplanation";
-import { ModeToggle, type SimMode } from "@/components/ModeToggle";
 import { ProjectCredits } from "@/components/ProjectCredits";
+import { SettingsPanel, type SimMode } from "@/components/SettingsPanel";
 import { Simulator } from "@/components/Simulator";
 import { Simulator3D } from "@/components/Simulator3D";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const STORAGE_KEY = "relax-viz:mode";
@@ -48,10 +46,8 @@ export function SimulatorRoot() {
             {t("page.title")}
           </h1>
           <div className="flex items-center gap-2">
-            <ModeToggle mode={mode} onChange={change} />
-            <LanguageToggle />
             <GitHubLink />
-            <ThemeToggle />
+            <SettingsPanel mode={mode} onModeChange={change} />
           </div>
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-200">
