@@ -416,6 +416,7 @@ export function Simulator() {
           displaySize={DISPLAY_SIZE}
           renderTick={renderTick}
           vmax={vmax}
+          emax={emax}
           trace={trace}
           traceDraft={traceDraft}
           onPaint={handlePaint}
