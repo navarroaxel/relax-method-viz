@@ -93,7 +93,7 @@ export function Canvas({
     const cy = (hover.j + 0.5) * cellSize;
     const ux = hover.ex / hover.E;
     const uy = hover.ey / hover.E;
-    const MAX_L = cellSize * 5;
+    const MAX_L = cellSize * 10;
     const L = Math.min(hover.E / emax, 1) * MAX_L;
     const x1 = cx - ux * L * 0.35;
     const y1 = cy - uy * L * 0.35;
