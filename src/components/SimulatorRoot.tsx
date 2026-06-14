@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { GitHubLink } from "@/components/GitHubLink";
 import { MethodExplanation } from "@/components/MethodExplanation";
@@ -60,6 +61,12 @@ export function SimulatorRoot() {
           </h1>
           <div className="flex items-center gap-2">
             <GitHubLink />
+            <Link
+              href="/exacta"
+              className="text-xs text-zinc-500 underline underline-offset-2 hover:text-zinc-800 dark:hover:text-zinc-200"
+            >
+              {t("analytical.nav_link")}
+            </Link>
             <SettingsPanel mode={mode} onModeChange={change} />
           </div>
         </div>

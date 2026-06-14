@@ -163,6 +163,24 @@ const ES = {
   "share.button": "Compartir",
   "share.copied": "¡Copiado!",
   "share.hint_custom": "Elegí un preset para compartir",
+
+  "analytical.title": "Solución analítica exacta",
+  "analytical.tab_spheres": "Esferas concéntricas",
+  "analytical.tab_plates": "Placas paralelas",
+  "analytical.ri": "Rᵢ — radio interior",
+  "analytical.ro": "R₀ — radio exterior",
+  "analytical.d": "d — separación",
+  "analytical.v1_sphere": "V₁ — potencial interior",
+  "analytical.v2_sphere": "V₂ — potencial exterior",
+  "analytical.v1_plate": "V₁ — placa izquierda",
+  "analytical.v2_plate": "V₂ — placa derecha",
+  "analytical.formula": "Fórmula",
+  "analytical.canvas_spheres": "V(r) — Solución exacta",
+  "analytical.canvas_plates": "V(x) — Solución exacta",
+  "analytical.nav_link": "Solución exacta",
+  "analytical.back": "← Volver al simulador",
+  "analytical.page_description":
+    "Distribución de potencial V(r) o V(x) obtenida resolviendo la ecuación de Laplace analíticamente.",
 } as const;
 
 type TranslationKey = keyof typeof ES;
@@ -317,6 +335,24 @@ const EN: Record<TranslationKey, string> = {
   "share.button": "Share",
   "share.copied": "Copied!",
   "share.hint_custom": "Pick a preset to share",
+
+  "analytical.title": "Exact Analytical Solution",
+  "analytical.tab_spheres": "Concentric Spheres",
+  "analytical.tab_plates": "Parallel Plates",
+  "analytical.ri": "Rᵢ — inner radius",
+  "analytical.ro": "R₀ — outer radius",
+  "analytical.d": "d — separation",
+  "analytical.v1_sphere": "V₁ — inner potential",
+  "analytical.v2_sphere": "V₂ — outer potential",
+  "analytical.v1_plate": "V₁ — left plate",
+  "analytical.v2_plate": "V₂ — right plate",
+  "analytical.formula": "Formula",
+  "analytical.canvas_spheres": "V(r) — Exact solution",
+  "analytical.canvas_plates": "V(x) — Exact solution",
+  "analytical.nav_link": "Exact solution",
+  "analytical.back": "← Back to simulator",
+  "analytical.page_description":
+    "Potential distribution V(r) or V(x) obtained by solving Laplace's equation analytically.",
 };
 
 const translations: Record<Language, Record<TranslationKey, string>> = {
