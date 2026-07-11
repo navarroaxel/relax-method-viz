@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ShareButton } from "@/components/ShareButton";
 import { Toolbar3D } from "@/components/Toolbar3D";
 import { Viewport3D } from "@/components/Viewport3DDynamic";
 import {
@@ -18,6 +19,7 @@ import {
   PRESETS_3D,
   type Preset3DId,
 } from "@/lib/presets3d";
+import { buildShareUrl, clearShareParam, readShareFromUrl } from "@/lib/share";
 import type {
   Grid3DState,
   Primitive3D,
@@ -176,6 +178,24 @@ export function Simulator3D() {
     bumpConductors();
   };
 
+  // Restore a shared preset link (?s=...) once, after mount. Placed after
+  // the worker-init effect and handleApplyPreset (so workerRef is set and
+  // handleApplyPreset is already defined by the time this posts to the
+  // worker). A 2D share link is handled by Simulator's matching effect; if
+  // we're not the matching mode here, do nothing and don't strip.
+  useEffect(() => {
+    const s = readShareFromUrl();
+    if (!s || s.mode !== "3d") return;
+    // One-time hydration of view state from a shared link on mount, not a
+    // derived-state loop — the recommended exception to this rule.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShowEquipotentials(s.display.equipotentials);
+    setShowFieldLines(s.display.fieldLines);
+    handleApplyPreset(s.preset);
+    clearShareParam();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAutoOmega = () => {
     setOmega(parseFloat((2 / (1 + Math.sin(Math.PI / grid.N))).toFixed(3)));
   };
@@ -216,6 +236,19 @@ export function Simulator3D() {
             ))}
           </select>
         </label>
+        <ShareButton
+          disabled={preset === "custom"}
+          getUrl={() =>
+            buildShareUrl({
+              mode: "3d",
+              preset: preset as Preset3DId,
+              display: {
+                equipotentials: showEquipotentials,
+                fieldLines: showFieldLines,
+              },
+            })
+          }
+        />
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <input
             type="checkbox"
