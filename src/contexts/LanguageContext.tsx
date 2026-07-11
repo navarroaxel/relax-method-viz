@@ -159,6 +159,10 @@ const ES = {
   "preset3d.lightning": "Pararrayos simplificado (3D)",
   "preset3d.faraday": "Jaula de Faraday (3D)",
   "preset3d.subconductors": "Línea 4 subconductores (3D)",
+
+  "share.button": "Compartir",
+  "share.copied": "¡Copiado!",
+  "share.hint_custom": "Elegí un preset para compartir",
 } as const;
 
 type TranslationKey = keyof typeof ES;
@@ -309,6 +313,10 @@ const EN: Record<TranslationKey, string> = {
   "preset3d.lightning": "Lightning rod (3D)",
   "preset3d.faraday": "Faraday cage (3D)",
   "preset3d.subconductors": "4-subconductor bundle (3D)",
+
+  "share.button": "Share",
+  "share.copied": "Copied!",
+  "share.hint_custom": "Pick a preset to share",
 };
 
 const translations: Record<Language, Record<TranslationKey, string>> = {

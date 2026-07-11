@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { GitHubLink } from "@/components/GitHubLink";
 import { MethodExplanation } from "@/components/MethodExplanation";
 import { ProjectCredits } from "@/components/ProjectCredits";
@@ -8,6 +8,7 @@ import { SettingsPanel, type SimMode } from "@/components/SettingsPanel";
 import { Simulator } from "@/components/Simulator";
 import { Simulator3D } from "@/components/Simulator3D";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { readShareFromUrl } from "@/lib/share";
 
 const STORAGE_KEY = "relax-viz:mode";
 const STORE_EVENT = "relax-viz:mode-change";
@@ -36,6 +37,18 @@ export function SimulatorRoot() {
   const change = useCallback((m: SimMode) => {
     localStorage.setItem(STORAGE_KEY, m);
     window.dispatchEvent(new Event(STORE_EVENT));
+  }, []);
+
+  // A shared link may target the other mode than the one stored/hydrated.
+  // Flip the mode store once, post-mount, so the matching <Simulator*> mounts
+  // and applies the preset + strips the URL itself (see Simulator/Simulator3D
+  // mount effects). Child effects run before parent effects, so the
+  // initially-mounted wrong-mode simulator sees the mismatch and no-ops
+  // (without stripping the URL) before this switches the mode.
+  useEffect(() => {
+    const s = readShareFromUrl();
+    if (s && s.mode !== mode) change(s.mode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

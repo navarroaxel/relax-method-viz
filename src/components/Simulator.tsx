@@ -9,6 +9,7 @@ import { Legend } from "@/components/Legend";
 import { PresetSelect } from "@/components/PresetSelect";
 import { RunControls } from "@/components/RunControls";
 import { SaveLoadDialog } from "@/components/SaveLoadDialog";
+import { ShareButton } from "@/components/ShareButton";
 import {
   makeProbeHistory,
   pushProbeSample,
@@ -28,6 +29,7 @@ import { PRESETS, type PresetId } from "@/lib/presets";
 import { DEFAULT_SOLVER_CONFIG } from "@/lib/relaxation";
 import { computeFieldStats, type TraceShape } from "@/lib/rendering";
 import { sampleE, sampleTrace, sampleV } from "@/lib/sampling";
+import { buildShareUrl, clearShareParam, readShareFromUrl } from "@/lib/share";
 import { applyGeometryToGrid } from "@/lib/storage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type {
@@ -262,6 +264,25 @@ export function Simulator() {
     bumpRender();
   };
 
+  // Restore a shared preset link (?mode=2d&preset=...) once, after mount. Placed after
+  // the worker-init effect and handleApplyPreset (so workerRef is set and
+  // handleApplyPreset is already defined by the time this posts to the
+  // worker). A 3D share link is handled by SimulatorRoot switching modes
+  // first; if we're not the matching mode here, do nothing and don't strip.
+  useEffect(() => {
+    const s = readShareFromUrl();
+    if (!s || s.mode !== "2d") return;
+    // One-time hydration of view state from a shared link on mount, not a
+    // derived-state loop — the recommended exception to this rule.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAcEnabled(s.ac.enabled);
+    setAcPeriodSec(s.ac.periodSec);
+    setDisplay(s.display);
+    handleApplyPreset(s.preset);
+    clearShareParam();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handlePaint = useCallback(() => {
     setPresetId("custom");
     setIteration(0);
@@ -378,7 +399,20 @@ export function Simulator() {
         onBrushChange={setBrushSize}
         onPaintPhaseChange={setPaintPhaseDeg}
       />
-      <PresetSelect value={presetId} onApply={handleApplyPreset} />
+      <div className="flex flex-wrap items-center gap-2">
+        <PresetSelect value={presetId} onApply={handleApplyPreset} />
+        <ShareButton
+          disabled={presetId === "custom"}
+          getUrl={() =>
+            buildShareUrl({
+              mode: "2d",
+              preset: presetId as PresetId,
+              ac: { enabled: acEnabled, periodSec: acPeriodSec },
+              display,
+            })
+          }
+        />
+      </div>
       <DisplayToggles display={display} onChange={setDisplay} />
       <RunControls
         isRunning={isRunning}
