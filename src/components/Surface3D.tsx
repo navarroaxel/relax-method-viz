@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Canvas as R3FCanvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { divergentColor } from "@/lib/colormap";
 import { idx } from "@/lib/grid";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { GridState } from "@/types";
 
 interface Surface3DProps {
@@ -78,15 +79,59 @@ function Surface({ grid, renderTick, vmax }: Surface3DProps) {
 }
 
 export default function Surface3D(props: Surface3DProps) {
+  const { t } = useLanguage();
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Composite the WebGL canvas onto a white background so the exported PNG
+  // reads cleanly on a report page regardless of the current theme.
+  const handleExport = () => {
+    const gl = wrapRef.current?.querySelector("canvas");
+    if (!gl) return;
+    const out = document.createElement("canvas");
+    out.width = gl.width;
+    out.height = gl.height;
+    const ctx = out.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(gl, 0, 0);
+    out.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "surface-3d.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  };
+
   return (
-    <div className="h-[360px] w-[480px] overflow-hidden rounded-md border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-      <R3FCanvas camera={{ position: [1.0, 0.9, 1.0], fov: 45 }}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[2, 2, 2]} intensity={0.8} />
-        <Surface {...props} />
-        <axesHelper args={[0.6]} />
-        <OrbitControls enableDamping />
-      </R3FCanvas>
+    <div className="flex flex-col items-center gap-2">
+      <div
+        ref={wrapRef}
+        className="h-[360px] w-[480px] overflow-hidden rounded-md border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+      >
+        <R3FCanvas
+          camera={{ position: [1.0, 0.9, 1.0], fov: 45 }}
+          gl={{ preserveDrawingBuffer: true }}
+        >
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[2, 2, 2]} intensity={0.8} />
+          <Surface {...props} />
+          <axesHelper args={[0.6]} />
+          <OrbitControls enableDamping />
+        </R3FCanvas>
+      </div>
+      <button
+        type="button"
+        onClick={handleExport}
+        className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
+      >
+        {t("export.surface_png")}
+      </button>
     </div>
   );
 }
