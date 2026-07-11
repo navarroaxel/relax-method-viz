@@ -6,6 +6,7 @@ export type Preset3DId =
   | "parallel"
   | "dipole"
   | "coax"
+  | "concentric"
   | "lightning"
   | "faraday"
   | "subconductors";
@@ -16,6 +17,7 @@ interface Preset3D {
     | "preset3d.parallel"
     | "preset3d.dipole"
     | "preset3d.coax"
+    | "preset3d.concentric"
     | "preset3d.lightning"
     | "preset3d.faraday"
     | "preset3d.subconductors";
@@ -99,6 +101,29 @@ export const PRESETS_3D: Record<Preset3DId, Preset3D> = {
       rasterCylinder(g, [cx, cy, 0], [cx, cy, N - 1], rShellOut, 0);
       rasterCylinder(g, [cx, cy, 0], [cx, cy, N - 1], rShellIn, 0, true);
       rasterCylinder(g, [cx, cy, 0], [cx, cy, N - 1], rInner, 80);
+    },
+  },
+  concentric: {
+    id: "concentric",
+    labelKey: "preset3d.concentric",
+    apply: (g) => {
+      clearAll3D(g);
+      const N = g.N;
+      const cx = Math.floor(N / 2);
+      const cy = Math.floor(N / 2);
+      const rInner = sc(6, N);
+      const rNeutral = sc(13, N);
+      const rWire = Math.max(1, sc(1, N));
+      const N_WIRES = 12;
+      // Fase interior (+220 V), a lo largo de todo Z.
+      rasterCylinder(g, [cx, cy, 0], [cx, cy, N - 1], rInner, 220);
+      // Neutro concéntrico: hilos discretos a 0 V, cada uno un cilindro fino.
+      for (let m = 0; m < N_WIRES; m++) {
+        const th = (2 * Math.PI * m) / N_WIRES;
+        const wx = Math.round(cx + rNeutral * Math.cos(th));
+        const wy = Math.round(cy + rNeutral * Math.sin(th));
+        rasterCylinder(g, [wx, wy, 0], [wx, wy, N - 1], rWire, 0);
+      }
     },
   },
   lightning: {
@@ -210,7 +235,6 @@ export const PRESETS_3D: Record<Preset3DId, Preset3D> = {
       const V1 = Math.sqrt(2 / 3) * 500_000;
       const r = sc(2, N);
       const cx = Math.floor(N / 2);
-      const cz = Math.floor(N / 2);
       const spread = sc(4, N);
       const bundleY = sc(20, N);
       rasterPlate(g, [sc(6, N), sc(50, N), sc(6, N)], [sc(54, N), sc(52, N), sc(54, N)], 0);
