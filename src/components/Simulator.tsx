@@ -304,7 +304,7 @@ export function Simulator() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "campo.png";
+      a.download = "field.png";
       document.body.appendChild(a);
       a.click();
       a.remove();

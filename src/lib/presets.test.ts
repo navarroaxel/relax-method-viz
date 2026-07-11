@@ -128,6 +128,39 @@ describe("preset-specific voltage/geometry checks", () => {
   );
 
   it.each(SIZES)(
+    "singleconductor: has cells at V1 = sqrt(2/3)*500kV, a grounded plane, and a single central disc (N=%i)",
+    (N) => {
+      const g = createGrid(N);
+      PRESETS.singleconductor.apply(g);
+      const V1 = Math.sqrt(2 / 3) * 500_000;
+      const sc = (x: number) => Math.round((x * N) / 80);
+      const ci = sc(40);
+      const cj = sc(30);
+      // A single disc of radius sc(2); allow slack for rasterization/rounding.
+      const maxDist = sc(2) + 2;
+      let hasV1 = false;
+      let hasGround = false;
+      let v1CellsAllCentral = true;
+      for (let k = 0; k < g.fixed.length; k++) {
+        if (g.fixed[k] !== 1) continue;
+        const v = g.Vfix[k] as number;
+        if (v === 0) hasGround = true;
+        if (Math.abs(v - V1) < 1) {
+          hasV1 = true;
+          // idx(i, j, N) = i * N + j
+          const i = Math.floor(k / N);
+          const j = k % N;
+          if (Math.hypot(i - ci, j - cj) > maxDist) v1CellsAllCentral = false;
+        }
+      }
+      expect(hasV1).toBe(true);
+      expect(hasGround).toBe(true);
+      // Distinguishes the single central disc from the 4-disc bundle layout.
+      expect(v1CellsAllCentral).toBe(true);
+    },
+  );
+
+  it.each(SIZES)(
     "threephase: has cells at V1 = sqrt(2/3)*500kV (N=%i)",
     (N) => {
       const g = createGrid(N);
