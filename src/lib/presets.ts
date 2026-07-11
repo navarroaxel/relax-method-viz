@@ -116,6 +116,7 @@ export type PresetId =
   | "dipole"
   | "lightning"
   | "coaxial"
+  | "concentric"
   | "faraday"
   | "tip"
   | "subconductors"
@@ -166,6 +167,32 @@ export const PRESETS: Record<PresetId, Preset> = {
       const sc = (x: number) => Math.round(x * g.N / 80);
       setRing(g, sc(40), sc(40), sc(30), sc(2), 0);
       setDisc(g, sc(40), sc(40), sc(8), +80);
+      applyFixedValues(g);
+    },
+  },
+  concentric: {
+    label: "Cable concéntrico",
+    apply: (g) => {
+      clearAll(g);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      const cx = sc(40);
+      const cy = sc(40);
+      // Neutro concéntrico: hilos discretos a 0 V repartidos en un círculo.
+      const rNeutral = sc(22);
+      const rWire = Math.max(1, sc(1.5));
+      const N_WIRES = 12;
+      for (let m = 0; m < N_WIRES; m++) {
+        const th = (2 * Math.PI * m) / N_WIRES;
+        setDisc(
+          g,
+          Math.round(cx + rNeutral * Math.cos(th)),
+          Math.round(cy + rNeutral * Math.sin(th)),
+          rWire,
+          0,
+        );
+      }
+      // Fase interior (+220 V).
+      setDisc(g, cx, cy, sc(9), +220);
       applyFixedValues(g);
     },
   },
@@ -240,6 +267,7 @@ export const PRESET_ORDER: PresetId[] = [
   "dipole",
   "lightning",
   "coaxial",
+  "concentric",
   "faraday",
   "tip",
   "subconductors",
