@@ -13,10 +13,14 @@ function setRect(
   v: number,
 ): void {
   const { N, fixed, Vfix } = g;
-  const iMin = Math.max(0, Math.min(i0, i1));
-  const iMax = Math.min(N, Math.max(i0, i1));
-  const jMin = Math.max(0, Math.min(j0, j1));
-  const jMax = Math.min(N, Math.max(j0, j1));
+  // Clamp to the interior [1, N-1): conductors must stay off rows/cols 0 and
+  // N-1, which applyBoundary rewrites every sweep (see AGENTS.md). Presets pass
+  // full-width bounds like [0, sc(80)=N) intending "span the domain"; Neumann
+  // walls mirror the field outward so stopping one cell short is equivalent.
+  const iMin = Math.max(1, Math.min(i0, i1));
+  const iMax = Math.min(N - 1, Math.max(i0, i1));
+  const jMin = Math.max(1, Math.min(j0, j1));
+  const jMax = Math.min(N - 1, Math.max(j0, j1));
   for (let i = iMin; i < iMax; i++) {
     for (let j = jMin; j < jMax; j++) {
       const k = idx(i, j, N);
