@@ -235,7 +235,6 @@ export const PRESETS_3D: Record<Preset3DId, Preset3D> = {
       const V1 = Math.sqrt(2 / 3) * 500_000;
       const r = sc(2, N);
       const cx = Math.floor(N / 2);
-      const cz = Math.floor(N / 2);
       const spread = sc(4, N);
       const bundleY = sc(20, N);
       rasterPlate(g, [sc(6, N), sc(50, N), sc(6, N)], [sc(54, N), sc(52, N), sc(54, N)], 0);
