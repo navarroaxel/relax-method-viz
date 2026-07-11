@@ -10,9 +10,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 npm run dev       # dev server at http://localhost:3000 (Turbopack)
 npm run build     # static export to out/
 npm run lint      # ESLint
+npm test          # vitest run — unit tests under src/**/*.test.ts (currently only src/lib/)
+npm run test:watch # vitest in watch mode
 ```
 
-There is no test suite. Type-check with:
+Type-check with:
 
 ```bash
 npx tsc --noEmit
@@ -20,7 +22,7 @@ npx tsc --noEmit
 
 ## Architecture
 
-**Stack**: Next.js 16 (App Router, static export), React 19, TypeScript strict + `noUncheckedIndexedAccess`, Tailwind CSS v4. No testing framework. The entire build output is a static `out/` directory — no server runtime.
+**Stack**: Next.js 16 (App Router, static export), React 19, TypeScript strict + `noUncheckedIndexedAccess`, Tailwind CSS v4, Vitest for unit tests. The entire build output is a static `out/` directory — no server runtime.
 
 **App shell**: `SimulatorRoot.tsx` owns the page chrome — the `<main>` wrapper, the header (title, description, GitHub link + `SettingsPanel` popover that holds the 2D/3D mode, language, and theme controls), and the footer (`MethodExplanation`, `ProjectCredits`). It reads `relax-viz:mode` (`"2d" | "3d"`) from `localStorage` via `useSyncExternalStore` (SSR defaults to `"2d"` to match the static export) and renders either `<Simulator />` or `<Simulator3D />` between the header and footer — both are fragments, so their children become siblings of the shared chrome.
 
@@ -67,7 +69,7 @@ npx tsc --noEmit
 
 **Path alias**: `@/` maps to `src/`.
 
-**Presets (2D)** (`src/lib/presets.ts`): Eight entries in `PRESETS: Record<PresetId, Preset>`, rendered in the order defined by `PRESET_ORDER`. Each `apply(g)` calls `clearAll`, then geometry helpers (`setRect`, `setDisc`, `setRing`, `setTriangleTipUp`), then `applyFixedValues`. All coordinates are written for N = 80 and scaled via `sc = (x) => Math.round(x * g.N / 80)` so they adapt to any grid size.
+**Presets (2D)** (`src/lib/presets.ts`): Nine entries in `PRESETS: Record<PresetId, Preset>`, rendered in the order defined by `PRESET_ORDER`. Each `apply(g)` calls `clearAll`, then geometry helpers (`setRect`, `setDisc`, `setRing`, `setTriangleTipUp`), then `applyFixedValues`. All coordinates are written for N = 80 and scaled via `sc = (x) => Math.round(x * g.N / 80)` so they adapt to any grid size.
 
 | ID             | Label                    | Geometry                                                        |
 | -------------- | ------------------------ | --------------------------------------------------------------- |
@@ -79,6 +81,7 @@ npx tsc --noEmit
 | `tip`          | Punta vs plano           | Grounded bottom plate + triangular tip at +80 V                |
 | `conductors`   | Placas conductoras       | Horizontal plate +100 kV + vertical plate −100 kV (L-shape)   |
 | `subconductors`| Línea 4 subconductores   | Ground plane + 2×2 disc bundle at √(2/3)×500 kV               |
+| `threephase`   | Línea trifásica + neutro | Ground plane + 3 discs at √(2/3)×500 kV, AC phases 0°/120°/240° + 1 grounded (neutral) disc |
 
 **Presets (3D)** (`src/lib/presets3d.ts`): Six entries in `PRESETS_3D: Record<Preset3DId, Preset3D>`. Each `apply(g)` calls `clearAll3D`, then voxel rasterizers from `src/lib/primitives3d.ts` (presets currently use `rasterPlate` and `rasterCylinder`; `rasterSphere` and `rasterWire` are available for the toolbar tools but no preset needs them). All coordinates are written for `REF_N = 60` and scaled via `sc = (x, N) => Math.round(x * N / 60)`. There is no `tip` or `conductors` analogue in 3D.
 

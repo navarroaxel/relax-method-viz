@@ -10,12 +10,15 @@ real mientras el solver converge.
 
 ## Qué hace
 
-- **Switch 2D / 3D en el header**: alterná entre el lienzo 2D y la
-  vista 3D de dominio volumétrico cuando quieras; la elección queda
-  persistida en `localStorage`.
-- **Ocho geometrías 2D predefinidas**: capacitor plano, dipolo,
+- **Popover de configuración en el header**: un botón ⚙ al lado del
+  link de GitHub abre un popover con el switch de modo 2D / 3D, el
+  toggle de idioma ES / EN y el control de tema claro / oscuro /
+  sistema; el modo y el tema elegidos quedan persistidos en
+  `localStorage`.
+- **Nueve geometrías 2D predefinidas**: capacitor plano, dipolo,
   pararrayos simplificado, cable coaxial, jaula de Faraday, punta vs
-  plano, placas conductoras en L, bundle de 4 subconductores AT.
+  plano, placas conductoras en L, bundle de 4 subconductores AT,
+  línea trifásica + neutro.
 - **Seis geometrías 3D predefinidas**: placas paralelas, dipolo, cable
   coaxial, pararrayos simplificado, jaula de Faraday, bundle de 4
   subconductores AT.
@@ -83,11 +86,19 @@ npm run build
 Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
 `ArrayBuffer` transferable.
 
+Correr los tests unitarios (Vitest, cubren `src/lib/*`):
+
+```bash
+npm test          # corrida única
+npm run test:watch
+```
+
 ## Cómo se usa
 
-El header tiene un switch **2D / 3D** (arriba a la derecha, al lado
-del idioma / GitHub / tema). Los dos modos comparten el cromo de la
-página pero tienen toolbars, presets y solvers independientes.
+El popover **⚙ Configuración** del header (arriba a la derecha, al
+lado del link de GitHub) tiene el switch de modo **2D / 3D**, el
+idioma y el tema. Los dos modos comparten el cromo de la página pero
+tienen toolbars, presets y solvers independientes.
 
 ### Modo 2D
 
@@ -163,6 +174,7 @@ página pero tienen toolbars, presets y solvers independientes.
 | `tip`            | Punta vs plano            | Punta triangular a +80 V sobre plano aterrado — alta concentración de campo en el vértice.      |
 | `conductors`     | Placas conductoras        | Geometría en L (placa horizontal +100 kV, placa vertical −100 kV); campos de franja en bordes.  |
 | `subconductors`  | Línea 4 subconductores    | Bundle 2×2 de discos a √(2/3)×500 kV sobre plano de tierra — modela línea AT real.             |
+| `threephase`     | Línea trifásica + neutro  | Tres discos a √(2/3)×500 kV con fases AC 0°/120°/240° más un disco aterrado (neutro), sobre plano de tierra. |
 
 ### 3D
 
@@ -263,13 +275,13 @@ src/
   app/                     Shell de Next.js App Router (layout + page)
   components/
     SimulatorRoot.tsx      Cromo de la página (header + footer) + dispatch 2D/3D
-    ModeToggle.tsx         Switch 2D / 3D (en el header)
+    SettingsPanel.tsx      Popover ⚙: modo 2D/3D + idioma + tema (en el header)
     Simulator.tsx          2D: estado top-level + plumbing del worker
     Canvas.tsx             Canvas 480×480, paint + touch + hover + traza
     Surface3D.tsx          Malla 3D opcional del modo 2D (V(x, y) en Three.js)
     Surface3DDynamic.tsx   Wrapper de dynamic-import de Next sobre Surface3D
     Toolbar.tsx            2D: herramientas, sliders de voltaje / pincel / fase
-    PresetSelect.tsx       Dropdown de los ocho presets 2D
+    PresetSelect.tsx       Dropdown de los nueve presets 2D
     DisplayToggles.tsx     Checkboxes por capa 2D (heatmap / equipotenciales /
                            líneas de campo / flechas / superficie 3D)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grilla / contorno
@@ -286,8 +298,6 @@ src/
     Viewport3DDynamic.tsx  Wrapper de dynamic-import de Next sobre Viewport3D
     MethodExplanation.tsx  Bloque de notas (relajación / traza / AC)
     ProjectCredits.tsx     <footer> de la página con créditos de cátedra y equipo
-    LanguageToggle.tsx     Switch ES / EN (useSyncExternalStore)
-    ThemeToggle.tsx        Switch de tema claro / oscuro / sistema
     GitHubLink.tsx         Link al repo
   lib/
     grid.ts                GridState, idx, paintBrush/Stroke, applyModulatedFixed
@@ -296,7 +306,7 @@ src/
     sampling.ts            sampleV, sampleE, sampleTrace (interpolación bilineal)
     chartUtils.ts          niceTicks, formatNum (compartidos por Trace + StripChart)
     colormap.ts            Lerp divergente azul-blanco-rojo
-    presets.ts             Helpers de geometría 2D + registro (ocho presets)
+    presets.ts             Helpers de geometría 2D + registro (nueve presets)
     storage.ts             localStorage + import/export JSON
     grid3d.ts              Grid3DState, idx3, applyBoundary3D / applyFixedValues3D
     relaxation3d.ts        relaxStep3D (SOR 6 vecinos), DEFAULT_SOLVER_CONFIG_3D
@@ -353,6 +363,9 @@ del hot loop — empezar mirando `lib/relaxation.ts`.
 - Web Worker para el solver, `Float32Array` / `Uint8Array`
   transferables para streaming de progreso sin copias
 - `localStorage` para persistencia; `canvas.toBlob` para export a PNG
+- Vercel Analytics (`@vercel/analytics`, montado como `<Analytics />`
+  en `layout.tsx`)
+- Vitest para tests unitarios sobre `src/lib/*`
 
 ## Deploy
 

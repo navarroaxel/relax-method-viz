@@ -9,12 +9,14 @@ time as the solver converges.
 
 ## Features
 
-- **2D / 3D toggle in the header**: switch between the 2D canvas and a
-  full 3D voxel-domain view at any time; the choice is remembered in
-  `localStorage`.
-- **Eight built-in 2D geometries**: flat capacitor, dipole, simplified
+- **Settings popover in the header**: a single ⚙ button next to the
+  GitHub link opens a popover with the 2D / 3D mode switch, the
+  ES / EN language toggle, and the light / dark / system theme
+  control; mode and theme choices are remembered in `localStorage`.
+- **Nine built-in 2D geometries**: flat capacitor, dipole, simplified
   lightning rod, coaxial cable, Faraday cage, tip-vs-plane, L-shaped
-  conducting plates, 4-subconductor HV bundle.
+  conducting plates, 4-subconductor HV bundle, three-phase line +
+  neutral.
 - **Six built-in 3D geometries**: parallel plates, dipole, coaxial
   cable, simplified lightning rod, Faraday cage, 4-subconductor HV
   bundle.
@@ -78,11 +80,19 @@ npm run build
 Requirements: Node 20+ (Next.js 16), modern browser with Web Worker and
 transferable `ArrayBuffer` support.
 
+Run the unit tests (Vitest, covering `src/lib/*`):
+
+```bash
+npm test          # single run
+npm run test:watch
+```
+
 ## Using the app
 
-The header has a **2D / 3D** toggle (top-right, next to language /
-GitHub / theme). The two modes share the page chrome but otherwise
-have independent toolbars, presets, and solvers.
+The header's **⚙ Settings** popover (top-right, next to the GitHub
+link) holds the **2D / 3D** mode switch, language, and theme. The two
+modes share the page chrome but otherwise have independent toolbars,
+presets, and solvers.
 
 ### 2D mode
 
@@ -156,6 +166,7 @@ have independent toolbars, presets, and solvers.
 | `tip`            | Punta vs plano            | Triangular tip at +80 V over a grounded plate — high field density near the apex.               |
 | `conductors`     | Placas conductoras        | L-shaped geometry (horizontal +100 kV plate, vertical −100 kV plate); fringe fields at edges.  |
 | `subconductors`  | Línea 4 subconductores    | 2×2 bundle of discs at √(2/3)×500 kV over a ground plane — models a 4-subconductor HV bundle.  |
+| `threephase`     | Línea trifásica + neutro  | Three discs at √(2/3)×500 kV with AC phases 0°/120°/240° plus one grounded (neutral) disc, over a ground plane. |
 
 ### 3D
 
@@ -253,13 +264,13 @@ src/
   app/                     Next.js App Router shell (layout + page)
   components/
     SimulatorRoot.tsx      Page chrome (header + footer) + 2D/3D dispatch
-    ModeToggle.tsx         2D / 3D switch (in the header)
+    SettingsPanel.tsx      ⚙ popover: 2D/3D mode + language + theme (in the header)
     Simulator.tsx          2D: top-level state + worker plumbing
     Canvas.tsx             480×480 canvas, paint + touch + hover + trace input
     Surface3D.tsx          2D-mode optional Three.js mesh of V(x, y)
     Surface3DDynamic.tsx   Next dynamic-import wrapper around Surface3D
     Toolbar.tsx            2D tool picker, voltage / brush / paint-phase
-    PresetSelect.tsx       Dropdown of the eight 2D preset geometries
+    PresetSelect.tsx       Dropdown of the nine 2D preset geometries
     DisplayToggles.tsx     2D per-layer checkboxes (heatmap / equipotentials /
                            streamlines / arrows / 3D surface)
     RunControls.tsx        Calcular / Paso / Reset V / Limpiar / grid size / boundary
@@ -276,8 +287,6 @@ src/
     Viewport3DDynamic.tsx  Next dynamic-import wrapper around Viewport3D
     MethodExplanation.tsx  Footer block with relaxation / trace / AC notes
     ProjectCredits.tsx     Page <footer> with course / team credits
-    LanguageToggle.tsx     ES / EN switch (useSyncExternalStore)
-    ThemeToggle.tsx        Light / dark / system theme switch
     GitHubLink.tsx         Repo link
   lib/
     grid.ts                GridState, idx, paintBrush/Stroke, applyModulatedFixed
@@ -286,7 +295,7 @@ src/
     sampling.ts            sampleV, sampleE, sampleTrace (bilinear interp)
     chartUtils.ts          niceTicks, formatNum (shared by Trace + StripChart)
     colormap.ts            Divergent blue-white-red lerp
-    presets.ts             2D geometry helpers + registry (eight presets)
+    presets.ts             2D geometry helpers + registry (nine presets)
     storage.ts             localStorage + JSON import/export
     grid3d.ts              Grid3DState, idx3, applyBoundary3D / applyFixedValues3D
     relaxation3d.ts        relaxStep3D (6-neighbor SOR), DEFAULT_SOLVER_CONFIG_3D
@@ -341,6 +350,9 @@ the hot loop somewhere — start by checking `lib/relaxation.ts`.
 - Web Worker for the solver, transferable `Float32Array` / `Uint8Array`
   for zero-copy progress streaming
 - `localStorage` for persistence; `canvas.toBlob` for PNG export
+- Vercel Analytics (`@vercel/analytics`, mounted as `<Analytics />` in
+  `layout.tsx`)
+- Vitest for unit tests over `src/lib/*`
 
 ## Deploy
 
