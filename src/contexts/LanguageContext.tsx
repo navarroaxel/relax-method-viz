@@ -81,6 +81,7 @@ const ES = {
 
   "export.save_load": "Guardar / Cargar",
   "export.png": "Exportar PNG",
+  "export.surface_png": "Exportar superficie PNG",
 
   "legend.title": "Referencia",
   "legend.ground": "Tierra",
@@ -229,6 +230,7 @@ const EN: Record<TranslationKey, string> = {
 
   "export.save_load": "Save / Load",
   "export.png": "Export PNG",
+  "export.surface_png": "Export surface PNG",
 
   "legend.title": "Legend",
   "legend.ground": "Ground",
