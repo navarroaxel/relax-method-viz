@@ -83,8 +83,8 @@ Build de producción (export estático a `out/`):
 npm run build
 ```
 
-Requisitos: Node 20+ (Next.js 16), browser moderno con Web Worker y
-`ArrayBuffer` transferable.
+Requisitos: Node 24.15+ (ver `engines` en `package.json`; CI usa Node
+26), browser moderno con Web Worker y `ArrayBuffer` transferable.
 
 Correr los tests unitarios (Vitest, cubren `src/lib/*`):
 

@@ -77,7 +77,8 @@ Production build (static export to `out/`):
 npm run build
 ```
 
-Requirements: Node 20+ (Next.js 16), modern browser with Web Worker and
+Requirements: Node 24.15+ (see `engines` in `package.json`; CI runs Node
+26), modern browser with Web Worker and
 transferable `ArrayBuffer` support.
 
 Run the unit tests (Vitest, covering `src/lib/*`):
