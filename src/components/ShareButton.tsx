@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ShareButtonProps {
@@ -11,6 +11,15 @@ interface ShareButtonProps {
 export function ShareButton({ disabled, getUrl }: ShareButtonProps) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  // Clear the pending "copied" reset if we unmount (e.g. switching 2D/3D mode)
+  // within the 1.8s window, so it never fires setState on an unmounted node.
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleClick = async () => {
     const url = getUrl();
@@ -20,7 +29,8 @@ export function ShareButton({ disabled, getUrl }: ShareButtonProps) {
       window.prompt("", url); // clipboard blocked — let the user copy manually
     }
     setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => setCopied(false), 1800);
   };
 
   const label = disabled

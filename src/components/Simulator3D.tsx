@@ -178,7 +178,7 @@ export function Simulator3D() {
     bumpConductors();
   };
 
-  // Restore a shared preset link (?s=...) once, after mount. Placed after
+  // Restore a shared preset link (?mode=3d&preset=...) once, after mount. Placed after
   // the worker-init effect and handleApplyPreset (so workerRef is set and
   // handleApplyPreset is already defined by the time this posts to the
   // worker). A 2D share link is handled by Simulator's matching effect; if
