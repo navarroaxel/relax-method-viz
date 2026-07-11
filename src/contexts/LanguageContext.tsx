@@ -76,6 +76,7 @@ const ES = {
   "preset.faraday": "Jaula de Faraday",
   "preset.tip": "Punta vs plano",
   "preset.conductors": "Placas conductoras",
+  "preset.singleconductor": "Línea 1 conductor",
   "preset.subconductors": "Línea 4 subconductores",
   "preset.threephase": "Línea trifásica + neutro",
 
@@ -225,6 +226,7 @@ const EN: Record<TranslationKey, string> = {
   "preset.faraday": "Faraday cage",
   "preset.tip": "Tip vs plane",
   "preset.conductors": "Conducting plates",
+  "preset.singleconductor": "Single-conductor line",
   "preset.subconductors": "4-subconductor line",
   "preset.threephase": "Three-phase line + neutral",
 

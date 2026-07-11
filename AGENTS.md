@@ -69,7 +69,7 @@ npx tsc --noEmit
 
 **Path alias**: `@/` maps to `src/`.
 
-**Presets (2D)** (`src/lib/presets.ts`): Nine entries in `PRESETS: Record<PresetId, Preset>`, rendered in the order defined by `PRESET_ORDER`. Each `apply(g)` calls `clearAll`, then geometry helpers (`setRect`, `setDisc`, `setRing`, `setTriangleTipUp`), then `applyFixedValues`. All coordinates are written for N = 80 and scaled via `sc = (x) => Math.round(x * g.N / 80)` so they adapt to any grid size.
+**Presets (2D)** (`src/lib/presets.ts`): Ten entries in `PRESETS: Record<PresetId, Preset>`, rendered in the order defined by `PRESET_ORDER`. Each `apply(g)` calls `clearAll`, then geometry helpers (`setRect`, `setDisc`, `setRing`, `setTriangleTipUp`), then `applyFixedValues`. All coordinates are written for N = 80 and scaled via `sc = (x) => Math.round(x * g.N / 80)` so they adapt to any grid size.
 
 | ID             | Label                    | Geometry                                                        |
 | -------------- | ------------------------ | --------------------------------------------------------------- |
@@ -80,6 +80,7 @@ npx tsc --noEmit
 | `faraday`      | Jaula de Faraday         | Top plate +80 V, grounded bottom plate + grounded closed box   |
 | `tip`          | Punta vs plano           | Grounded bottom plate + triangular tip at +80 V                |
 | `conductors`   | Placas conductoras       | Horizontal plate +100 kV + vertical plate −100 kV (L-shape)   |
+| `singleconductor` | Línea 1 conductor        | Ground plane + single central disc at √(2/3)×500 kV            |
 | `subconductors`| Línea 4 subconductores   | Ground plane + 2×2 disc bundle at √(2/3)×500 kV               |
 | `threephase`   | Línea trifásica + neutro | Ground plane + 3 discs at √(2/3)×500 kV, AC phases 0°/120°/240° + 1 grounded (neutral) disc |
 

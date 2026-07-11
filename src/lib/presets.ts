@@ -119,6 +119,7 @@ export type PresetId =
   | "concentric"
   | "faraday"
   | "tip"
+  | "singleconductor"
   | "subconductors"
   | "threephase"
   | "conductors";
@@ -221,6 +222,17 @@ export const PRESETS: Record<PresetId, Preset> = {
       applyFixedValues(g);
     },
   },
+  singleconductor: {
+    label: "Línea 1 conductor",
+    apply: (g) => {
+      clearAll(g);
+      const sc = (x: number) => Math.round(x * g.N / 80);
+      const V1 = Math.sqrt(2 / 3) * 500_000;
+      setRect(g, 0, sc(75), sc(80), sc(78), 0);
+      setDisc(g, sc(40), sc(30), sc(2), V1);
+      applyFixedValues(g);
+    },
+  },
   subconductors: {
     label: "Línea 4 subconductores",
     apply: (g) => {
@@ -270,6 +282,7 @@ export const PRESET_ORDER: PresetId[] = [
   "concentric",
   "faraday",
   "tip",
+  "singleconductor",
   "subconductors",
   "threephase",
   "conductors",
