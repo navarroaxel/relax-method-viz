@@ -2,6 +2,7 @@
   "name": "relax-method-viz",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Interactive 2D electrostatic field simulator that solves Laplace's equation by successive over-relaxation (SOR) on a square grid. UTN FRBA — Teoría de los Campos.",
   "engines": {
     "node": ">=24.15.0"
