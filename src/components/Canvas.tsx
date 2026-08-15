@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { applyFixedValues, idx, paintBrush, paintStroke } from "@/lib/grid";
+import { applyFixedValues, paintBrush, paintStroke } from "@/lib/grid";
 import { renderAll, renderTrace, type TraceShape } from "@/lib/rendering";
+import { sampleE, sampleV } from "@/lib/sampling";
 import type { DisplayFlags, GridState, Tool } from "@/types";
 
 interface CanvasProps {
@@ -15,6 +16,7 @@ interface CanvasProps {
   displaySize: number;
   renderTick: number;
   vmax: number;
+  emax: number;
   trace: TraceShape | null;
   traceDraft: TraceShape | null;
   onPaint: () => void;
@@ -29,6 +31,8 @@ interface HoverInfo {
   j: number;
   V: number;
   E: number;
+  ex: number;
+  ey: number;
 }
 
 const CURVE_MIN_STEP = 0.5; // grid cells between recorded points
@@ -43,6 +47,7 @@ export function Canvas({
   displaySize,
   renderTick,
   vmax,
+  emax,
   trace,
   traceDraft,
   onPaint,
@@ -53,6 +58,7 @@ export function Canvas({
 }: CanvasProps) {
   const internalCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasRef = externalCanvasRef ?? internalCanvasRef;
+  const overlayRef = useRef<HTMLCanvasElement | null>(null);
   const isPaintingRef = useRef(false);
   const lastCellRef = useRef<{ i: number; j: number } | null>(null);
   const isCurveDrawingRef = useRef(false);
@@ -73,6 +79,54 @@ export function Canvas({
     const cellSize = displaySize / grid.N;
     renderTrace(ctx, trace, traceDraft, cellSize);
   }, [canvasRef, grid, display, displaySize, renderTick, vmax, trace, traceDraft]);
+
+  useEffect(() => {
+    const canvas = overlayRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!hover || hover.E < 1e-6) return;
+
+    const cellSize = displaySize / grid.N;
+    const cx = (hover.i + 0.5) * cellSize;
+    const cy = (hover.j + 0.5) * cellSize;
+    const ux = hover.ex / hover.E;
+    const uy = hover.ey / hover.E;
+    const MAX_L = cellSize * 10;
+    const L = Math.min(hover.E / emax, 1) * MAX_L;
+    const x1 = cx - ux * L * 0.35;
+    const y1 = cy - uy * L * 0.35;
+    const x2 = cx + ux * L * 0.65;
+    const y2 = cy + uy * L * 0.65;
+
+    ctx.save();
+    ctx.strokeStyle = "#fbbf24";
+    ctx.fillStyle = "#fbbf24";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    const angle = Math.atan2(uy, ux);
+    const hl = cellSize * 0.7;
+    const ha = Math.PI / 6;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - hl * Math.cos(angle - ha), y2 - hl * Math.sin(angle - ha));
+    ctx.lineTo(x2 - hl * Math.cos(angle + ha), y2 - hl * Math.sin(angle + ha));
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }, [hover, emax, displaySize, grid.N]);
 
   // Cancel any in-progress trace when the tool changes.
   useEffect(() => {
@@ -121,24 +175,16 @@ export function Canvas({
 
     const updateHover = (clientX: number, clientY: number) => {
       const { grid } = stateRef.current;
-      const { i, j } = toCell(clientX, clientY);
+      const { x, y } = toFracCell(clientX, clientY);
+      const i = Math.floor(x);
+      const j = Math.floor(y);
       if (i < 0 || i >= grid.N || j < 0 || j >= grid.N) {
         setHover(null);
         return;
       }
-      const k = idx(i, j, grid.N);
-      const V = grid.V[k] as number;
-      let E = 0;
-      if (i > 0 && i < grid.N - 1 && j > 0 && j < grid.N - 1) {
-        const vR = grid.V[idx(i + 1, j, grid.N)] as number;
-        const vL = grid.V[idx(i - 1, j, grid.N)] as number;
-        const vD = grid.V[idx(i, j + 1, grid.N)] as number;
-        const vU = grid.V[idx(i, j - 1, grid.N)] as number;
-        const ex = -(vR - vL) * 0.5;
-        const ey = -(vD - vU) * 0.5;
-        E = Math.sqrt(ex * ex + ey * ey);
-      }
-      setHover({ i, j, V, E });
+      const { ex, ey, mag } = sampleE(grid.V, grid.N, x, y);
+      const V = sampleV(grid.V, grid.N, x, y);
+      setHover({ i, j, V, E: mag, ex, ey });
     };
 
     // ---- trace handlers ------------------------------------------------
@@ -268,6 +314,7 @@ export function Canvas({
       const t = e.touches[0];
       if (!t) return;
       e.preventDefault();
+      updateHover(t.clientX, t.clientY);
       const { tool } = stateRef.current;
       const { x, y } = toFracCell(t.clientX, t.clientY);
       if (tool === "line") {
@@ -288,6 +335,7 @@ export function Canvas({
       const t = e.touches[0];
       if (!t) return;
       e.preventDefault();
+      updateHover(t.clientX, t.clientY);
       const { tool } = stateRef.current;
       if (tool === "line") {
         const { x, y } = toFracCell(t.clientX, t.clientY);
@@ -350,13 +398,25 @@ export function Canvas({
         height={displaySize}
         className="block h-full w-full rounded-md border border-zinc-300 bg-white shadow-sm touch-none select-none dark:border-zinc-700"
       />
+      <canvas
+        ref={overlayRef}
+        width={displaySize}
+        height={displaySize}
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      />
       {hover && (
         <div className="pointer-events-none absolute right-2 top-2 rounded-md border border-zinc-200 bg-white/90 px-2 py-1 font-mono text-[11px] leading-tight text-zinc-700 shadow-sm backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200">
           <div>
             ({hover.i}, {hover.j})
           </div>
           <div>V = {hover.V.toFixed(2)}</div>
+          <div>
+            E = ({hover.ex.toFixed(2)}, {hover.ey.toFixed(2)})
+          </div>
           <div>|E| = {hover.E.toFixed(3)}</div>
+          <div>
+            θ = {(Math.atan2(hover.ey, hover.ex) * (180 / Math.PI)).toFixed(1)}°
+          </div>
         </div>
       )}
     </div>
