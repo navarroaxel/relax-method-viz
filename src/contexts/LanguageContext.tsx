@@ -17,6 +17,7 @@ const ES = {
   "language.switch_aria": "Cambiar a inglés",
 
   "page.title": "Campo Eléctrico — Método de Relax",
+  "page.lab1_link": "Laboratorio 1 — Fuerzas entre corrientes y campos magnéticos →",
   "page.description":
     "Dibujá conductores en el lienzo, asignales un potencial, y mirá cómo se forma el campo electrostático mientras el solver SOR converge.",
 
@@ -171,6 +172,7 @@ const EN: Record<TranslationKey, string> = {
   "language.switch_aria": "Switch to Spanish",
 
   "page.title": "Electric Field — Relaxation Method",
+  "page.lab1_link": "Lab 1 — Forces between currents and magnetic fields →",
   "page.description":
     "Draw conductors on the canvas, assign them a potential, and watch the electrostatic field form as the SOR solver converges.",
 
