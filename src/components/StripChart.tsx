@@ -121,25 +121,19 @@ export function StripChart(props: StripChartProps) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const dpr =
+      typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
     if (canvas.width !== WIDTH * dpr || canvas.height !== HEIGHT * dpr) {
       canvas.width = WIDTH * dpr;
       canvas.height = HEIGHT * dpr;
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (mode === "ac") {
-      drawAc(
-        ctx,
-        acPhaseRad ?? 0,
-        acPeriodSec ?? 1,
-        acPhases ?? [],
-        palette,
-        {
-          axisT: t("stripchart.axis_t"),
-          sinLabel: t("stripchart.ac.sin_label"),
-          phasePrefix: t("stripchart.ac.phase_prefix"),
-        },
-      );
+      drawAc(ctx, acPhaseRad ?? 0, acPeriodSec ?? 1, acPhases ?? [], palette, {
+        axisT: t("stripchart.axis_t"),
+        sinLabel: t("stripchart.ac.sin_label"),
+        phasePrefix: t("stripchart.ac.phase_prefix"),
+      });
     } else {
       drawProbe(
         ctx,
@@ -178,7 +172,9 @@ export function StripChart(props: StripChartProps) {
   return (
     <div className="flex w-full max-w-3xl flex-col gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm dark:border-zinc-700 dark:bg-zinc-900">
       <div className="flex items-center justify-between">
-        <span className="font-medium text-zinc-700 dark:text-zinc-300">{title}</span>
+        <span className="font-medium text-zinc-700 dark:text-zinc-300">
+          {title}
+        </span>
         {props.mode === "probe" && props.onClear && (
           <button
             type="button"
@@ -192,7 +188,11 @@ export function StripChart(props: StripChartProps) {
       <div className="relative w-full overflow-hidden">
         <canvas
           ref={canvasRef}
-          style={{ width: "100%", height: "auto", aspectRatio: `${WIDTH} / ${HEIGHT}` }}
+          style={{
+            width: "100%",
+            height: "auto",
+            aspectRatio: `${WIDTH} / ${HEIGHT}`,
+          }}
           className="block rounded bg-white dark:bg-zinc-950"
         />
       </div>
@@ -367,8 +367,7 @@ function drawProbe(
     plotX + ((dtSec + WINDOW_SEC) / WINDOW_SEC) * plotW;
   const yOfV = (v: number): number =>
     plotY + plotH - ((v - vLow) / (vHigh - vLow)) * plotH;
-  const yOfE = (e: number): number =>
-    plotY + plotH - (e / eHigh) * plotH;
+  const yOfE = (e: number): number => plotY + plotH - (e / eHigh) * plotH;
 
   // Grid + tick labels for both axes.
   ctx.font = "11px ui-sans-serif, system-ui, -apple-system, sans-serif";

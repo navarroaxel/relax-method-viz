@@ -255,8 +255,7 @@ const EN: Record<TranslationKey, string> = {
   "explanation.ac":
     "With AC modulation enabled, each fixed conductor oscillates as V = Vfix · sin(ωt + φ), with ω = 2π/T (T is the period in seconds) and φ a per-cell phase set while painting. This lets you simulate phase-shifted sources — e.g. a dipole with φ = 180° on one pole. While AC is on the field never settles, so the solver runs continuously instead of stopping at convergence.",
 
-  "credits.subtitle":
-    "Numerical potential computation — Relaxation Method",
+  "credits.subtitle": "Numerical potential computation — Relaxation Method",
   "credits.description":
     "Interactive simulator developed as a teaching aid to visualize the convergence of the relaxation method (SOR) on 2D electrostatic geometries, in the context of the course.",
   "credits.teachers": "Teachers",

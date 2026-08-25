@@ -53,9 +53,10 @@ export function encodeShare(p: SharePayload): string {
 }
 
 /** Parse a query string (or `URLSearchParams`) back into a payload, or null. */
-export function decodeShare(input: string | URLSearchParams): SharePayload | null {
-  const params =
-    typeof input === "string" ? new URLSearchParams(input) : input;
+export function decodeShare(
+  input: string | URLSearchParams,
+): SharePayload | null {
+  const params = typeof input === "string" ? new URLSearchParams(input) : input;
   const mode = params.get("mode");
   const preset = params.get("preset");
   if (!preset) return null;
@@ -63,7 +64,8 @@ export function decodeShare(input: string | URLSearchParams): SharePayload | nul
   if (mode === "2d") {
     if (!Object.keys(PRESETS).includes(preset)) return null;
     const periodRaw = Number(params.get("acPeriod"));
-    const periodSec = Number.isFinite(periodRaw) && periodRaw > 0 ? periodRaw : 5;
+    const periodSec =
+      Number.isFinite(periodRaw) && periodRaw > 0 ? periodRaw : 5;
     return {
       mode: "2d",
       preset: preset as PresetId,

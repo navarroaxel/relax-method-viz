@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { applyGeometryToGrid, exportToJSON, importFromJSON } from "@/lib/storage";
+import {
+  applyGeometryToGrid,
+  exportToJSON,
+  importFromJSON,
+} from "@/lib/storage";
 import { createGrid, idx } from "@/lib/grid";
 
 describe("exportToJSON / importFromJSON / applyGeometryToGrid round-trip", () => {

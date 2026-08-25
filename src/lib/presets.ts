@@ -134,7 +134,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Capacitor plano",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       setRect(g, sc(20), sc(22), sc(60), sc(25), +100_000);
       setRect(g, sc(20), sc(55), sc(60), sc(58), -100_000);
       applyFixedValues(g);
@@ -144,7 +144,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Dipolo",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       setDisc(g, sc(28), sc(40), sc(3), +100_000);
       setDisc(g, sc(52), sc(40), sc(3), -100_000);
       applyFixedValues(g);
@@ -154,10 +154,10 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Pararrayos simplificado",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
-      setRect(g, 0, sc(2), sc(80), sc(5), +100_000);  // V1: top plate
-      setRect(g, 0, sc(75), sc(80), sc(78), 0);        // V2: bottom plate
-      setRect(g, sc(39), sc(40), sc(41), sc(76), 0);   // V2: vertical rod
+      const sc = (x: number) => Math.round((x * g.N) / 80);
+      setRect(g, 0, sc(2), sc(80), sc(5), +100_000); // V1: top plate
+      setRect(g, 0, sc(75), sc(80), sc(78), 0); // V2: bottom plate
+      setRect(g, sc(39), sc(40), sc(41), sc(76), 0); // V2: vertical rod
       applyFixedValues(g);
     },
   },
@@ -165,7 +165,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Cable Coaxial",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       setRing(g, sc(40), sc(40), sc(30), sc(2), 0);
       setDisc(g, sc(40), sc(40), sc(8), +80);
       applyFixedValues(g);
@@ -175,7 +175,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Cable concéntrico",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       const cx = sc(40);
       const cy = sc(40);
       // Neutro concéntrico: hilos discretos a 0 V repartidos en un círculo.
@@ -201,7 +201,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Jaula de Faraday",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       // V1: top plate
       setRect(g, 0, sc(2), sc(80), sc(5), +80);
       // V2: bottom plate + closed box enclosure (all ground)
@@ -216,7 +216,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Placas conductoras",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       setRect(g, sc(10), sc(16), sc(57), sc(18), +100_000); // horizontal plate V1
       setRect(g, sc(60), sc(20), sc(62), sc(68), -100_000); // vertical plate V2
       applyFixedValues(g);
@@ -226,7 +226,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Línea 1 conductor",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       const V1 = Math.sqrt(2 / 3) * 500_000;
       setRect(g, 0, sc(75), sc(80), sc(78), 0);
       setDisc(g, sc(40), sc(30), sc(2), V1);
@@ -237,7 +237,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Línea 4 subconductores",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       const V1 = Math.sqrt(2 / 3) * 500_000;
       setRect(g, 0, sc(75), sc(80), sc(78), 0);
       setDisc(g, sc(36), sc(26), sc(2), V1);
@@ -251,7 +251,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Línea trifásica + neutro",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       const V1 = Math.sqrt(2 / 3) * 500_000;
       const PHI = (2 * Math.PI) / 3;
       setRect(g, 0, sc(75), sc(80), sc(78), 0);
@@ -266,7 +266,7 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: "Punta vs plano",
     apply: (g) => {
       clearAll(g);
-      const sc = (x: number) => Math.round(x * g.N / 80);
+      const sc = (x: number) => Math.round((x * g.N) / 80);
       setRect(g, 0, sc(68), sc(80), sc(71), -50);
       setTriangleTipUp(g, sc(40), sc(42), sc(10), sc(6), +80);
       applyFixedValues(g);

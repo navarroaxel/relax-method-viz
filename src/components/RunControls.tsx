@@ -91,7 +91,9 @@ export function RunControls({
         {t("run.boundary")}
         <select
           value={boundary}
-          onChange={(e) => onChangeBoundary(e.target.value as BoundaryCondition)}
+          onChange={(e) =>
+            onChangeBoundary(e.target.value as BoundaryCondition)
+          }
           className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
         >
           <option value="dirichlet">Dirichlet (V = 0)</option>

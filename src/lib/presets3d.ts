@@ -37,8 +37,10 @@ export const PRESETS_3D: Record<Preset3DId, Preset3D> = {
       const N = g.N;
       // Two horizontal slabs at +100 / -100 V, spanning most of the X/Z
       // domain. Plates are perpendicular to the Y axis (vertical).
-      const i0 = sc(8, N), i1 = sc(52, N);
-      const k0 = sc(8, N), k1 = sc(52, N);
+      const i0 = sc(8, N),
+        i1 = sc(52, N);
+      const k0 = sc(8, N),
+        k1 = sc(52, N);
       const yTop = sc(45, N);
       const yBot = sc(15, N);
       const halfT = sc(2, N);
@@ -202,19 +204,17 @@ export const PRESETS_3D: Record<Preset3DId, Preset3D> = {
       const yBotPlate = sc(6, N);
       const yBotPlateTop = sc(8, N);
       // Top source plate (+80 V).
-      rasterPlate(
-        g,
-        [xMin, yTopPlate, zMin],
-        [xMax, yTopPlateTop, zMax],
-        80,
-      );
+      rasterPlate(g, [xMin, yTopPlate, zMin], [xMax, yTopPlateTop, zMax], 80);
       // Ground plate (0 V).
       rasterPlate(g, [xMin, yBotPlate, zMin], [xMax, yBotPlateTop, zMax], 0);
 
       // Hollow grounded box: paint a solid 0V box, then erase the interior.
-      const bxMin = sc(18, N), bxMax = sc(42, N);
-      const byMin = sc(20, N), byMax = sc(40, N);
-      const bzMin = sc(18, N), bzMax = sc(42, N);
+      const bxMin = sc(18, N),
+        bxMax = sc(42, N);
+      const byMin = sc(20, N),
+        byMax = sc(40, N);
+      const bzMin = sc(18, N),
+        bzMax = sc(42, N);
       rasterPlate(g, [bxMin, byMin, bzMin], [bxMax, byMax, bzMax], 0);
       // Carve interior, leaving voxel-thick walls (shrink each face by 2).
       rasterPlate(
@@ -237,11 +237,40 @@ export const PRESETS_3D: Record<Preset3DId, Preset3D> = {
       const cx = Math.floor(N / 2);
       const spread = sc(4, N);
       const bundleY = sc(20, N);
-      rasterPlate(g, [sc(6, N), sc(50, N), sc(6, N)], [sc(54, N), sc(52, N), sc(54, N)], 0);
-      rasterCylinder(g, [cx - spread, bundleY, 0], [cx - spread, bundleY, N - 1], r, V1);
-      rasterCylinder(g, [cx + spread, bundleY, 0], [cx + spread, bundleY, N - 1], r, V1);
-      rasterCylinder(g, [cx - spread, bundleY + 2 * spread, 0], [cx - spread, bundleY + 2 * spread, N - 1], r, V1);
-      rasterCylinder(g, [cx + spread, bundleY + 2 * spread, 0], [cx + spread, bundleY + 2 * spread, N - 1], r, V1);
+      rasterPlate(
+        g,
+        [sc(6, N), sc(50, N), sc(6, N)],
+        [sc(54, N), sc(52, N), sc(54, N)],
+        0,
+      );
+      rasterCylinder(
+        g,
+        [cx - spread, bundleY, 0],
+        [cx - spread, bundleY, N - 1],
+        r,
+        V1,
+      );
+      rasterCylinder(
+        g,
+        [cx + spread, bundleY, 0],
+        [cx + spread, bundleY, N - 1],
+        r,
+        V1,
+      );
+      rasterCylinder(
+        g,
+        [cx - spread, bundleY + 2 * spread, 0],
+        [cx - spread, bundleY + 2 * spread, N - 1],
+        r,
+        V1,
+      );
+      rasterCylinder(
+        g,
+        [cx + spread, bundleY + 2 * spread, 0],
+        [cx + spread, bundleY + 2 * spread, N - 1],
+        r,
+        V1,
+      );
     },
   },
 };

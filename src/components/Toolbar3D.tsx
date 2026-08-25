@@ -18,7 +18,12 @@ interface Toolbar3DProps {
   onSliceAxisChange: (a: SliceAxis) => void;
 }
 
-const TOOLS: { id: Tool3D; activeBg: string; activeFg: string; color: string }[] = [
+const TOOLS: {
+  id: Tool3D;
+  activeBg: string;
+  activeFg: string;
+  color: string;
+}[] = [
   { id: "wire", activeBg: "#791F1F", activeFg: "#fff", color: "#791F1F" },
   { id: "plate", activeBg: "#0C447C", activeFg: "#fff", color: "#0C447C" },
   { id: "sphere", activeBg: "#7C2D8C", activeFg: "#fff", color: "#7C2D8C" },
@@ -73,8 +78,16 @@ export function Toolbar3D({
               className="rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
               style={
                 active
-                  ? { backgroundColor: opt.activeBg, color: opt.activeFg, borderColor: opt.activeBg }
-                  : { backgroundColor: "white", color: opt.color, borderColor: "#e4e4e7" }
+                  ? {
+                      backgroundColor: opt.activeBg,
+                      color: opt.activeFg,
+                      borderColor: opt.activeBg,
+                    }
+                  : {
+                      backgroundColor: "white",
+                      color: opt.color,
+                      borderColor: "#e4e4e7",
+                    }
               }
             >
               {labels[opt.id]}
@@ -138,7 +151,9 @@ export function Toolbar3D({
             ))}
           </div>
           <select
-            value={VOLTAGE_PRESETS.some((p) => p.value === voltage) ? voltage : ""}
+            value={
+              VOLTAGE_PRESETS.some((p) => p.value === voltage) ? voltage : ""
+            }
             onChange={(e) => {
               if (e.target.value !== "") {
                 const v = Number(e.target.value);
@@ -167,7 +182,9 @@ export function Toolbar3D({
           />
         </div>
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <span className="w-28">{t("toolbar3d.thickness")} {thickness}</span>
+          <span className="w-28">
+            {t("toolbar3d.thickness")} {thickness}
+          </span>
           <input
             type="range"
             min={1}
@@ -179,7 +196,9 @@ export function Toolbar3D({
           />
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <span className="w-28">{t("toolbar3d.radius")} {radius}</span>
+          <span className="w-28">
+            {t("toolbar3d.radius")} {radius}
+          </span>
           <input
             type="range"
             min={1}

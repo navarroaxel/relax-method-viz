@@ -122,7 +122,8 @@ export function Simulator3D() {
   const handleToggleRun = () => {
     setIsRunning((r) => {
       const next = !r;
-      if (next) post({ type: "run", config: { ...DEFAULT_SOLVER_CONFIG_3D, omega } });
+      if (next)
+        post({ type: "run", config: { ...DEFAULT_SOLVER_CONFIG_3D, omega } });
       else post({ type: "pause" });
       return next;
     });
@@ -200,7 +201,9 @@ export function Simulator3D() {
     setOmega(parseFloat((2 / (1 + Math.sin(Math.PI / grid.N))).toFixed(3)));
   };
 
-  const deltaLabel = Number.isFinite(deltaMax) ? deltaMax.toExponential(2) : "—";
+  const deltaLabel = Number.isFinite(deltaMax)
+    ? deltaMax.toExponential(2)
+    : "—";
 
   return (
     <>
@@ -350,7 +353,8 @@ export function Simulator3D() {
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-zinc-200 bg-white p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
         <div className="flex flex-wrap gap-4">
           <span>
-            {t("stats.iteration")} <span className="font-mono">{iteration}</span>
+            {t("stats.iteration")}{" "}
+            <span className="font-mono">{iteration}</span>
           </span>
           <span>
             Δmax: <span className="font-mono">{deltaLabel}</span>

@@ -16,7 +16,10 @@ describe("niceTicks", () => {
     const norm = step / mag;
     expect([1, 2, 5].some((n) => Math.abs(norm - n) < 1e-9)).toBe(true);
     for (let k = 1; k < ticks.length; k++) {
-      expect((ticks[k] as number) - (ticks[k - 1] as number)).toBeCloseTo(step, 6);
+      expect((ticks[k] as number) - (ticks[k - 1] as number)).toBeCloseTo(
+        step,
+        6,
+      );
     }
     for (const t of ticks) {
       expect(t).toBeGreaterThanOrEqual(ticks[0] as number);

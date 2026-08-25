@@ -59,9 +59,25 @@ export function Canvas({
   const curvePointsRef = useRef<Array<[number, number]>>([]);
   const [hover, setHover] = useState<HoverInfo | null>(null);
 
-  const stateRef = useRef({ tool, voltage, brushSize, paintPhaseRad, grid, trace, traceDraft });
+  const stateRef = useRef({
+    tool,
+    voltage,
+    brushSize,
+    paintPhaseRad,
+    grid,
+    trace,
+    traceDraft,
+  });
   useEffect(() => {
-    stateRef.current = { tool, voltage, brushSize, paintPhaseRad, grid, trace, traceDraft };
+    stateRef.current = {
+      tool,
+      voltage,
+      brushSize,
+      paintPhaseRad,
+      grid,
+      trace,
+      traceDraft,
+    };
   }, [tool, voltage, brushSize, paintPhaseRad, grid, trace, traceDraft]);
 
   useEffect(() => {
@@ -72,7 +88,16 @@ export function Canvas({
     renderAll(ctx, grid, display, displaySize, vmax);
     const cellSize = displaySize / grid.N;
     renderTrace(ctx, trace, traceDraft, cellSize);
-  }, [canvasRef, grid, display, displaySize, renderTick, vmax, trace, traceDraft]);
+  }, [
+    canvasRef,
+    grid,
+    display,
+    displaySize,
+    renderTick,
+    vmax,
+    trace,
+    traceDraft,
+  ]);
 
   // Cancel any in-progress trace when the tool changes.
   useEffect(() => {
@@ -107,10 +132,21 @@ export function Canvas({
     };
 
     const paintAt = (i: number, j: number) => {
-      const { grid, tool, voltage, brushSize, paintPhaseRad } = stateRef.current;
+      const { grid, tool, voltage, brushSize, paintPhaseRad } =
+        stateRef.current;
       const last = lastCellRef.current;
       if (last) {
-        paintStroke(grid, last.i, last.j, i, j, brushSize, tool, voltage, paintPhaseRad);
+        paintStroke(
+          grid,
+          last.i,
+          last.j,
+          i,
+          j,
+          brushSize,
+          tool,
+          voltage,
+          paintPhaseRad,
+        );
       } else {
         paintBrush(grid, i, j, brushSize, tool, voltage, paintPhaseRad);
       }
@@ -161,7 +197,10 @@ export function Canvas({
       } else {
         onTraceChange({
           kind: "line",
-          points: [[draftStart[0], draftStart[1]], [x, y]],
+          points: [
+            [draftStart[0], draftStart[1]],
+            [x, y],
+          ],
         });
       }
       onTraceDraftChange(null);
@@ -173,7 +212,10 @@ export function Canvas({
       if (!draftStart) return;
       onTraceDraftChange({
         kind: "line",
-        points: [[draftStart[0], draftStart[1]], [x, y]],
+        points: [
+          [draftStart[0], draftStart[1]],
+          [x, y],
+        ],
       });
     };
 
@@ -348,10 +390,10 @@ export function Canvas({
         ref={canvasRef}
         width={displaySize}
         height={displaySize}
-        className="block h-full w-full rounded-md border border-zinc-300 bg-white shadow-sm touch-none select-none dark:border-zinc-700"
+        className="block h-full w-full touch-none rounded-md border border-zinc-300 bg-white shadow-sm select-none dark:border-zinc-700"
       />
       {hover && (
-        <div className="pointer-events-none absolute right-2 top-2 rounded-md border border-zinc-200 bg-white/90 px-2 py-1 font-mono text-[11px] leading-tight text-zinc-700 shadow-sm backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200">
+        <div className="pointer-events-none absolute top-2 right-2 rounded-md border border-zinc-200 bg-white/90 px-2 py-1 font-mono text-[11px] leading-tight text-zinc-700 shadow-sm backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200">
           <div>
             ({hover.i}, {hover.j})
           </div>
