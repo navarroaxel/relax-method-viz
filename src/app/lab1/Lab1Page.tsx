@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { Lab1Chart, type ChartMarker, type ChartSeries } from "@/components/Lab1Chart";
+import { Lab1Diagram } from "@/components/Lab1Diagram";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   analyzeStep,
@@ -137,6 +138,16 @@ export function Lab1Page() {
         <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
           {c.setupWarning}
         </p>
+      </section>
+
+      <section className={SECTION}>
+        <h2 className={H2}>{c.diagramTitle}</h2>
+        <p className={BODY}>{c.diagramBody}</p>
+        <Lab1Diagram
+          labels={c.diagram}
+          fieldMt={analysis.fieldMt}
+          referenceForceMn={analysis.forceSteadyMn}
+        />
       </section>
 
       <section className={SECTION}>

@@ -1,3 +1,4 @@
+import type { DiagramLabels } from "@/components/Lab1Diagram";
 import type { Language } from "@/contexts/LanguageContext";
 
 /**
@@ -21,6 +22,9 @@ export interface Lab1Copy {
   setupTitle: string;
   setupSteps: string[];
   setupWarning: string;
+  diagramTitle: string;
+  diagramBody: string;
+  diagram: DiagramLabels;
 
   stepTitle: string;
   stepBody: string;
@@ -91,6 +95,30 @@ const ES: Lab1Copy = {
   ],
   setupWarning:
     "El bucle y su soporte sólo toleran corrientes de hasta 20 A por poco tiempo: el barrido hay que hacerlo rápido. Si todas las fuerzas salen negativas, se invierten las conexiones del soporte.",
+
+  diagramTitle: "El banco, en movimiento",
+  diagramBody:
+    "Esquema del montaje de la figura 2.1 de la guía. El trazo punteado marca por dónde circula cada corriente: la del solenoide (fija en 5 A) y la del bucle (variable). Movés el deslizador para ver cómo crece la fuerza sobre el bucle con la corriente, o le das a reproducir para que la animación siga el registro de escalón real — ahí se ve lo importante: la corriente salta de golpe y el bucle llega tarde, se pasa de largo y recién después se acomoda.",
+  diagram: {
+    supply20: "Fuente bucle",
+    supply5: "Fuente bobina",
+    cassy: "Sensor CASSY",
+    forceSensor: "Sensor de fuerza",
+    support: "Estructura soporte",
+    solenoid: "Solenoide",
+    loop: "Espira conductora",
+    fieldB: "B",
+    forceF: "F",
+    loopCurrent: "I bucle",
+    coilCurrent: "I bobina",
+    play: "▶ Reproducir el escalón",
+    pause: "■ Detener",
+    replayHint:
+      "Reproduciendo la captura real a velocidad natural (1 s, en bucle). La corriente ya está arriba mientras la espira todavía está subiendo.",
+    manualHint:
+      "Modo manual: la fuerza se calcula como F = I · l · B con el campo medido. El barrido del ensayo va de 0 a 12 A en pasos de 2 A.",
+    elapsed: "t",
+  },
 
   stepTitle: "3. El registro de escalón",
   stepBody:
@@ -177,6 +205,30 @@ const EN: Lab1Copy = {
   ],
   setupWarning:
     "The loop and its holder only tolerate currents up to 20 A for a short time: the sweep has to be quick. If every force reads negative, swap the connections on the holder.",
+
+  diagramTitle: "The bench, in motion",
+  diagramBody:
+    "Schematic of the setup from figure 2.1 of the guide. The dashed strokes trace where each current flows: the solenoid's (fixed at 5 A) and the loop's (variable). Drag the slider to see the force on the loop grow with current, or hit play to drive the animation from the real step record — that is where the point lands: the current jumps at once while the loop arrives late, overshoots, and only then settles.",
+  diagram: {
+    supply20: "Loop supply",
+    supply5: "Coil supply",
+    cassy: "CASSY sensor",
+    forceSensor: "Force sensor",
+    support: "Support structure",
+    solenoid: "Solenoid",
+    loop: "Conductor loop",
+    fieldB: "B",
+    forceF: "F",
+    loopCurrent: "I loop",
+    coilCurrent: "I coil",
+    play: "▶ Play the step",
+    pause: "■ Stop",
+    replayHint:
+      "Replaying the real capture at natural speed (1 s, looping). The current is already up while the loop is still rising.",
+    manualHint:
+      "Manual mode: force is computed as F = I · l · B with the measured field. The experiment's sweep runs 0 to 12 A in 2 A steps.",
+    elapsed: "t",
+  },
 
   stepTitle: "3. The step record",
   stepBody:
