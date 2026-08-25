@@ -134,12 +134,7 @@ export function computeStreamlines3D(
   };
 
   const inside = (x: number, y: number, z: number): boolean =>
-    x > 0.5 &&
-    x < N - 1.5 &&
-    y > 0.5 &&
-    y < N - 1.5 &&
-    z > 0.5 &&
-    z < N - 1.5;
+    x > 0.5 && x < N - 1.5 && y > 0.5 && y < N - 1.5 && z > 0.5 && z < N - 1.5;
 
   const isFixedAt = (x: number, y: number, z: number): boolean => {
     const i = Math.floor(x);
@@ -153,7 +148,9 @@ export function computeStreamlines3D(
   const out: number[] = [];
 
   const trace = (x0: number, y0: number, z0: number, dir: 1 | -1): void => {
-    let x = x0, y = y0, z = z0;
+    let x = x0,
+      y = y0,
+      z = z0;
     for (let s = 0; s < maxSteps; s++) {
       const k1 = sampleE(x, y, z);
       if (k1[3] < minMag) break;
@@ -244,22 +241,50 @@ function addLevelSegments(
       const seg = (a: [number, number], b: [number, number]) =>
         out.push(a[0], a[1], b[0], b[1]);
       switch (c) {
-        case 1: case 14: seg(e3(), e0()); break;
-        case 2: case 13: seg(e0(), e1()); break;
-        case 4: case 11: seg(e1(), e2()); break;
-        case 8: case 7: seg(e2(), e3()); break;
-        case 3: case 12: seg(e3(), e1()); break;
-        case 6: case 9: seg(e0(), e2()); break;
+        case 1:
+        case 14:
+          seg(e3(), e0());
+          break;
+        case 2:
+        case 13:
+          seg(e0(), e1());
+          break;
+        case 4:
+        case 11:
+          seg(e1(), e2());
+          break;
+        case 8:
+        case 7:
+          seg(e2(), e3());
+          break;
+        case 3:
+        case 12:
+          seg(e3(), e1());
+          break;
+        case 6:
+        case 9:
+          seg(e0(), e2());
+          break;
         case 5: {
           const mean = (vA + vB + vC + vD) * 0.25;
-          if (mean > L) { seg(e0(), e1()); seg(e2(), e3()); }
-          else { seg(e3(), e0()); seg(e1(), e2()); }
+          if (mean > L) {
+            seg(e0(), e1());
+            seg(e2(), e3());
+          } else {
+            seg(e3(), e0());
+            seg(e1(), e2());
+          }
           break;
         }
         case 10: {
           const mean = (vA + vB + vC + vD) * 0.25;
-          if (mean > L) { seg(e3(), e0()); seg(e1(), e2()); }
-          else { seg(e0(), e1()); seg(e2(), e3()); }
+          if (mean > L) {
+            seg(e3(), e0());
+            seg(e1(), e2());
+          } else {
+            seg(e0(), e1());
+            seg(e2(), e3());
+          }
           break;
         }
       }

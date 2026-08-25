@@ -37,11 +37,7 @@ function downloadFile(content: string, filename: string, mime: string): void {
   URL.revokeObjectURL(url);
 }
 
-export function SaveLoadDialog({
-  onClose,
-  grid,
-  onLoad,
-}: SaveLoadDialogProps) {
+export function SaveLoadDialog({ onClose, grid, onLoad }: SaveLoadDialogProps) {
   const { t } = useLanguage();
   const [name, setName] = useState("");
   const [geometries, setGeometries] = useState<SavedGeometry[]>(() =>
@@ -60,7 +56,7 @@ export function SaveLoadDialog({
         const panel = panelRef.current;
         if (!panel) return;
         const focusable = panel.querySelectorAll<HTMLElement>(
-          "button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex=\"-1\"])",
+          'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
         );
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -218,9 +214,12 @@ export function SaveLoadDialog({
                   className="flex flex-wrap items-center justify-between gap-2 p-2 text-sm"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium text-zinc-900 dark:text-zinc-100">{g.name}</span>
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                      {g.name}
+                    </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {formatDate(g.createdAt)} · {g.cells.length} {t("dialog.cells")} · N=
+                      {formatDate(g.createdAt)} · {g.cells.length}{" "}
+                      {t("dialog.cells")} · N=
                       {g.N}
                     </span>
                   </div>

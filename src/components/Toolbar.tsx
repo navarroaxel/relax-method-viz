@@ -69,7 +69,9 @@ export function Toolbar({
   return (
     <div className="flex flex-col gap-3 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t("toolbar.tool")}</span>
+        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          {t("toolbar.tool")}
+        </span>
         {TOOLS.map((t) => {
           const active = t.id === tool;
           return (
@@ -101,7 +103,9 @@ export function Toolbar({
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
           <span>{t("toolbar.potential")}</span>
           <select
-            value={VOLTAGE_PRESETS.some((p) => p.value === voltage) ? voltage : ""}
+            value={
+              VOLTAGE_PRESETS.some((p) => p.value === voltage) ? voltage : ""
+            }
             onChange={(e) => {
               if (e.target.value !== "") {
                 const v = Number(e.target.value);
@@ -130,7 +134,9 @@ export function Toolbar({
           />
         </label>
         <label className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-          <span className="w-20">{t("toolbar.brush")} {brushSize}</span>
+          <span className="w-20">
+            {t("toolbar.brush")} {brushSize}
+          </span>
           <input
             type="range"
             min={1}

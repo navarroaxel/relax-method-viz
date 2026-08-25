@@ -156,28 +156,28 @@ presets, and solvers.
 
 ### 2D
 
-| Preset ID        | Label                     | What you should see after **Calcular**                                                          |
-| ---------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `parallel`       | Capacitor plano           | Linear `V` between the plates; uniform vertical `E` (textbook parallel-plate capacitor).        |
-| `dipole`         | Dipolo                    | Cardioid-shaped equipotentials; field lines curving from `+` disc to `−` disc.                  |
-| `lightning`      | Pararrayos simplificado   | Top plate at +100 kV, grounded rod below — equipotentials compress sharply near the rod tip.    |
-| `coaxial`        | Cable Coaxial             | Concentric circular equipotentials; radial field outward from the inner disc.                    |
-| `faraday`        | Jaula de Faraday          | `V ≈ 0` and no arrows inside the grounded closed box, even with an external field — cage screens. |
-| `tip`            | Punta vs plano            | Triangular tip at +80 V over a grounded plate — high field density near the apex.               |
-| `conductors`     | Placas conductoras        | L-shaped geometry (horizontal +100 kV plate, vertical −100 kV plate); fringe fields at edges.  |
-| `subconductors`  | Línea 4 subconductores    | 2×2 bundle of discs at √(2/3)×500 kV over a ground plane — models a 4-subconductor HV bundle.  |
-| `threephase`     | Línea trifásica + neutro  | Three discs at √(2/3)×500 kV with AC phases 0°/120°/240° plus one grounded (neutral) disc, over a ground plane. |
+| Preset ID       | Label                    | What you should see after **Calcular**                                                                          |
+| --------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `parallel`      | Capacitor plano          | Linear `V` between the plates; uniform vertical `E` (textbook parallel-plate capacitor).                        |
+| `dipole`        | Dipolo                   | Cardioid-shaped equipotentials; field lines curving from `+` disc to `−` disc.                                  |
+| `lightning`     | Pararrayos simplificado  | Top plate at +100 kV, grounded rod below — equipotentials compress sharply near the rod tip.                    |
+| `coaxial`       | Cable Coaxial            | Concentric circular equipotentials; radial field outward from the inner disc.                                   |
+| `faraday`       | Jaula de Faraday         | `V ≈ 0` and no arrows inside the grounded closed box, even with an external field — cage screens.               |
+| `tip`           | Punta vs plano           | Triangular tip at +80 V over a grounded plate — high field density near the apex.                               |
+| `conductors`    | Placas conductoras       | L-shaped geometry (horizontal +100 kV plate, vertical −100 kV plate); fringe fields at edges.                   |
+| `subconductors` | Línea 4 subconductores   | 2×2 bundle of discs at √(2/3)×500 kV over a ground plane — models a 4-subconductor HV bundle.                   |
+| `threephase`    | Línea trifásica + neutro | Three discs at √(2/3)×500 kV with AC phases 0°/120°/240° plus one grounded (neutral) disc, over a ground plane. |
 
 ### 3D
 
-| Preset ID       | Label                            | Geometry                                                                                |
-| --------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
-| `parallel`      | Placas paralelas (3D)            | Two horizontal slabs at ±100 V perpendicular to Y — 3D parallel-plate capacitor.       |
-| `dipole`        | Dipolo (3D)                      | Two small ±100 V slabs on opposite sides — symmetric dipole field.                     |
-| `coax`          | Cable coaxial (3D)               | Grounded outer cylinder + inner conductor at +80 V along the axis.                     |
-| `lightning`     | Pararrayos simplificado (3D)     | Top plate +100 kV, grounded floor + grounded vertical rod — field concentrates on tip. |
-| `faraday`       | Jaula de Faraday (3D)            | Driven plate + grounded floor + grounded closed box — interior shielded.               |
-| `subconductors` | Línea 4 subconductores (3D)      | Ground plane + 2×2 cylinder bundle at √(2/3)×500 kV — full 3D version of the bundle.   |
+| Preset ID       | Label                        | Geometry                                                                               |
+| --------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| `parallel`      | Placas paralelas (3D)        | Two horizontal slabs at ±100 V perpendicular to Y — 3D parallel-plate capacitor.       |
+| `dipole`        | Dipolo (3D)                  | Two small ±100 V slabs on opposite sides — symmetric dipole field.                     |
+| `coax`          | Cable coaxial (3D)           | Grounded outer cylinder + inner conductor at +80 V along the axis.                     |
+| `lightning`     | Pararrayos simplificado (3D) | Top plate +100 kV, grounded floor + grounded vertical rod — field concentrates on tip. |
+| `faraday`       | Jaula de Faraday (3D)        | Driven plate + grounded floor + grounded closed box — interior shielded.               |
+| `subconductors` | Línea 4 subconductores (3D)  | Ground plane + 2×2 cylinder bundle at √(2/3)×500 kV — full 3D version of the bundle.   |
 
 ## The math
 
@@ -329,11 +329,11 @@ worker streams `acPhaseRad` along with each progress event. A
 
 Target budget on a modern laptop:
 
-| Grid  | SOR iteration | Time to converge | Render frame |
-| ----- | ------------: | ---------------: | -----------: |
-| 80²   |        < 1 ms |          < 100 ms |       < 8 ms |
-| 150²  |        < 3 ms |          < 500 ms |      < 15 ms |
-| 200²  |        < 6 ms |           < 1.5 s |      < 25 ms |
+| Grid | SOR iteration | Time to converge | Render frame |
+| ---- | ------------: | ---------------: | -----------: |
+| 80²  |        < 1 ms |         < 100 ms |       < 8 ms |
+| 150² |        < 3 ms |         < 500 ms |      < 15 ms |
+| 200² |        < 6 ms |          < 1.5 s |      < 25 ms |
 
 If 80² doesn't converge in under 100 ms there's an allocation inside
 the hot loop somewhere — start by checking `lib/relaxation.ts`.

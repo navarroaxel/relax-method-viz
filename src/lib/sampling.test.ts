@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { sampleV, sampleE, sampleEForStreamline, sampleTrace } from "@/lib/sampling";
+import {
+  sampleV,
+  sampleE,
+  sampleEForStreamline,
+  sampleTrace,
+} from "@/lib/sampling";
 import { createGrid, idx } from "@/lib/grid";
 import type { GridState } from "@/types";
 

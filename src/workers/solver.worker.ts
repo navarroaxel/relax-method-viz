@@ -29,10 +29,9 @@ function postOut(msg: WorkerOutbound, transfer: Transferable[]): void {
 function emitProgress(deltaMax: number): void {
   if (!grid) return;
   const snap = snapshotV(grid);
-  postOut(
-    { type: "progress", iteration, deltaMax, V: snap, acPhaseRad },
-    [snap.buffer],
-  );
+  postOut({ type: "progress", iteration, deltaMax, V: snap, acPhaseRad }, [
+    snap.buffer,
+  ]);
 }
 
 function emitDone(deltaMax: number, converged: boolean): void {
@@ -62,7 +61,12 @@ function resetAcPhase(): void {
   lastTickWallMs = null;
 }
 
-function startRun(config: { omega: number; tolerance: number; maxIterations: number; reportEvery: number }): void {
+function startRun(config: {
+  omega: number;
+  tolerance: number;
+  maxIterations: number;
+  reportEvery: number;
+}): void {
   if (!grid) return;
   running = true;
   const myToken = ++runToken;

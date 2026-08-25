@@ -23,19 +23,15 @@ function postOut(msg: Worker3DOutbound, transfer: Transferable[]): void {
 function emitProgress(deltaMax: number): void {
   if (!grid) return;
   const snap = snapshotV(grid);
-  postOut(
-    { type: "progress", iteration, deltaMax, V: snap },
-    [snap.buffer],
-  );
+  postOut({ type: "progress", iteration, deltaMax, V: snap }, [snap.buffer]);
 }
 
 function emitDone(deltaMax: number, converged: boolean): void {
   if (!grid) return;
   const snap = snapshotV(grid);
-  postOut(
-    { type: "done", iteration, deltaMax, converged, V: snap },
-    [snap.buffer],
-  );
+  postOut({ type: "done", iteration, deltaMax, converged, V: snap }, [
+    snap.buffer,
+  ]);
 }
 
 function startRun(config: {

@@ -25,7 +25,11 @@ describe("divergentColor", () => {
   });
 
   it("returns WHITE when vmax is non-finite", () => {
-    expect(divergentColor(50, Infinity)).toEqual([WHITE[0], WHITE[1], WHITE[2]]);
+    expect(divergentColor(50, Infinity)).toEqual([
+      WHITE[0],
+      WHITE[1],
+      WHITE[2],
+    ]);
     expect(divergentColor(50, NaN)).toEqual([WHITE[0], WHITE[1], WHITE[2]]);
   });
 });

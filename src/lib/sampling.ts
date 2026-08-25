@@ -75,10 +75,8 @@ export function sampleE(
   const w10 = fx * (1 - fy);
   const w01 = (1 - fx) * fy;
   const w11 = fx * fy;
-  const ex =
-    w00 * e00[0] + w10 * e10[0] + w01 * e01[0] + w11 * e11[0];
-  const ey =
-    w00 * e00[1] + w10 * e10[1] + w01 * e01[1] + w11 * e11[1];
+  const ex = w00 * e00[0] + w10 * e10[0] + w01 * e01[0] + w11 * e11[0];
+  const ey = w00 * e00[1] + w10 * e10[1] + w01 * e01[1] + w11 * e11[1];
   return { ex, ey, mag: Math.hypot(ex, ey) };
 }
 

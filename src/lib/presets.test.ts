@@ -74,16 +74,19 @@ describe.each(PRESET_ORDER)("preset %s", (id) => {
 });
 
 describe("preset-specific voltage/geometry checks", () => {
-  it.each(SIZES)("parallel: has both +100kV and -100kV fixed cells (N=%i)", (N) => {
-    const g = createGrid(N);
-    PRESETS.parallel.apply(g);
-    const vals = new Set<number>();
-    for (let k = 0; k < g.fixed.length; k++) {
-      if (g.fixed[k] === 1) vals.add(g.Vfix[k] as number);
-    }
-    expect(vals.has(100_000)).toBe(true);
-    expect(vals.has(-100_000)).toBe(true);
-  });
+  it.each(SIZES)(
+    "parallel: has both +100kV and -100kV fixed cells (N=%i)",
+    (N) => {
+      const g = createGrid(N);
+      PRESETS.parallel.apply(g);
+      const vals = new Set<number>();
+      for (let k = 0; k < g.fixed.length; k++) {
+        if (g.fixed[k] === 1) vals.add(g.Vfix[k] as number);
+      }
+      expect(vals.has(100_000)).toBe(true);
+      expect(vals.has(-100_000)).toBe(true);
+    },
+  );
 
   it.each(SIZES)("dipole: has opposite-sign disc voltages (N=%i)", (N) => {
     const g = createGrid(N);
@@ -210,15 +213,18 @@ describe("preset-specific voltage/geometry checks", () => {
     },
   );
 
-  it.each(SIZES)("tip: triangle tip is present (nonzero +80V cells beyond the plate)", (N) => {
-    const g = createGrid(N);
-    PRESETS.tip.apply(g);
-    let plusCount = 0;
-    for (let k = 0; k < g.fixed.length; k++) {
-      if (g.fixed[k] === 1 && (g.Vfix[k] as number) === 80) plusCount++;
-    }
-    expect(plusCount).toBeGreaterThan(0);
-  });
+  it.each(SIZES)(
+    "tip: triangle tip is present (nonzero +80V cells beyond the plate)",
+    (N) => {
+      const g = createGrid(N);
+      PRESETS.tip.apply(g);
+      let plusCount = 0;
+      for (let k = 0; k < g.fixed.length; k++) {
+        if (g.fixed[k] === 1 && (g.Vfix[k] as number) === 80) plusCount++;
+      }
+      expect(plusCount).toBeGreaterThan(0);
+    },
+  );
 
   it.each(SIZES)("conductors: has +100kV and -100kV plates (N=%i)", (N) => {
     const g = createGrid(N);

@@ -28,7 +28,8 @@ export interface SolverProgress {
 
 // 3-tuple [i, j, V] is the legacy form; 4-tuple [i, j, V, phaseDeg] adds the
 // AC phase in degrees. New code writes the 4-tuple; old saves still load.
-export type SavedCell = [number, number, number] | [number, number, number, number];
+export type SavedCell =
+  [number, number, number] | [number, number, number, number];
 
 export interface SavedGeometry {
   name: string;

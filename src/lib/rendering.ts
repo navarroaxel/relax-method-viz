@@ -167,10 +167,7 @@ function drawLevel(
       const e1 = () => interp(vB, vC, bx, by, cx, cy, L); // right
       const e2 = () => interp(vC, vD, cx, cy, dx, dy, L); // bottom (C→D)
       const e3 = () => interp(vD, vA, dx, dy, ax, ay, L); // left  (D→A)
-      const seg = (
-        a: [number, number],
-        b: [number, number],
-      ) => {
+      const seg = (a: [number, number], b: [number, number]) => {
         ctx.moveTo(a[0], a[1]);
         ctx.lineTo(b[0], b[1]);
       };
@@ -262,7 +259,8 @@ export function renderFieldArrows(
   const headSize = 3.2;
   for (const s of samples) {
     if (s.mag < threshold) continue;
-    const lenScale = (0.25 + 0.75 * Math.sqrt(s.mag / emax)) * cellSize * step * 0.78;
+    const lenScale =
+      (0.25 + 0.75 * Math.sqrt(s.mag / emax)) * cellSize * step * 0.78;
     const angle = Math.atan2(s.ey, s.ex);
     const cx = (s.i + 0.5) * cellSize;
     const cy = (s.j + 0.5) * cellSize;
@@ -403,10 +401,10 @@ export function renderStreamlines(
       const bwd = trace(sx, sy, -1);
       const pts: number[] = [];
       for (let i = bwd.length - 2; i >= 0; i -= 2) {
-        pts.push(bwd[i] as number, (bwd[i + 1] as number));
+        pts.push(bwd[i] as number, bwd[i + 1] as number);
       }
       for (let i = 2; i < fwd.length; i += 2) {
-        pts.push(fwd[i] as number, (fwd[i + 1] as number));
+        pts.push(fwd[i] as number, fwd[i + 1] as number);
       }
       if (pts.length >= 6) lines.push(pts);
     }
@@ -514,7 +512,13 @@ function drawTracePath(
     for (const p of [points[0], points[points.length - 1]]) {
       if (!p) continue;
       ctx.beginPath();
-      ctx.arc((p[0] as number) * cellSize, (p[1] as number) * cellSize, 4, 0, Math.PI * 2);
+      ctx.arc(
+        (p[0] as number) * cellSize,
+        (p[1] as number) * cellSize,
+        4,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.stroke();
     }
@@ -535,10 +539,8 @@ export function renderAll(
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, displaySize, displaySize);
   if (display.heatmap) renderHeatmap(ctx, V, N, vmax, displaySize);
-  if (display.equipotentials)
-    renderEquipotentials(ctx, V, N, vmax, cellSize);
+  if (display.equipotentials) renderEquipotentials(ctx, V, N, vmax, cellSize);
   if (display.arrows) renderFieldArrows(ctx, V, fixed, N, cellSize);
-  else if (display.streamlines)
-    renderStreamlines(ctx, V, fixed, N, cellSize);
+  else if (display.streamlines) renderStreamlines(ctx, V, fixed, N, cellSize);
   renderConductors(ctx, fixed, Vfix, N, cellSize);
 }

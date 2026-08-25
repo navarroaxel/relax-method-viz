@@ -46,14 +46,24 @@ export function ShareButton({ disabled, getUrl }: ShareButtonProps) {
       disabled={disabled}
       aria-label={label}
       title={label}
-      className="inline-flex items-center justify-center rounded-md border border-zinc-300 bg-white p-2 text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex items-center justify-center rounded-md border border-zinc-300 bg-white p-2 text-zinc-700 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
     >
       {copied ? (
-        <svg aria-hidden viewBox="0 0 16 16" fill="currentColor" className="size-5">
+        <svg
+          aria-hidden
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          className="size-5"
+        >
           <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-6.5 6.5a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06L6.75 10.19l5.97-5.97a.75.75 0 0 1 1.06 0z" />
         </svg>
       ) : (
-        <svg aria-hidden viewBox="0 0 16 16" fill="currentColor" className="size-5">
+        <svg
+          aria-hidden
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          className="size-5"
+        >
           <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-4.66 2.33a2.5 2.5 0 0 1 0 1.084l4.66 2.33a2.5 2.5 0 1 1-.67 1.342l-4.66-2.33a2.5 2.5 0 1 1 0-3.768l4.66-2.33A2.5 2.5 0 0 1 11 2.5z" />
         </svg>
       )}

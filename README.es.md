@@ -164,28 +164,28 @@ tienen toolbars, presets y solvers independientes.
 
 ### 2D
 
-| ID               | Etiqueta                  | Qué se ve después de **Calcular**                                                               |
-| ---------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
-| `parallel`       | Capacitor plano           | `V` lineal entre las placas; `E` uniforme y vertical (capacitor de placas paralelas).           |
-| `dipole`         | Dipolo                    | Equipotenciales con forma de cardioides; líneas de campo curvándose del disco `+` al `−`.       |
-| `lightning`      | Pararrayos simplificado   | Placa superior a +100 kV, varilla aterrada abajo — equipotenciales se aprietan en la punta.     |
-| `coaxial`        | Cable Coaxial             | Equipotenciales circulares concéntricas; campo radial saliendo del disco central.                |
-| `faraday`        | Jaula de Faraday          | `V ≈ 0` y sin flechas dentro de la caja cerrada aterrada, incluso con campo externo.            |
-| `tip`            | Punta vs plano            | Punta triangular a +80 V sobre plano aterrado — alta concentración de campo en el vértice.      |
-| `conductors`     | Placas conductoras        | Geometría en L (placa horizontal +100 kV, placa vertical −100 kV); campos de franja en bordes.  |
-| `subconductors`  | Línea 4 subconductores    | Bundle 2×2 de discos a √(2/3)×500 kV sobre plano de tierra — modela línea AT real.             |
-| `threephase`     | Línea trifásica + neutro  | Tres discos a √(2/3)×500 kV con fases AC 0°/120°/240° más un disco aterrado (neutro), sobre plano de tierra. |
+| ID              | Etiqueta                 | Qué se ve después de **Calcular**                                                                            |
+| --------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `parallel`      | Capacitor plano          | `V` lineal entre las placas; `E` uniforme y vertical (capacitor de placas paralelas).                        |
+| `dipole`        | Dipolo                   | Equipotenciales con forma de cardioides; líneas de campo curvándose del disco `+` al `−`.                    |
+| `lightning`     | Pararrayos simplificado  | Placa superior a +100 kV, varilla aterrada abajo — equipotenciales se aprietan en la punta.                  |
+| `coaxial`       | Cable Coaxial            | Equipotenciales circulares concéntricas; campo radial saliendo del disco central.                            |
+| `faraday`       | Jaula de Faraday         | `V ≈ 0` y sin flechas dentro de la caja cerrada aterrada, incluso con campo externo.                         |
+| `tip`           | Punta vs plano           | Punta triangular a +80 V sobre plano aterrado — alta concentración de campo en el vértice.                   |
+| `conductors`    | Placas conductoras       | Geometría en L (placa horizontal +100 kV, placa vertical −100 kV); campos de franja en bordes.               |
+| `subconductors` | Línea 4 subconductores   | Bundle 2×2 de discos a √(2/3)×500 kV sobre plano de tierra — modela línea AT real.                           |
+| `threephase`    | Línea trifásica + neutro | Tres discos a √(2/3)×500 kV con fases AC 0°/120°/240° más un disco aterrado (neutro), sobre plano de tierra. |
 
 ### 3D
 
-| ID              | Etiqueta                       | Geometría                                                                                  |
-| --------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
-| `parallel`      | Placas paralelas (3D)          | Dos slabs horizontales a ±100 V perpendiculares a Y — capacitor de placas en volumen.     |
-| `dipole`        | Dipolo (3D)                    | Dos slabs chicos a ±100 V en lados opuestos — campo dipolar simétrico.                    |
-| `coax`          | Cable coaxial (3D)             | Cilindro exterior aterrado + conductor interno a +80 V a lo largo del eje.                |
-| `lightning`     | Pararrayos simplificado (3D)   | Placa superior +100 kV, piso aterrado + varilla vertical aterrada — campo en la punta.    |
-| `faraday`       | Jaula de Faraday (3D)          | Placa excitada + piso aterrado + caja cerrada aterrada — interior apantallado.            |
-| `subconductors` | Línea 4 subconductores (3D)    | Plano de tierra + bundle 2×2 de cilindros a √(2/3)×500 kV — versión 3D del bundle.        |
+| ID              | Etiqueta                     | Geometría                                                                              |
+| --------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| `parallel`      | Placas paralelas (3D)        | Dos slabs horizontales a ±100 V perpendiculares a Y — capacitor de placas en volumen.  |
+| `dipole`        | Dipolo (3D)                  | Dos slabs chicos a ±100 V en lados opuestos — campo dipolar simétrico.                 |
+| `coax`          | Cable coaxial (3D)           | Cilindro exterior aterrado + conductor interno a +80 V a lo largo del eje.             |
+| `lightning`     | Pararrayos simplificado (3D) | Placa superior +100 kV, piso aterrado + varilla vertical aterrada — campo en la punta. |
+| `faraday`       | Jaula de Faraday (3D)        | Placa excitada + piso aterrado + caja cerrada aterrada — interior apantallado.         |
+| `subconductors` | Línea 4 subconductores (3D)  | Plano de tierra + bundle 2×2 de cilindros a √(2/3)×500 kV — versión 3D del bundle.     |
 
 ## La matemática
 

@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 
 export type SimMode = "2d" | "3d";
@@ -25,9 +20,7 @@ function readStoredTheme(): ThemeMode {
 
 function applyTheme(mode: ThemeMode): void {
   if (typeof window === "undefined") return;
-  const systemDark = window.matchMedia(
-    "(prefers-color-scheme: dark)",
-  ).matches;
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const useDark = mode === "dark" || (mode === "auto" && systemDark);
   document.documentElement.classList.toggle("dark", useDark);
   if (mode === "auto") {
@@ -107,9 +100,9 @@ export function SettingsPanel({ mode, onModeChange }: SettingsPanelProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-60 space-y-3 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute top-full right-0 z-50 mt-1 w-60 space-y-3 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <p className="mb-2 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
               {t("settings.section_display")}
             </p>
 
@@ -133,7 +126,7 @@ export function SettingsPanel({ mode, onModeChange }: SettingsPanelProps) {
           </div>
 
           <div className="border-t border-zinc-200 pt-3 dark:border-zinc-700">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <p className="mb-2 text-[10px] font-semibold tracking-wider text-zinc-400 uppercase dark:text-zinc-500">
               {t("settings.section_interface")}
             </p>
 

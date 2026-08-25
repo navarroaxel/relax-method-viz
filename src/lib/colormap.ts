@@ -6,7 +6,8 @@ export function divergentColor(
   v: number,
   vmax: number,
 ): [number, number, number] {
-  if (vmax <= 0 || !Number.isFinite(vmax)) return [WHITE[0], WHITE[1], WHITE[2]];
+  if (vmax <= 0 || !Number.isFinite(vmax))
+    return [WHITE[0], WHITE[1], WHITE[2]];
   const t = Math.max(-1, Math.min(1, v / vmax));
   const target = t >= 0 ? RED : BLUE;
   const a = Math.abs(t);

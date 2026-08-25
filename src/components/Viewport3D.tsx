@@ -8,10 +8,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import {
-  Canvas as R3FCanvas,
-  type ThreeEvent,
-} from "@react-three/fiber";
+import { Canvas as R3FCanvas, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -59,7 +56,11 @@ function cellToWorld(
   out = new THREE.Vector3(),
 ): THREE.Vector3 {
   const s = 1 / N;
-  return out.set((i + 0.5) * s - HALF, (j + 0.5) * s - HALF, (k + 0.5) * s - HALF);
+  return out.set(
+    (i + 0.5) * s - HALF,
+    (j + 0.5) * s - HALF,
+    (k + 0.5) * s - HALF,
+  );
 }
 
 // World hit point on a slice plane → integer (i, j, k) cell coords. The
@@ -168,7 +169,11 @@ function SlicePlane({
     const ctx = c.getContext("2d");
     const image =
       ctx?.createImageData(N, N) ??
-      ({ data: new Uint8ClampedArray(N * N * 4), width: N, height: N } as ImageData);
+      ({
+        data: new Uint8ClampedArray(N * N * 4),
+        width: N,
+        height: N,
+      } as ImageData);
     const tex = new THREE.CanvasTexture(c);
     tex.magFilter = THREE.NearestFilter;
     tex.minFilter = THREE.NearestFilter;
@@ -204,7 +209,16 @@ function SlicePlane({
     }
     // V is mutated in place; renderTick is the change signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderTick, axis, index, N, vmax, resources, contours, showEquipotentials]);
+  }, [
+    renderTick,
+    axis,
+    index,
+    N,
+    vmax,
+    resources,
+    contours,
+    showEquipotentials,
+  ]);
 
   // Position & orient the plane so its normal is along `axis`.
   const w = sliceWorldPos(N, index);
@@ -369,12 +383,7 @@ function FieldLines({ grid, renderTick, visible }: FieldLinesProps) {
   if (!visible) return null;
   return (
     <lineSegments geometry={resources.geometry} renderOrder={1}>
-      <lineBasicMaterial
-        color="#0aa"
-        transparent
-        opacity={0.6}
-        depthTest
-      />
+      <lineBasicMaterial color="#0aa" transparent opacity={0.6} depthTest />
     </lineSegments>
   );
 }
@@ -391,7 +400,13 @@ function DomainBounds() {
 
 // Ghost line shown between the first click anchor and the live pointer
 // position while the user is mid-primitive.
-function GhostLine({ a, b }: { a: [number, number, number]; b: [number, number, number] }) {
+function GhostLine({
+  a,
+  b,
+}: {
+  a: [number, number, number];
+  b: [number, number, number];
+}) {
   return (
     <Line
       points={[a, b]}
@@ -439,9 +454,7 @@ export function Viewport3D({
     const N = grid.N;
     // Clamp endpoints into the [1, N-2] interior so primitives never sit on
     // the boundary row where applyBoundary3D would overwrite them.
-    const clamp = (
-      p: [number, number, number],
-    ): [number, number, number] => [
+    const clamp = (p: [number, number, number]): [number, number, number] => [
       Math.max(1, Math.min(N - 2, p[0])),
       Math.max(1, Math.min(N - 2, p[1])),
       Math.max(1, Math.min(N - 2, p[2])),
@@ -451,7 +464,13 @@ export function Viewport3D({
     let prim: Primitive3D;
     switch (tool) {
       case "wire":
-        prim = { kind: "wire", a: aa, b: bb, thickness, voltage: effectiveVoltage };
+        prim = {
+          kind: "wire",
+          a: aa,
+          b: bb,
+          thickness,
+          voltage: effectiveVoltage,
+        };
         break;
       case "plate": {
         // Extend the plate perpendicular to the slice plane by ±thickness/2.
@@ -468,19 +487,38 @@ export function Viewport3D({
           aDepth[2] = Math.max(1, aa[2] - half);
           bDepth[2] = Math.min(N - 2, bb[2] + half);
         }
-        prim = { kind: "plate", a: aDepth, b: bDepth, voltage: effectiveVoltage };
+        prim = {
+          kind: "plate",
+          a: aDepth,
+          b: bDepth,
+          voltage: effectiveVoltage,
+        };
         break;
       }
       case "sphere": {
         const dx = bb[0] - aa[0];
         const dy = bb[1] - aa[1];
         const dz = bb[2] - aa[2];
-        const r = Math.max(1, Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz)));
-        prim = { kind: "sphere", center: aa, radius: r, voltage: effectiveVoltage };
+        const r = Math.max(
+          1,
+          Math.round(Math.sqrt(dx * dx + dy * dy + dz * dz)),
+        );
+        prim = {
+          kind: "sphere",
+          center: aa,
+          radius: r,
+          voltage: effectiveVoltage,
+        };
         break;
       }
       case "cylinder":
-        prim = { kind: "cylinder", a: aa, b: bb, radius, voltage: effectiveVoltage };
+        prim = {
+          kind: "cylinder",
+          a: aa,
+          b: bb,
+          radius,
+          voltage: effectiveVoltage,
+        };
         break;
       case "era":
         // Erase = plate-shaped wipe between the two clicks.
@@ -551,7 +589,11 @@ export function Viewport3D({
         <DomainBounds />
         <axesHelper args={[0.6]} />
         <VoxelInstances grid={grid} conductorVersion={conductorVersion} />
-        <FieldLines grid={grid} renderTick={renderTick} visible={showFieldLines} />
+        <FieldLines
+          grid={grid}
+          renderTick={renderTick}
+          visible={showFieldLines}
+        />
         <SlicePlane
           N={grid.N}
           axis={sliceAxis}
@@ -568,8 +610,10 @@ export function Viewport3D({
         <OrbitControls makeDefault enableDamping enabled={anchor === null} />
       </R3FCanvas>
       {/* Slice index slider overlay */}
-      <div className="pointer-events-auto absolute bottom-2 left-2 right-2 flex items-center gap-2 rounded-md border border-zinc-300 bg-white/90 px-2 py-1 text-xs text-zinc-700 backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200">
-        <span className="font-mono">slice {sliceAxis} = {sliceIndex}</span>
+      <div className="pointer-events-auto absolute right-2 bottom-2 left-2 flex items-center gap-2 rounded-md border border-zinc-300 bg-white/90 px-2 py-1 text-xs text-zinc-700 backdrop-blur-sm dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200">
+        <span className="font-mono">
+          slice {sliceAxis} = {sliceIndex}
+        </span>
         <input
           type="range"
           min={0}
@@ -581,7 +625,7 @@ export function Viewport3D({
         />
       </div>
       {anchor && (
-        <div className="pointer-events-none absolute left-2 top-2 rounded-md border border-yellow-400 bg-yellow-100/90 px-2 py-1 font-mono text-[11px] leading-tight text-yellow-900 shadow-sm">
+        <div className="pointer-events-none absolute top-2 left-2 rounded-md border border-yellow-400 bg-yellow-100/90 px-2 py-1 font-mono text-[11px] leading-tight text-yellow-900 shadow-sm">
           {t("viewport3d.anchor_hint")}
         </div>
       )}

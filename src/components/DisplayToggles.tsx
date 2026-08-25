@@ -17,9 +17,7 @@ export function DisplayToggles({ display, onChange }: DisplayTogglesProps) {
         <input
           type="checkbox"
           checked={display.heatmap}
-          onChange={(e) =>
-            onChange({ ...display, heatmap: e.target.checked })
-          }
+          onChange={(e) => onChange({ ...display, heatmap: e.target.checked })}
         />
         {t("display.heatmap")}
       </label>
