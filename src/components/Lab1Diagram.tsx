@@ -205,7 +205,9 @@ export function Lab1Diagram({
   // pulses race across a bench that is otherwise frozen.
   const timeScale = replaying ? speed : 1;
   const loopPeriod = reducedMotion ? 0 : pulsePeriod(loopCurrentA) / timeScale;
-  const coilPeriod = reducedMotion ? 0 : pulsePeriod(COIL_CURRENT_A) / timeScale;
+  const coilPeriod = reducedMotion
+    ? 0
+    : pulsePeriod(COIL_CURRENT_A) / timeScale;
 
   const turns = Array.from({ length: TURNS }, (_, k) => COIL_X0 + k * COIL_DX);
   const coilX1 = COIL_X0 + (TURNS - 1) * COIL_DX;
@@ -523,24 +525,26 @@ export function Lab1Diagram({
         >
           {playing ? labels.pause : labels.play}
         </button>
-        <span className="flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
-          {labels.speed}
-          {SPEEDS.map((rate) => (
-            <button
-              key={rate.value}
-              type="button"
-              onClick={() => setSpeed(rate.value)}
-              aria-pressed={speed === rate.value}
-              className={
-                speed === rate.value
-                  ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 font-mono text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
-                  : "rounded-md border border-zinc-300 px-2 py-1 font-mono text-xs hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-800"
-              }
-            >
-              {rate.label}
-            </button>
-          ))}
-        </span>
+        {replaying && (
+          <span className="flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
+            {labels.speed}
+            {SPEEDS.map((rate) => (
+              <button
+                key={rate.value}
+                type="button"
+                onClick={() => setSpeed(rate.value)}
+                aria-pressed={speed === rate.value}
+                className={
+                  speed === rate.value
+                    ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 font-mono text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+                    : "rounded-md border border-zinc-300 px-2 py-1 font-mono text-xs hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-800"
+                }
+              >
+                {rate.label}
+              </button>
+            ))}
+          </span>
+        )}
         {!replaying && (
           <label className="flex flex-1 items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
             {labels.loopCurrent}
