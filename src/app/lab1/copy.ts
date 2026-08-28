@@ -111,10 +111,11 @@ const ES: Lab1Copy = {
     forceF: "F",
     loopCurrent: "I bucle",
     coilCurrent: "I bobina",
+    speed: "Velocidad",
     play: "▶ Reproducir el escalón",
     pause: "■ Detener",
     replayHint:
-      "Reproduciendo la captura real a velocidad natural (1 s, en bucle). La corriente ya está arriba mientras la espira todavía está subiendo.",
+      "Reproduciendo la captura real en bucle. Toda la parte interesante dura unas décimas de segundo, así que bajá la velocidad para verla: la corriente ya está arriba mientras la espira todavía está subiendo.",
     manualHint:
       "Modo manual: la fuerza se calcula como F = I · l · B con el campo medido. El barrido del ensayo va de 0 a 12 A en pasos de 2 A.",
     elapsed: "t",
@@ -221,10 +222,11 @@ const EN: Lab1Copy = {
     forceF: "F",
     loopCurrent: "I loop",
     coilCurrent: "I coil",
+    speed: "Speed",
     play: "▶ Play the step",
     pause: "■ Stop",
     replayHint:
-      "Replaying the real capture at natural speed (1 s, looping). The current is already up while the loop is still rising.",
+      "Replaying the real capture on a loop. The interesting part lasts a few tenths of a second, so slow it down to watch it: the current is already up while the loop is still rising.",
     manualHint:
       "Manual mode: force is computed as F = I · l · B with the measured field. The experiment's sweep runs 0 to 12 A in 2 A steps.",
     elapsed: "t",

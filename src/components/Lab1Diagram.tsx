@@ -21,6 +21,7 @@ export interface DiagramLabels {
   forceF: string;
   loopCurrent: string;
   coilCurrent: string;
+  speed: string;
   play: string;
   pause: string;
   replayHint: string;
@@ -57,6 +58,13 @@ const LOOP_BOTTOM = COIL_CY + 28;
 const SENSOR_BOTTOM = 134;
 /** Height at which the supply leads join the loop holder. */
 const FEED_Y = 142;
+
+/** Playback rates offered for the step replay. */
+const SPEEDS = [
+  { value: 1, label: "1×" },
+  { value: 0.25, label: "0.25×" },
+  { value: 0.1, label: "0.1×" },
+] as const;
 
 /** Max upward travel of the loop when the sensor is fully loaded, in px. */
 const MAX_DEFLECTION = 13;
@@ -141,17 +149,25 @@ export function Lab1Diagram({
   const [playing, setPlaying] = useState(false);
   const [sampleIndex, setSampleIndex] = useState<number | null>(null);
   const [manualCurrent, setManualCurrent] = useState(8);
+  const [speed, setSpeed] = useState<number>(1);
   const rafRef = useRef<number | null>(null);
+  /** Position within the capture, in capture-milliseconds. */
+  const elapsedRef = useRef(0);
 
   // Playback walks the real capture in wall-clock time and loops, so the lag
   // between the current step and the force response shows up on the bench
-  // drawing itself, not only on the chart.
+  // drawing itself, not only on the chart. The whole interesting part lasts
+  // ~0.3 s at 1×, so the slower rates are what make it readable.
   useEffect(() => {
     if (!playing) return;
     const total = escalonForceMn.length * ESCALON_DT_S * 1000;
+    // Resume from wherever the capture was, so changing rate mid-replay
+    // re-times the playback instead of jumping back to the step.
+    const base = elapsedRef.current;
     const start = performance.now();
     const tick = (now: number) => {
-      const elapsed = (now - start) % total;
+      const elapsed = (base + (now - start) * speed) % total;
+      elapsedRef.current = elapsed;
       setSampleIndex(Math.floor(elapsed / (ESCALON_DT_S * 1000)));
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -159,11 +175,14 @@ export function Lab1Diagram({
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [playing]);
+  }, [playing, speed]);
 
   const togglePlay = useCallback(() => {
     setPlaying((p) => {
-      if (p) setSampleIndex(null);
+      if (p) {
+        setSampleIndex(null);
+        elapsedRef.current = 0;
+      }
       return !p;
     });
   }, []);
@@ -182,8 +201,11 @@ export function Lab1Diagram({
   const deflection = load * MAX_DEFLECTION;
   const arrowLen = 10 + load * 44;
 
-  const loopPeriod = reducedMotion ? 0 : pulsePeriod(loopCurrentA);
-  const coilPeriod = reducedMotion ? 0 : pulsePeriod(COIL_CURRENT_A);
+  // In slow motion the charge carriers should crawl too, otherwise the
+  // pulses race across a bench that is otherwise frozen.
+  const timeScale = replaying ? speed : 1;
+  const loopPeriod = reducedMotion ? 0 : pulsePeriod(loopCurrentA) / timeScale;
+  const coilPeriod = reducedMotion ? 0 : pulsePeriod(COIL_CURRENT_A) / timeScale;
 
   const turns = Array.from({ length: TURNS }, (_, k) => COIL_X0 + k * COIL_DX);
   const coilX1 = COIL_X0 + (TURNS - 1) * COIL_DX;
@@ -501,6 +523,24 @@ export function Lab1Diagram({
         >
           {playing ? labels.pause : labels.play}
         </button>
+        <span className="flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
+          {labels.speed}
+          {SPEEDS.map((rate) => (
+            <button
+              key={rate.value}
+              type="button"
+              onClick={() => setSpeed(rate.value)}
+              aria-pressed={speed === rate.value}
+              className={
+                speed === rate.value
+                  ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 font-mono text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+                  : "rounded-md border border-zinc-300 px-2 py-1 font-mono text-xs hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-800"
+              }
+            >
+              {rate.label}
+            </button>
+          ))}
+        </span>
         {!replaying && (
           <label className="flex flex-1 items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
             {labels.loopCurrent}
