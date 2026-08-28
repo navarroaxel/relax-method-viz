@@ -56,9 +56,30 @@ export interface Lab1Copy {
   lessonTitle: string;
   lessonBody: string[];
 
+  rampTitle: string;
+  rampBody: string;
+  rampTimeBody: string;
+  rampHysteresis: string;
+  rampLagNote: string;
+  rampAxisI: string;
+  rampAxisF: string;
+  rampRising: string;
+  rampFalling: string;
+  rampOverallFit: string;
+  rampRisingFit: string;
+  rampFallingFit: string;
+  mPeak: string;
+  mRate: string;
+  mSlope: string;
+  mR2: string;
+  mTare: string;
+  mFieldRamp: string;
+  mHysteresis: string;
+  mLag: string;
   fieldTitle: string;
   fieldBody: string;
   fieldCompare: (measured: string, direct: string, deltaPct: string) => string;
+  fieldThree: (ramp: string, spreadPct: string) => string;
 
   checklistTitle: string;
   checklist: string[];
@@ -159,13 +180,39 @@ const ES: Lab1Copy = {
     "El compromiso del ensayo está acá: la guía pide hacerlo rápido porque el bucle no aguanta 20 A mucho tiempo, pero cada punto necesita el tiempo de asentamiento que se mide abajo. Ese es el número que hay que respetar entre escalón y escalón.",
   ],
 
-  fieldTitle: "5. De la fuerza al campo",
+  rampTitle: "5. El barrido progresivo",
+  rampBody:
+    "La hoja «progresivo» es la medición que el informe realmente pide: F en función de I. En vez de ir por escalones de 2 A, acá la perilla se movió a mano de forma continua mientras el CASSY registraba solo, 201 muestras cada 100 ms durante 20 s. La corriente sube hasta el pico y después vuelve a bajar, así que el registro tiene las dos ramas del barrido — y eso es lo que convierte el retardo del sensor en algo que se ve de una.",
+  rampTimeBody:
+    "Primero, el registro en el tiempo: se nota el pulso de la mano en la corriente, y la fuerza siguiéndola de cerca porque a este ritmo (≈1 A/s) el sensor tiene tiempo de acomodarse entre muestra y muestra.",
+  rampHysteresis:
+    "Al graficar F contra I aparece el detalle: la ida y la vuelta no se superponen. La rama de subida queda por debajo de la de bajada, y cada una ajusta a una recta de pendiente distinta. No es que el campo haya cambiado: es el mismo retardo del sensor del registro de escalón. Mientras subís, la fuerza que se lee corresponde a una corriente de un instante antes —menor— y la pendiente sale chica; mientras bajás corresponde a una corriente mayor y la pendiente sale grande. El lazo que encierran las dos ramas es, literalmente, el error que cometés según para qué lado movés la perilla.",
+  rampLagNote:
+    "Se puede cerrar el círculo con un número. Si se desfasa la fuerza respecto de la corriente y se busca el retardo que mejor alinea las dos señales, el mínimo cae justo donde el escalón puso el pico de la respuesta del sensor. Dos registros tomados de maneras distintas, el mismo retardo.",
+  rampAxisI: "I (A)",
+  rampAxisF: "F (mN)",
+  rampRising: "Subida",
+  rampFalling: "Bajada",
+  rampOverallFit: "Ajuste total",
+  rampRisingFit: "Ajuste subida",
+  rampFallingFit: "Ajuste bajada",
+  mPeak: "Corriente máxima",
+  mRate: "Ritmo máximo de la perilla",
+  mSlope: "Pendiente F/I",
+  mR2: "r² del ajuste",
+  mTare: "Tara residual",
+  mFieldRamp: "B del ajuste total",
+  mHysteresis: "Histéresis entre ramas",
+  mLag: "Retardo que mejor alinea F con I",
+  fieldTitle: "6. De la fuerza al campo",
   fieldBody:
     "Aplicando B = F/(I·l) muestra a muestra se ve lo mismo desde el otro lado: mientras el sensor todavía se está acomodando, el «campo» calculado no significa nada; recién cuando la fuerza se asienta, el cociente se estabiliza en el valor real.",
   fieldCompare: (measured, direct, deltaPct) =>
     `El valor de régimen da B = ${measured} mT. La medición directa con la sonda de campo (hoja «Medicion_directa») da ${direct} mT en su meseta: una diferencia del ${deltaPct} %, dentro de lo esperable para un método indirecto con un solo punto de corriente.`,
 
-  checklistTitle: "6. Qué pide el informe",
+  fieldThree: (ramp, spreadPct) =>
+    `Y el barrido progresivo, con su ajuste sobre 201 puntos, da ${ramp} mT. Los tres caminos —la fuerza en régimen tras un escalón, la pendiente de un barrido continuo y la sonda de campo— caen dentro del ${spreadPct} % entre sí, que para un ensayo de banco es un acuerdo muy razonable.`,
+  checklistTitle: "7. Qué pide el informe",
   checklist: [
     "Tabla del instrumental usado con alcance y error de cada equipo (trazabilidad).",
     "Gráficos separados de F vs I y de B vs I, con cotas de error en el segundo.",
@@ -272,13 +319,39 @@ const EN: Lab1Copy = {
     "This is the trade-off of the experiment: the guide asks you to work fast because the loop cannot hold 20 A for long, yet each point needs the settling time measured below. That is the number to respect between steps.",
   ],
 
-  fieldTitle: "5. From force to field",
+  rampTitle: "5. The progressive sweep",
+  rampBody:
+    "The «progresivo» sheet holds the measurement the report actually asks for: F against I. Instead of stepping in 2 A increments, the knob was turned by hand continuously while CASSY logged on its own — 201 samples every 100 ms across 20 s. The current rises to a peak and then comes back down, so the record holds both branches of the sweep, and that is what turns the sensor's lag into something you can see at a glance.",
+  rampTimeBody:
+    "First the time record: you can see the hand's pace in the current, with the force tracking it closely because at this rate (≈1 A/s) the sensor has time to settle between samples.",
+  rampHysteresis:
+    "Plotting F against I brings out the detail: the way up and the way down do not overlap. The rising branch sits below the falling one, and each fits a line of a different slope. The field did not change — this is the same sensor lag the step record showed. On the way up, the force being read belongs to the current of an instant earlier — a smaller one — so the slope comes out low; on the way down it belongs to a larger current and the slope comes out high. The loop enclosed by the two branches is literally the error you make depending on which way you turn the knob.",
+  rampLagNote:
+    "The circle closes with a number. Shifting force against current and looking for the delay that best aligns the two signals puts the minimum right where the step record put the peak of the sensor's response. Two records taken in completely different ways, the same lag.",
+  rampAxisI: "I (A)",
+  rampAxisF: "F (mN)",
+  rampRising: "Rising",
+  rampFalling: "Falling",
+  rampOverallFit: "Overall fit",
+  rampRisingFit: "Rising fit",
+  rampFallingFit: "Falling fit",
+  mPeak: "Peak current",
+  mRate: "Fastest knob rate",
+  mSlope: "F/I slope",
+  mR2: "Fit r²",
+  mTare: "Residual tare",
+  mFieldRamp: "B from the overall fit",
+  mHysteresis: "Hysteresis between branches",
+  mLag: "Delay that best aligns F with I",
+  fieldTitle: "6. From force to field",
   fieldBody:
     "Applying B = F/(I·l) sample by sample shows the same thing from the other side: while the sensor is still settling, the computed «field» means nothing; only once the force settles does the ratio stabilise at the real value.",
   fieldCompare: (measured, direct, deltaPct) =>
     `The steady-state value gives B = ${measured} mT. The direct field probe («Medicion_directa» sheet) reads ${direct} mT on its plateau: a ${deltaPct} % difference, well within what an indirect method at a single current point can be expected to give.`,
 
-  checklistTitle: "6. What the report asks for",
+  fieldThree: (ramp, spreadPct) =>
+    `And the progressive sweep, fitted over 201 points, gives ${ramp} mT. All three routes — the steady force after a step, the slope of a continuous sweep, and the field probe — land within ${spreadPct} % of each other, which for a bench experiment is very reasonable agreement.`,
+  checklistTitle: "7. What the report asks for",
   checklist: [
     "A table of the instruments used, with range and error for each (traceability).",
     "Separate plots of F vs I and B vs I, with error bars on the second one.",

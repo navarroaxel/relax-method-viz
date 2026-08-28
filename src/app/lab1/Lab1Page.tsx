@@ -9,6 +9,7 @@ import {
   type ChartSeries,
 } from "@/components/Lab1Chart";
 import { Lab1Diagram } from "@/components/Lab1Diagram";
+import { Lab1XYChart, type XYFitLine } from "@/components/Lab1XYChart";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   analyzeStep,
@@ -18,6 +19,13 @@ import {
   fieldSeriesMt,
   LOOP_LENGTH_M,
 } from "@/lib/lab1Escalon";
+
+import {
+  analyzeRamp,
+  PROGRESIVO_DT_S,
+  progresivoCurrentA,
+  progresivoForceMn,
+} from "@/lib/lab1Progresivo";
 
 import { LAB1_COPY } from "./copy";
 
@@ -52,6 +60,53 @@ export function Lab1Page() {
   const fieldMt = useMemo(
     () => fieldSeriesMt(escalonForceMn, escalonCurrentA),
     [],
+  );
+
+  const ramp = useMemo(
+    () => analyzeRamp(progresivoForceMn, progresivoCurrentA, LOOP_LENGTH_M),
+    [],
+  );
+
+  const rampSeries = useMemo<ChartSeries[]>(
+    () => [
+      {
+        values: progresivoForceMn,
+        axis: "left",
+        label: c.chartForce,
+        color: "force",
+      },
+      {
+        values: progresivoCurrentA,
+        axis: "right",
+        label: c.chartCurrent,
+        color: "current",
+      },
+    ],
+    [c.chartForce, c.chartCurrent],
+  );
+
+  const rampFits = useMemo<XYFitLine[]>(
+    () => [
+      {
+        slope: ramp.overall.slopeMnPerA,
+        intercept: ramp.overall.interceptMn,
+        tone: "overall",
+        label: c.rampOverallFit,
+      },
+      {
+        slope: ramp.rising.slopeMnPerA,
+        intercept: ramp.rising.interceptMn,
+        tone: "rising",
+        label: c.rampRisingFit,
+      },
+      {
+        slope: ramp.falling.slopeMnPerA,
+        intercept: ramp.falling.interceptMn,
+        tone: "falling",
+        label: c.rampFallingFit,
+      },
+    ],
+    [ramp, c.rampOverallFit, c.rampRisingFit, c.rampFallingFit],
   );
 
   const stepSeries = useMemo<ChartSeries[]>(
@@ -93,6 +148,11 @@ export function Lab1Page() {
   const deltaPct = Math.abs(
     ((analysis.fieldMt - DIRECT_B_MT) / DIRECT_B_MT) * 100,
   );
+  // Spread across the three independent routes to B, as a percentage of the
+  // smallest of them.
+  const fields = [analysis.fieldMt, ramp.overall.fieldMt, DIRECT_B_MT];
+  const spreadPct =
+    ((Math.max(...fields) - Math.min(...fields)) / Math.min(...fields)) * 100;
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -229,6 +289,65 @@ export function Lab1Page() {
       </section>
 
       <section className={SECTION}>
+        <h2 className={H2}>{c.rampTitle}</h2>
+        <p className={BODY}>{c.rampBody}</p>
+        <p className={BODY}>{c.rampTimeBody}</p>
+        <Lab1Chart
+          series={rampSeries}
+          leftLabel={c.chartForce}
+          rightLabel={c.chartCurrent}
+          showMarkers={false}
+          timeLabel={c.chartTime}
+          hoverHint={c.hoverHint}
+          dtS={PROGRESIVO_DT_S}
+        />
+        <p className={BODY}>{c.rampHysteresis}</p>
+        <Lab1XYChart
+          xs={progresivoCurrentA}
+          ys={progresivoForceMn}
+          splitIndex={ramp.peakIndex}
+          lines={rampFits}
+          xLabel={c.rampAxisI}
+          yLabel={c.rampAxisF}
+          risingLabel={c.rampRising}
+          fallingLabel={c.rampFalling}
+          hoverHint={c.hoverHint}
+          formatSample={(index, i, f) =>
+            `t = ${(index * PROGRESIVO_DT_S).toFixed(1)} s  ·  I = ${i.toFixed(2)} A  ·  F = ${f.toFixed(2)} mN`
+          }
+        />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric label={c.mPeak} value={`${ramp.peakCurrentA.toFixed(2)} A`} />
+          <Metric
+            label={c.mRate}
+            value={`${ramp.maxRateAPerS.toFixed(1)} A/s`}
+          />
+          <Metric
+            label={c.mSlope}
+            value={`${ramp.overall.slopeMnPerA.toFixed(4)} mN/A`}
+          />
+          <Metric label={c.mR2} value={ramp.overall.r2.toFixed(4)} />
+          <Metric
+            label={c.mTare}
+            value={`${ramp.overall.interceptMn.toFixed(3)} mN`}
+          />
+          <Metric
+            label={c.mFieldRamp}
+            value={`${ramp.overall.fieldMt.toFixed(2)} mT`}
+          />
+          <Metric
+            label={c.mHysteresis}
+            value={`${ramp.hysteresisPct.toFixed(1)} %`}
+          />
+          <Metric
+            label={c.mLag}
+            value={`${(ramp.bestLagS * 1000).toFixed(0)} ms`}
+          />
+        </div>
+        <p className={BODY}>{c.rampLagNote}</p>
+      </section>
+
+      <section className={SECTION}>
         <h2 className={H2}>{c.fieldTitle}</h2>
         <p className={BODY}>{c.fieldBody}</p>
         <Lab1Chart
@@ -251,6 +370,9 @@ export function Lab1Page() {
             DIRECT_B_MT.toFixed(2),
             deltaPct.toFixed(1),
           )}
+        </p>
+        <p className={BODY}>
+          {c.fieldThree(ramp.overall.fieldMt.toFixed(2), spreadPct.toFixed(1))}
         </p>
       </section>
 

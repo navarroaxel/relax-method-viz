@@ -6,7 +6,7 @@ import { formatNum, niceTicks } from "@/lib/chartUtils";
 import { ESCALON_DT_S } from "@/lib/lab1Escalon";
 
 export interface ChartSeries {
-  /** Samples, one per {@link ESCALON_DT_S}. */
+  /** Samples, one per `dtS` (defaults to the escalón interval). */
   values: Float64Array;
   /** Which vertical axis this series is drawn against. */
   axis: "left" | "right";
@@ -42,6 +42,8 @@ interface Lab1ChartProps {
   showMarkers: boolean;
   timeLabel: string;
   hoverHint: string;
+  /** Sampling interval of the series, in seconds. */
+  dtS?: number;
 }
 
 interface Palette {
@@ -145,6 +147,7 @@ export function Lab1Chart({
   showMarkers,
   timeLabel,
   hoverHint,
+  dtS = ESCALON_DT_S,
 }: Lab1ChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDark = useIsDarkMode();
@@ -152,7 +155,7 @@ export function Lab1Chart({
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   const sampleCount = series[0]?.values.length ?? 0;
-  const tMax = (sampleCount - 1) * ESCALON_DT_S;
+  const tMax = (sampleCount - 1) * dtS;
 
   const plotW = WIDTH - MARGIN.left - MARGIN.right;
   const plotH = HEIGHT - MARGIN.top - MARGIN.bottom;
@@ -288,7 +291,7 @@ export function Lab1Chart({
       ctx.strokeStyle = palette[s.color];
       ctx.beginPath();
       for (let k = 0; k < s.values.length; k++) {
-        const x = xOf(k * ESCALON_DT_S);
+        const x = xOf(k * dtS);
         const y = yOf(s.values[k] ?? 0, s.axis);
         if (k === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -298,7 +301,7 @@ export function Lab1Chart({
 
     // Hover cursor.
     if (hoverIndex !== null) {
-      const x = xOf(hoverIndex * ESCALON_DT_S);
+      const x = xOf(hoverIndex * dtS);
       ctx.strokeStyle = palette.cursor;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -314,6 +317,7 @@ export function Lab1Chart({
     }
   }, [
     band,
+    dtS,
     hoverIndex,
     leftLabel,
     leftRange,
@@ -332,7 +336,7 @@ export function Lab1Chart({
   const readout =
     hoverIndex === null
       ? hoverHint
-      : `t = ${(hoverIndex * ESCALON_DT_S).toFixed(3)} s` +
+      : `t = ${(hoverIndex * dtS).toFixed(3)} s` +
         series
           .map((s) => `  ·  ${s.label} = ${(s.values[hoverIndex] ?? 0).toFixed(2)}`)
           .join("");
