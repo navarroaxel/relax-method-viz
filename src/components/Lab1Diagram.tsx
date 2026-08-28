@@ -420,7 +420,7 @@ export function Lab1Diagram({
           className={sky}
           period={loopPeriod}
           delayFraction={0.25}
-          d={`M600 74 L520 74 L520 ${FEED_Y} L${LOOP_X + LOOP_HALF_W} ${FEED_Y}`}
+          d={`M600 74 L588 74 L588 ${FEED_Y} L${LOOP_X + LOOP_HALF_W} ${FEED_Y}`}
         />
         <Wire
           className={sky}
