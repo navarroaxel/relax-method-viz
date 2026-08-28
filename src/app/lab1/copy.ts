@@ -28,6 +28,7 @@ export interface Lab1Copy {
 
   stepTitle: string;
   stepBody: string;
+  inrushNote: string;
   markersToggle: string;
   chartTime: string;
   chartForce: string;
@@ -124,6 +125,8 @@ const ES: Lab1Copy = {
   stepTitle: "3. El registro de escalón",
   stepBody:
     "Esta captura no es una medición de campo: es la respuesta del banco a un escalón de corriente. La corriente pasa de ~1 A a 20,2 A en unos 2 ms —para el sensor, un escalón perfecto— y a partir de ahí todo lo que hace la curva de fuerza es respuesta mecánica del sensor, no física del campo. Pasá el cursor por el gráfico para leer valores.",
+  inrushNote:
+    "¿Y por qué no hay pico de arranque (inrush)? Porque en este circuito no hay nada que lo produzca. Un inrush aparece cuando algo pide por un instante mucha más corriente que en régimen: un núcleo de hierro que se satura al energizarse, o un capacitor de filtro descargado. Acá la carga es el bucle de 8 cm con sus cables —prácticamente resistiva, sin núcleo ni capacidad—, y la bobina, que sí es inductiva, es sin núcleo: una inductancia sin hierro no satura, así que al energizarse crece exponencialmente hacia su valor final y nunca por encima (y además está en el otro circuito, estabilizada en 5 A desde antes de la captura). A eso se suma que la fuente es electrónica regulada con límite de corriente: su lazo de control lleva la corriente a la consigna y la sujeta ahí. La medición es coherente con eso — subida monótona con τ ≈ 1 ms, 99 % del valor final a los 4 ms y una excursión máxima de 0,6 % sobre el régimen, dentro del ruido propio del canal (±0,1 A). Ese τ de 1 ms es además demasiado lento para la inductancia del bucle (del orden de 1 µH, que se establecería en decenas de microsegundos), así que lo que se ve es el lazo de la fuente y no la carga. En este banco lo único que oscila es la mecánica del sensor.",
   markersToggle: "Marcar los tiempos característicos",
   chartTime: "t (s)",
   chartForce: "F (mN)",
@@ -235,6 +238,8 @@ const EN: Lab1Copy = {
   stepTitle: "3. The step record",
   stepBody:
     "This capture is not a field measurement: it is the bench's response to a current step. The current goes from ~1 A to 20.2 A in about 2 ms — a perfect step as far as the sensor is concerned — and everything the force curve does afterwards is the sensor's mechanical response, not field physics. Hover the chart to read values.",
+  inrushNote:
+    "So why is there no inrush peak? Because nothing in this circuit can produce one. Inrush appears when something momentarily draws far more current than it does in steady state: an iron core saturating as it is energised, or a discharged bulk capacitor. Here the load is the 8 cm loop and its leads — essentially resistive, with no core and no capacitance — and the coil, which is the inductive part, is air-core: an inductor without iron cannot saturate, so energising it grows exponentially towards its final value and never above it (and it is on the other circuit anyway, settled at 5 A well before this capture). On top of that the supply is an electronically regulated, current-limited source: its control loop drives the current to the setpoint and holds it there. The measurement agrees — a monotonic rise with τ ≈ 1 ms, 99 % of the final value by 4 ms, and a largest excursion of 0.6 % above steady state, within the channel's own noise (±0.1 A). That 1 ms is also far too slow for the loop's own inductance (of order 1 µH, which would settle in tens of microseconds), so what we see is the supply's loop rather than the load. On this bench the only thing that rings is the sensor's mechanics.",
   markersToggle: "Mark the characteristic times",
   chartTime: "t (s)",
   chartForce: "F (mN)",

@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import { Lab1Chart, type ChartMarker, type ChartSeries } from "@/components/Lab1Chart";
+import {
+  Lab1Chart,
+  type ChartMarker,
+  type ChartSeries,
+} from "@/components/Lab1Chart";
 import { Lab1Diagram } from "@/components/Lab1Diagram";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -153,6 +157,9 @@ export function Lab1Page() {
       <section className={SECTION}>
         <h2 className={H2}>{c.stepTitle}</h2>
         <p className={BODY}>{c.stepBody}</p>
+        <p className="rounded-md border border-zinc-200 bg-zinc-50 p-2 text-sm leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+          {c.inrushNote}
+        </p>
         <label className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
           <input
             type="checkbox"
