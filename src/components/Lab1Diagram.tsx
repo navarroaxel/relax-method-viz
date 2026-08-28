@@ -8,6 +8,11 @@ import {
   ESCALON_DT_S,
   LOOP_LENGTH_M,
 } from "@/lib/lab1Escalon";
+import {
+  PROGRESIVO_DT_S,
+  progresivoCurrentA,
+  progresivoForceMn,
+} from "@/lib/lab1Progresivo";
 
 export interface DiagramLabels {
   supply20: string;
@@ -22,9 +27,11 @@ export interface DiagramLabels {
   loopCurrent: string;
   coilCurrent: string;
   speed: string;
-  play: string;
+  playStep: string;
+  playRamp: string;
   pause: string;
   replayHint: string;
+  replayRampHint: string;
   manualHint: string;
   elapsed: string;
 }
@@ -59,12 +66,39 @@ const SENSOR_BOTTOM = 134;
 /** Height at which the supply leads join the loop holder. */
 const FEED_Y = 142;
 
-/** Playback rates offered for the step replay. */
-const SPEEDS = [
-  { value: 1, label: "1×" },
-  { value: 0.25, label: "0.25×" },
-  { value: 0.1, label: "0.1×" },
-] as const;
+export type Capture = "escalon" | "progresivo";
+
+/**
+ * The two recorded sweeps the bench can replay. Their rates pull in opposite
+ * directions: the step is over in a few tenths of a second and needs slowing
+ * down, while the hand-swept ramp takes 20 s and is more watchable sped up.
+ */
+const CAPTURES: Record<
+  Capture,
+  {
+    force: Float64Array;
+    current: Float64Array;
+    dtS: number;
+    rates: readonly number[];
+  }
+> = {
+  escalon: {
+    force: escalonForceMn,
+    current: escalonCurrentA,
+    dtS: ESCALON_DT_S,
+    rates: [1, 0.25, 0.1],
+  },
+  progresivo: {
+    force: progresivoForceMn,
+    current: progresivoCurrentA,
+    dtS: PROGRESIVO_DT_S,
+    rates: [1, 2, 4],
+  },
+};
+
+function rateLabel(rate: number): string {
+  return `${rate}×`;
+}
 
 /** Max upward travel of the loop when the sensor is fully loaded, in px. */
 const MAX_DEFLECTION = 13;
@@ -146,7 +180,7 @@ export function Lab1Diagram({
   referenceForceMn,
 }: Lab1DiagramProps) {
   const reducedMotion = useReducedMotion();
-  const [playing, setPlaying] = useState(false);
+  const [capture, setCapture] = useState<Capture | null>(null);
   const [sampleIndex, setSampleIndex] = useState<number | null>(null);
   const [manualCurrent, setManualCurrent] = useState(8);
   const [speed, setSpeed] = useState<number>(1);
@@ -154,48 +188,47 @@ export function Lab1Diagram({
   /** Position within the capture, in capture-milliseconds. */
   const elapsedRef = useRef(0);
 
-  // Playback walks the real capture in wall-clock time and loops, so the lag
-  // between the current step and the force response shows up on the bench
-  // drawing itself, not only on the chart. The whole interesting part lasts
-  // ~0.3 s at 1×, so the slower rates are what make it readable.
+  // Playback walks the chosen capture in wall-clock time and loops, so what
+  // the sensor did shows up on the bench drawing itself and not only on the
+  // charts further down the page.
   useEffect(() => {
-    if (!playing) return;
-    const total = escalonForceMn.length * ESCALON_DT_S * 1000;
+    if (!capture) return;
+    const { force, dtS } = CAPTURES[capture];
+    const total = force.length * dtS * 1000;
     // Resume from wherever the capture was, so changing rate mid-replay
-    // re-times the playback instead of jumping back to the step.
+    // re-times the playback instead of jumping back to the start.
     const base = elapsedRef.current;
     const start = performance.now();
     const tick = (now: number) => {
       const elapsed = (base + (now - start) * speed) % total;
       elapsedRef.current = elapsed;
-      setSampleIndex(Math.floor(elapsed / (ESCALON_DT_S * 1000)));
+      setSampleIndex(Math.floor(elapsed / (dtS * 1000)));
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [playing, speed]);
+  }, [capture, speed]);
 
-  const togglePlay = useCallback(() => {
-    setPlaying((p) => {
-      if (p) {
-        setSampleIndex(null);
-        elapsedRef.current = 0;
-      }
-      return !p;
-    });
+  const togglePlay = useCallback((which: Capture) => {
+    setSampleIndex(null);
+    elapsedRef.current = 0;
+    // Rate sets differ per capture, so never carry one over.
+    setSpeed(1);
+    setCapture((active) => (active === which ? null : which));
   }, []);
 
-  const replaying = playing && sampleIndex !== null;
-  const loopCurrentA = replaying
-    ? (escalonCurrentA[sampleIndex] ?? 0)
-    : manualCurrent;
+  const replaying = capture !== null && sampleIndex !== null;
+  const active = capture ? CAPTURES[capture] : null;
+  const loopCurrentA =
+    replaying && active ? (active.current[sampleIndex] ?? 0) : manualCurrent;
   // Manual mode predicts the force from the measured field; playback shows
   // what the sensor actually reported. F[mN] = I · l · B[mT].
-  const forceMn = replaying
-    ? (escalonForceMn[sampleIndex] ?? 0)
-    : manualCurrent * LOOP_LENGTH_M * fieldMt;
+  const forceMn =
+    replaying && active
+      ? (active.force[sampleIndex] ?? 0)
+      : manualCurrent * LOOP_LENGTH_M * fieldMt;
 
   const load = Math.max(0, Math.min(forceMn / referenceForceMn, 1.2));
   const deflection = load * MAX_DEFLECTION;
@@ -508,39 +541,50 @@ export function Lab1Diagram({
           value={`${forceMn.toFixed(2)} mN`}
           tone="text-rose-700 dark:text-rose-400"
         />
-        {replaying && (
+        {replaying && active && (
           <Chip
             label={labels.elapsed}
-            value={`${(sampleIndex * ESCALON_DT_S).toFixed(3)} s`}
+            value={`${(sampleIndex * active.dtS).toFixed(active.dtS < 0.01 ? 3 : 1)} s`}
             tone="text-zinc-500 dark:text-zinc-400"
           />
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={togglePlay}
-          className="rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
-        >
-          {playing ? labels.pause : labels.play}
-        </button>
-        {replaying && (
+        <span className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => togglePlay("escalon")}
+            aria-pressed={capture === "escalon"}
+            className="rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            {capture === "escalon" ? labels.pause : labels.playStep}
+          </button>
+          <button
+            type="button"
+            onClick={() => togglePlay("progresivo")}
+            aria-pressed={capture === "progresivo"}
+            className="rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            {capture === "progresivo" ? labels.pause : labels.playRamp}
+          </button>
+        </span>
+        {replaying && active && (
           <span className="flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
             {labels.speed}
-            {SPEEDS.map((rate) => (
+            {active.rates.map((rate) => (
               <button
-                key={rate.value}
+                key={rate}
                 type="button"
-                onClick={() => setSpeed(rate.value)}
-                aria-pressed={speed === rate.value}
+                onClick={() => setSpeed(rate)}
+                aria-pressed={speed === rate}
                 className={
-                  speed === rate.value
+                  speed === rate
                     ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 font-mono text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
                     : "rounded-md border border-zinc-300 px-2 py-1 font-mono text-xs hover:bg-zinc-100 dark:border-zinc-600 dark:hover:bg-zinc-800"
                 }
               >
-                {rate.label}
+                {rateLabel(rate)}
               </button>
             ))}
           </span>
@@ -564,7 +608,11 @@ export function Lab1Diagram({
         )}
       </div>
       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-        {replaying ? labels.replayHint : labels.manualHint}
+        {capture === "escalon"
+          ? labels.replayHint
+          : capture === "progresivo"
+            ? labels.replayRampHint
+            : labels.manualHint}
       </p>
     </div>
   );
