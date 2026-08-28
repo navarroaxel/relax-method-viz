@@ -191,7 +191,9 @@ export function Lab1Diagram({
 
   const amber = "stroke-amber-600 dark:stroke-amber-400";
   const sky = "stroke-sky-600 dark:stroke-sky-400";
-  const loopPath = `M${LOOP_X - LOOP_HALF_W} ${SENSOR_BOTTOM} L${LOOP_X - LOOP_HALF_W} ${loopBottom} L${LOOP_X + LOOP_HALF_W} ${loopBottom} L${LOOP_X + LOOP_HALF_W} ${SENSOR_BOTTOM}`;
+  // Drawn from the right leg down and back up the left one, so the pulse runs
+  // the way the current does: in from CASSY input B, out towards the supply.
+  const loopPath = `M${LOOP_X + LOOP_HALF_W} ${SENSOR_BOTTOM} L${LOOP_X + LOOP_HALF_W} ${loopBottom} L${LOOP_X - LOOP_HALF_W} ${loopBottom} L${LOOP_X - LOOP_HALF_W} ${SENSOR_BOTTOM}`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -399,19 +401,32 @@ export function Lab1Diagram({
           fill="none"
           strokeWidth="9"
         />
-        <Wire className={sky} period={loopPeriod} d={loopPath} />
-        {/* Feed from the 20 A supply through the CASSY current input. */}
         <Wire
           className={sky}
           period={loopPeriod}
-          delayFraction={0.66}
-          d={`M132 52 L246 52 L246 ${FEED_Y} L${LOOP_X - LOOP_HALF_W} ${FEED_Y}`}
+          delayFraction={0.5}
+          d={loopPath}
+        />
+        {/* The loop circuit, in series (guía §2.2): the 20 A supply feeds
+            CASSY input B, which passes the current on to the loop, and the
+            loop returns it to the supply. Input B measures current, so it
+            sits in the circuit with two leads rather than probing it. */}
+        <Wire
+          className={sky}
+          period={loopPeriod}
+          d={`M132 30 L152 30 L152 10 L578 10 L578 56 L600 56`}
         />
         <Wire
           className={sky}
           period={loopPeriod}
-          delayFraction={0.33}
-          d={`M${LOOP_X + LOOP_HALF_W} ${FEED_Y} L520 ${FEED_Y} L520 68 L600 68`}
+          delayFraction={0.25}
+          d={`M600 74 L520 74 L520 ${FEED_Y} L${LOOP_X + LOOP_HALF_W} ${FEED_Y}`}
+        />
+        <Wire
+          className={sky}
+          period={loopPeriod}
+          delayFraction={0.75}
+          d={`M${LOOP_X - LOOP_HALF_W} ${FEED_Y} L246 ${FEED_Y} L246 52 L132 52`}
         />
         {/* Loop length tick. */}
         <path

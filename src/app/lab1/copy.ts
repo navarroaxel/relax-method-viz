@@ -98,7 +98,7 @@ const ES: Lab1Copy = {
 
   diagramTitle: "El banco, en movimiento",
   diagramBody:
-    "Esquema del montaje de la figura 2.1 de la guía. El trazo punteado marca por dónde circula cada corriente: la del solenoide (fija en 5 A) y la del bucle (variable). Movés el deslizador para ver cómo crece la fuerza sobre el bucle con la corriente, o le das a reproducir para que la animación siga el registro de escalón real — ahí se ve lo importante: la corriente salta de golpe y el bucle llega tarde, se pasa de largo y recién después se acomoda.",
+    "Esquema del montaje de la figura 2.1 de la guía. El trazo punteado marca por dónde circula cada corriente: la del solenoide (fija en 5 A) y la del bucle (variable). Ojo con el circuito del bucle: la entrada B del CASSY mide corriente, así que va en serie —entra por un borne y sale por el otro—, y de ahí la corriente sigue al bucle y vuelve a la fuente. Movés el deslizador para ver cómo crece la fuerza sobre el bucle con la corriente, o le das a reproducir para que la animación siga el registro de escalón real — ahí se ve lo importante: la corriente salta de golpe y el bucle llega tarde, se pasa de largo y recién después se acomoda.",
   diagram: {
     supply20: "Fuente bucle",
     supply5: "Fuente bobina",
@@ -208,7 +208,7 @@ const EN: Lab1Copy = {
 
   diagramTitle: "The bench, in motion",
   diagramBody:
-    "Schematic of the setup from figure 2.1 of the guide. The dashed strokes trace where each current flows: the solenoid's (fixed at 5 A) and the loop's (variable). Drag the slider to see the force on the loop grow with current, or hit play to drive the animation from the real step record — that is where the point lands: the current jumps at once while the loop arrives late, overshoots, and only then settles.",
+    "Schematic of the setup from figure 2.1 of the guide. The dashed strokes trace where each current flows: the solenoid's (fixed at 5 A) and the loop's (variable). Note the loop circuit: CASSY input B measures current, so it sits in series — in through one terminal and out through the other — and from there the current goes on to the loop and back to the supply. Drag the slider to see the force on the loop grow with current, or hit play to drive the animation from the real step record — that is where the point lands: the current jumps at once while the loop arrives late, overshoots, and only then settles.",
   diagram: {
     supply20: "Loop supply",
     supply5: "Coil supply",
