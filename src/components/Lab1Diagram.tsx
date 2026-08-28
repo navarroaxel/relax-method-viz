@@ -310,7 +310,7 @@ export function Lab1Diagram({
         </g>
         {/* Sensor signal cable to CASSY input A. */}
         <path
-          d={`M${LOOP_X + 47} 106 L556 106 L556 40 L600 40`}
+          d={`M${LOOP_X + 47} 106 L556 106 L556 58 L600 58`}
           className="stroke-zinc-400 dark:stroke-zinc-500"
           fill="none"
           strokeWidth="1.6"
@@ -351,13 +351,13 @@ export function Lab1Diagram({
         <Wire
           className={amber}
           period={coilPeriod}
-          d={`M132 104 L168 104 L168 ${COIL_CY} L${COIL_X0 - COIL_RX} ${COIL_CY}`}
+          d={`M132 104 L178 104 L178 ${COIL_CY} L${COIL_X0 - COIL_RX} ${COIL_CY}`}
         />
         <Wire
           className={amber}
           period={coilPeriod}
           delayFraction={0.5}
-          d={`M${coilX1} ${COIL_CY + COIL_RY} L${coilX1} 322 L168 322 L168 126 L132 126`}
+          d={`M${coilX1} ${COIL_CY + COIL_RY} L${coilX1} 322 L156 322 L156 126 L132 126`}
         />
 
         {/* ---- B field inside the coil ----------------------------------- */}
@@ -414,7 +414,7 @@ export function Lab1Diagram({
         <Wire
           className={sky}
           period={loopPeriod}
-          d={`M132 30 L152 30 L152 10 L578 10 L578 56 L600 56`}
+          d={`M132 30 L152 30 L152 10 L578 10 L578 40 L600 40`}
         />
         <Wire
           className={sky}
