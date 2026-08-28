@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   analyzeStep,
   DIRECT_B_MT,
+  ESCALON_DT_S,
   escalonCurrentA,
   escalonForceMn,
   fieldSeriesMt,
@@ -22,6 +23,8 @@ import {
 
 import {
   analyzeRamp,
+  branchGap,
+  predictFromStepResponse,
   PROGRESIVO_DT_S,
   progresivoCurrentA,
   progresivoForceMn,
@@ -66,6 +69,31 @@ export function Lab1Page() {
     () => analyzeRamp(progresivoForceMn, progresivoCurrentA, LOOP_LENGTH_M),
     [],
   );
+
+  // What the escalón's own sensor would have reported for this sweep. If the
+  // hysteresis were purely its lag, this would open the same loop.
+  const lagLoop = useMemo(() => {
+    const perAmp = predictFromStepResponse(
+      progresivoCurrentA,
+      escalonForceMn,
+      analysis.forceSteadyMn,
+      Math.round(PROGRESIVO_DT_S / ESCALON_DT_S),
+    );
+    const predicted = Float64Array.from(
+      perAmp,
+      (v) => v * ramp.overall.slopeMnPerA,
+    );
+    const measured = branchGap(
+      progresivoForceMn,
+      progresivoCurrentA,
+      ramp.peakIndex,
+    );
+    const fromLag = branchGap(predicted, progresivoCurrentA, ramp.peakIndex);
+    return {
+      measuredGapMn: measured.gapMn,
+      explainedPct: (fromLag.gapMn / measured.gapMn) * 100,
+    };
+  }, [analysis.forceSteadyMn, ramp]);
 
   const rampSeries = useMemo<ChartSeries[]>(
     () => [
@@ -343,8 +371,21 @@ export function Lab1Page() {
             label={c.mLag}
             value={`${(ramp.bestLagS * 1000).toFixed(0)} ms`}
           />
+          <Metric
+            label={c.mDelayStep}
+            value={`${(analysis.effectiveDelayS * 1000).toFixed(0)} ms`}
+          />
+          <Metric
+            label={c.mLoop}
+            value={`${lagLoop.measuredGapMn.toFixed(3)} mN`}
+          />
+          <Metric
+            label={c.mLoopExplained}
+            value={`${lagLoop.explainedPct.toFixed(0)} %`}
+          />
         </div>
         <p className={BODY}>{c.rampLagNote}</p>
+        <p className={BODY}>{c.rampDelayNote}</p>
       </section>
 
       <section className={SECTION}>

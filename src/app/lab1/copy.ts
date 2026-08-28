@@ -61,6 +61,7 @@ export interface Lab1Copy {
   rampTimeBody: string;
   rampHysteresis: string;
   rampLagNote: string;
+  rampDelayNote: string;
   rampAxisI: string;
   rampAxisF: string;
   rampRising: string;
@@ -76,6 +77,9 @@ export interface Lab1Copy {
   mFieldRamp: string;
   mHysteresis: string;
   mLag: string;
+  mDelayStep: string;
+  mLoop: string;
+  mLoopExplained: string;
   fieldTitle: string;
   fieldBody: string;
   fieldCompare: (measured: string, direct: string, deltaPct: string) => string;
@@ -186,9 +190,11 @@ const ES: Lab1Copy = {
   rampTimeBody:
     "Primero, el registro en el tiempo: se nota el pulso de la mano en la corriente, y la fuerza siguiéndola de cerca porque a este ritmo (≈1 A/s) el sensor tiene tiempo de acomodarse entre muestra y muestra.",
   rampHysteresis:
-    "Al graficar F contra I aparece el detalle: la ida y la vuelta no se superponen. La rama de subida queda por debajo de la de bajada, y cada una ajusta a una recta de pendiente distinta. No es que el campo haya cambiado: es el mismo retardo del sensor del registro de escalón. Mientras subís, la fuerza que se lee corresponde a una corriente de un instante antes —menor— y la pendiente sale chica; mientras bajás corresponde a una corriente mayor y la pendiente sale grande. El lazo que encierran las dos ramas es, literalmente, el error que cometés según para qué lado movés la perilla.",
+    "Al graficar F contra I aparece el detalle: la ida y la vuelta no se superponen. La rama de subida queda por debajo de la de bajada, y cada una ajusta a una recta distinta. El campo no cambió: el lazo que encierran las dos ramas es, literalmente, el error que cometés según para qué lado estés moviendo la perilla. Un cuidado al leerlo: la rama de bajada sólo cubre de 13 a 20 A mientras la de subida barre de 1 a 20 A, así que el ancho del lazo se mide comparando las dos sobre la ventana de corriente que comparten.",
   rampLagNote:
-    "Se puede cerrar el círculo con un número. Si se desfasa la fuerza respecto de la corriente y se busca el retardo que mejor alinea las dos señales, el mínimo cae justo donde el escalón puso el pico de la respuesta del sensor. Dos registros tomados de maneras distintas, el mismo retardo.",
+    "¿Es el retardo del sensor? En parte, y se puede medir sin suponer ningún modelo — porque el registro de escalón es, literalmente, la respuesta de este sensor a un escalón. Superponiendo una copia suya por cada incremento de la corriente del barrido se obtiene lo que ese mismo sensor habría marcado: la predicción sigue a la fuerza medida con un r² de 0,997, así que es el mismo instrumento en los dos ensayos. Pero abre un lazo de apenas la mitad del ancho del real. El retardo explica cerca de la mitad de la histéresis y no más; el resto no es demora, porque corregir el desfase incluso agranda la diferencia entre ramas. Con estos datos no se puede separar si es rozamiento mecánico de la balanza o deriva del banco con 20 A circulando durante 20 s.",
+  rampDelayNote:
+    "De ahí sale también la respuesta a cuánto demora el sensor. El número que importa para una entrada lenta no es el tiempo de subida ni el de asentamiento, sino el retardo efectivo: el área entre la respuesta al escalón y su meseta, dividida por la meseta. Es el centroide de la respuesta, no hace falta ningún modelo para calcularlo, y da bastante menos que el tiempo de asentamiento porque casi todo el final del transitorio transcurre ya pegado al valor final. Ese es el desplazamiento que el escalón le pronostica a la fuerza en un barrido lento. El retardo aparente que sale de alinear F con I en el progresivo es más de un 50 % más largo, y ahora se entiende por qué: ese estimador le atribuye al retardo todo el ancho del lazo, incluida la mitad que no es retardo.",
   rampAxisI: "I (A)",
   rampAxisF: "F (mN)",
   rampRising: "Subida",
@@ -203,7 +209,10 @@ const ES: Lab1Copy = {
   mTare: "Tara residual",
   mFieldRamp: "B del ajuste total",
   mHysteresis: "Histéresis entre ramas",
-  mLag: "Retardo que mejor alinea F con I",
+  mLag: "Retardo aparente (alinea F con I)",
+  mDelayStep: "Retardo efectivo (del escalón)",
+  mLoop: "Ancho del lazo",
+  mLoopExplained: "Del lazo explicado por el retardo",
   fieldTitle: "6. De la fuerza al campo",
   fieldBody:
     "Aplicando B = F/(I·l) muestra a muestra se ve lo mismo desde el otro lado: mientras el sensor todavía se está acomodando, el «campo» calculado no significa nada; recién cuando la fuerza se asienta, el cociente se estabiliza en el valor real.",
@@ -325,9 +334,11 @@ const EN: Lab1Copy = {
   rampTimeBody:
     "First the time record: you can see the hand's pace in the current, with the force tracking it closely because at this rate (≈1 A/s) the sensor has time to settle between samples.",
   rampHysteresis:
-    "Plotting F against I brings out the detail: the way up and the way down do not overlap. The rising branch sits below the falling one, and each fits a line of a different slope. The field did not change — this is the same sensor lag the step record showed. On the way up, the force being read belongs to the current of an instant earlier — a smaller one — so the slope comes out low; on the way down it belongs to a larger current and the slope comes out high. The loop enclosed by the two branches is literally the error you make depending on which way you turn the knob.",
+    "Plotting F against I brings out the detail: the way up and the way down do not overlap. The rising branch sits below the falling one, and each fits a different line. The field did not change: the loop the two branches enclose is literally the error you make depending on which way you are turning the knob. One caveat in reading it — the falling branch only covers 13 to 20 A while the rising one sweeps 1 to 20 A, so the loop width is measured by comparing the two over the current window they share.",
   rampLagNote:
-    "The circle closes with a number. Shifting force against current and looking for the delay that best aligns the two signals puts the minimum right where the step record put the peak of the sensor's response. Two records taken in completely different ways, the same lag.",
+    "Is it the sensor's lag? Partly — and it can be measured without assuming any model, because the step record is literally this sensor's response to a step. Superposing a copy of it for every increment of the sweep's current gives what that same sensor would have reported: the prediction tracks the measured force with an r² of 0.997, so it is the same instrument in both experiments. But it opens a loop only half as wide as the real one. The lag accounts for about half of the hysteresis and no more; the rest is not delay, since correcting the shift actually widens the gap between branches. These data cannot separate whether it is mechanical friction in the balance or drift of the bench with 20 A flowing for 20 s.",
+  rampDelayNote:
+    "That also answers how much the sensor delays. The number that matters for a slow input is neither the rise time nor the settling time, but the effective delay: the area between the step response and its plateau, divided by the plateau. It is the centroid of the response, it needs no model at all, and it comes out well under the settling time because the tail of the transient plays out right next to the final value. That is the shift the step record predicts for the force in a slow sweep. The apparent lag from aligning F with I in the sweep comes out over 50 % longer, and now we know why: that estimator blames the delay for the entire loop, including the half that is not delay.",
   rampAxisI: "I (A)",
   rampAxisF: "F (mN)",
   rampRising: "Rising",
@@ -342,7 +353,10 @@ const EN: Lab1Copy = {
   mTare: "Residual tare",
   mFieldRamp: "B from the overall fit",
   mHysteresis: "Hysteresis between branches",
-  mLag: "Delay that best aligns F with I",
+  mLag: "Apparent lag (aligning F with I)",
+  mDelayStep: "Effective delay (from the step)",
+  mLoop: "Loop width",
+  mLoopExplained: "Of the loop explained by the lag",
   fieldTitle: "6. From force to field",
   fieldBody:
     "Applying B = F/(I·l) sample by sample shows the same thing from the other side: while the sensor is still settling, the computed «field» means nothing; only once the force settles does the ratio stabilise at the real value.",

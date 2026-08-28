@@ -223,3 +223,89 @@ export function analyzeRamp(
     bestLagS: bestLagSamples(force, current, 5, loopLengthM).lagS,
   };
 }
+
+/**
+ * What the escalón's own sensor would have reported for this current sweep.
+ *
+ * The step record *is* the sensor's step response, so superposing a scaled,
+ * shifted copy of it for every increment of the input reproduces the output
+ * without assuming any model — no damping ratio, no natural frequency. The
+ * result is per-amp: multiply by the measured gain to get mN.
+ *
+ * Only the sweep's own sample times are evaluated, and increments older than
+ * the step record has memory for have already settled to unit gain, so this
+ * costs `current.length × stepResponse.length` rather than the full
+ * fine-grid convolution.
+ */
+export function predictFromStepResponse(
+  current: Float64Array,
+  stepResponse: Float64Array,
+  stepSteadyMn: number,
+  oversample: number,
+): Float64Array {
+  const n = current.length;
+  const memory = stepResponse.length;
+  const fineCount = (n - 1) * oversample + 1;
+
+  // The sweep is sampled far more coarsely than the step response, so
+  // interpolate it up to the step record's grid before superposing.
+  const fine = new Float64Array(fineCount);
+  for (let k = 0; k < fineCount; k++) {
+    const x = k / oversample;
+    const j = Math.floor(x);
+    const frac = x - j;
+    const a = current[j] ?? 0;
+    const b = current[Math.min(j + 1, n - 1)] ?? 0;
+    fine[k] = a * (1 - frac) + b * frac;
+  }
+
+  const normalised = (k: number) =>
+    stepSteadyMn === 0 ? 0 : (stepResponse[k] ?? 0) / stepSteadyMn;
+
+  const out = new Float64Array(n);
+  for (let k = 0; k < n; k++) {
+    const t = k * oversample;
+    const from = Math.max(1, t - memory + 1);
+    // Everything older than the memory window has reached unit gain, which
+    // sums to exactly the input value at the edge of that window.
+    let acc = t >= memory ? (fine[t - memory] ?? 0) : (fine[0] ?? 0);
+    for (let j = from; j <= t; j++) {
+      acc += ((fine[j] ?? 0) - (fine[j - 1] ?? 0)) * normalised(t - j);
+    }
+    out[k] = acc;
+  }
+  return out;
+}
+
+/**
+ * Vertical gap between the two branches of the sweep, in the units of
+ * `values`. Both branches are fitted over the current window they share —
+ * the down leg covers less ground than the up leg, and comparing fits over
+ * different spans would not be comparing like with like.
+ */
+export function branchGap(
+  values: Float64Array,
+  current: Float64Array,
+  splitIndex: number,
+): { atCurrentA: number; gapMn: number } {
+  const n = values.length;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (let k = splitIndex; k < n; k++) {
+    const v = current[k] ?? 0;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  const inWindow = (k: number) =>
+    (current[k] ?? 0) >= lo && (current[k] ?? 0) <= hi;
+  const up: number[] = [];
+  for (let k = 0; k <= splitIndex; k++) if (inWindow(k)) up.push(k);
+  const down: number[] = [];
+  for (let k = splitIndex; k < n; k++) down.push(k);
+
+  const mid = (lo + hi) / 2;
+  const fitUp = fitLine(values, current, up, 1);
+  const fitDown = fitLine(values, current, down, 1);
+  const at = (f: LineFit) => f.slopeMnPerA * mid + f.interceptMn;
+  return { atCurrentA: mid, gapMn: at(fitDown) - at(fitUp) };
+}

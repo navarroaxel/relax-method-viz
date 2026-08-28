@@ -218,6 +218,30 @@ export interface StepAnalysis {
   naturalFreqHz: number;
   /** B = F / (I · l) evaluated at steady state, in mT. */
   fieldMt: number;
+  /** See {@link effectiveDelayS}. */
+  effectiveDelayS: number;
+}
+
+/**
+ * The delay this sensor adds to a slowly varying input: the centroid of its
+ * impulse response, which for a step response s(t) with plateau s∞ works out
+ * to ∫(s∞ − s(t)) dt / s∞ — the area between the response and its own
+ * plateau, divided by the plateau.
+ *
+ * Unlike the rise or settling time this needs no model of the system, and it
+ * is the number that turns up as lag when the input is a ramp rather than a
+ * step. It is also much shorter than either: most of the settling happens
+ * close to the final value, where it barely shifts the centroid.
+ */
+export function effectiveDelayS(
+  force: Float64Array,
+  steadyMn: number,
+  dtS = ESCALON_DT_S,
+): number {
+  if (steadyMn === 0) return 0;
+  let area = 0;
+  for (let k = 0; k < force.length; k++) area += steadyMn - (force[k] ?? 0);
+  return (area * dtS) / steadyMn;
 }
 
 function mean(a: Float64Array, from: number, to: number): number {
@@ -263,7 +287,8 @@ export function analyzeStep(
   // the signal clears three times the largest noise excursion.
   const preSteps = Math.min(40, n);
   let noise = 0;
-  for (let k = 0; k < preSteps; k++) noise = Math.max(noise, Math.abs(force[k] ?? 0));
+  for (let k = 0; k < preSteps; k++)
+    noise = Math.max(noise, Math.abs(force[k] ?? 0));
   const onsetS = firstCrossing(force, 3 * noise);
 
   const t10S = firstCrossing(force, 0.1 * forceSteadyMn);
@@ -306,6 +331,7 @@ export function analyzeStep(
     zeta,
     naturalFreqHz: wn / (2 * Math.PI),
     fieldMt,
+    effectiveDelayS: effectiveDelayS(force, forceSteadyMn),
   };
 }
 
