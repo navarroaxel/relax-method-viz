@@ -9,10 +9,10 @@ import {
   LOOP_LENGTH_M,
 } from "@/lib/lab1Escalon";
 import {
-  PROGRESIVO_DT_S,
-  progresivoCurrentA,
-  progresivoForceMn,
-} from "@/lib/lab1Progresivo";
+  RAMP_DT_S,
+  rampCurrentA,
+  rampForceMn,
+} from "@/lib/lab1MedicionContinua";
 
 export interface DiagramLabels {
   supply20: string;
@@ -66,7 +66,7 @@ const SENSOR_BOTTOM = 134;
 /** Height at which the supply leads join the loop holder. */
 const FEED_Y = 142;
 
-export type Capture = "escalon" | "progresivo";
+export type Capture = "escalon" | "continua";
 
 /**
  * The two recorded sweeps the bench can replay. Their rates pull in opposite
@@ -88,10 +88,10 @@ const CAPTURES: Record<
     dtS: ESCALON_DT_S,
     rates: [1, 0.25, 0.1],
   },
-  progresivo: {
-    force: progresivoForceMn,
-    current: progresivoCurrentA,
-    dtS: PROGRESIVO_DT_S,
+  continua: {
+    force: rampForceMn,
+    current: rampCurrentA,
+    dtS: RAMP_DT_S,
     rates: [1, 2, 4],
   },
 };
@@ -562,11 +562,11 @@ export function Lab1Diagram({
           </button>
           <button
             type="button"
-            onClick={() => togglePlay("progresivo")}
-            aria-pressed={capture === "progresivo"}
+            onClick={() => togglePlay("continua")}
+            aria-pressed={capture === "continua"}
             className="rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
-            {capture === "progresivo" ? labels.pause : labels.playRamp}
+            {capture === "continua" ? labels.pause : labels.playRamp}
           </button>
         </span>
         {replaying && active && (
@@ -610,7 +610,7 @@ export function Lab1Diagram({
       <p className="text-xs text-zinc-500 dark:text-zinc-400">
         {capture === "escalon"
           ? labels.replayHint
-          : capture === "progresivo"
+          : capture === "continua"
             ? labels.replayRampHint
             : labels.manualHint}
       </p>

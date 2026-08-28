@@ -1,14 +1,17 @@
 /**
- * Laboratorio 1 — the "progresivo" sheet of lab1.xlsx: 201 samples at 100 ms
- * over 20 s, logged by CASSY while the loop current was swept by hand with
- * the supply knob. Unlike the escalón capture, this is the actual F-vs-I
- * measurement the report asks for — and because the knob goes up and then
- * back down, the record contains both branches of the sweep, which is what
- * makes the force sensor's lag show up as hysteresis.
+ * Laboratorio 1 — the "Medicion_continua" sheet of lab1.xlsx: 201 samples at
+ * 100 ms over 20 s, logged by CASSY while the loop current was swept by hand
+ * with the supply knob. It is the same indirect method as the 2 A steps, run
+ * as one continuous ramp instead of point by point, and it is the F-vs-I
+ * measurement the report actually asks for.
+ *
+ * Because the knob goes up and then back down, the record contains both
+ * branches of the sweep — which is what makes the force sensor's lag show up
+ * as hysteresis.
  */
 
 /** Sampling interval of the capture, in seconds. */
-export const PROGRESIVO_DT_S = 0.1;
+export const RAMP_DT_S = 0.1;
 
 const FORCE_MN_CSV =
   "0.05,0.05,0.07,0.1,0.1,0.1,0.13,0.18,0.21,0.23,0.25,0.29,0.32,0.33," +
@@ -53,15 +56,15 @@ function parseCsv(csv: string): Float64Array {
   return out;
 }
 
-/** Force channel F_A1, in mN, one sample every {@link PROGRESIVO_DT_S}. */
-export const progresivoForceMn: Float64Array = parseCsv(FORCE_MN_CSV);
+/** Force channel F_A1, in mN, one sample every {@link RAMP_DT_S}. */
+export const rampForceMn: Float64Array = parseCsv(FORCE_MN_CSV);
 
-/** Current channel I_B1, in A, sampled alongside {@link progresivoForceMn}. */
-export const progresivoCurrentA: Float64Array = parseCsv(CURRENT_A_CSV);
+/** Current channel I_B1, in A, sampled alongside {@link rampForceMn}. */
+export const rampCurrentA: Float64Array = parseCsv(CURRENT_A_CSV);
 
 /** Sample index -> time in seconds. */
-export function progresivoTime(index: number): number {
-  return index * PROGRESIVO_DT_S;
+export function rampTime(index: number): number {
+  return index * RAMP_DT_S;
 }
 
 export interface LineFit {
@@ -150,7 +153,7 @@ export function bestLagSamples(
     }
     if (err < bestErr) {
       bestErr = err;
-      best = { lagSamples: lag, lagS: lag * PROGRESIVO_DT_S, fit };
+      best = { lagSamples: lag, lagS: lag * RAMP_DT_S, fit };
     }
   }
   return best;
@@ -178,7 +181,7 @@ export interface RampAnalysis {
 
 /**
  * Figures of merit of the hand-swept ramp. `force` is in mN and `current` in
- * A, both sampled at {@link PROGRESIVO_DT_S}.
+ * A, both sampled at {@link RAMP_DT_S}.
  */
 export function analyzeRamp(
   force: Float64Array,
@@ -195,7 +198,7 @@ export function analyzeRamp(
   let maxRateAPerS = 0;
   for (let k = 1; k < n; k++) {
     const rate =
-      Math.abs((current[k] ?? 0) - (current[k - 1] ?? 0)) / PROGRESIVO_DT_S;
+      Math.abs((current[k] ?? 0) - (current[k - 1] ?? 0)) / RAMP_DT_S;
     if (rate > maxRateAPerS) maxRateAPerS = rate;
   }
 
@@ -210,7 +213,7 @@ export function analyzeRamp(
 
   return {
     peakIndex,
-    peakTimeS: progresivoTime(peakIndex),
+    peakTimeS: rampTime(peakIndex),
     peakCurrentA: current[peakIndex] ?? 0,
     startCurrentA: current[0] ?? 0,
     endCurrentA: current[n - 1] ?? 0,

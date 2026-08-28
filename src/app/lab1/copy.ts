@@ -124,7 +124,7 @@ const ES: Lab1Copy = {
 
   diagramTitle: "El banco, en movimiento",
   diagramBody:
-    "Esquema del montaje de la figura 2.1 de la guía. El trazo punteado marca por dónde circula cada corriente: la del solenoide (fija en 5 A) y la del bucle (variable). Ojo con el circuito del bucle: la entrada B del CASSY mide corriente, así que va en serie —entra por un borne y sale por el otro—, y de ahí la corriente sigue al bucle y vuelve a la fuente. Movés el deslizador para ver cómo crece la fuerza sobre el bucle con la corriente, o reproducís cualquiera de las dos capturas reales para que la animación siga los datos. En el escalón se ve lo importante: la corriente salta de golpe y el bucle llega tarde, se pasa de largo y recién después se acomoda. En el progresivo se ve el otro extremo: la perilla movida a mano durante 20 s, con el sensor siguiéndola de cerca.",
+    "Esquema del montaje de la figura 2.1 de la guía. El trazo punteado marca por dónde circula cada corriente: la del solenoide (fija en 5 A) y la del bucle (variable). Ojo con el circuito del bucle: la entrada B del CASSY mide corriente, así que va en serie —entra por un borne y sale por el otro—, y de ahí la corriente sigue al bucle y vuelve a la fuente. Movés el deslizador para ver cómo crece la fuerza sobre el bucle con la corriente, o reproducís cualquiera de las dos capturas reales para que la animación siga los datos. En el escalón se ve lo importante: la corriente salta de golpe y el bucle llega tarde, se pasa de largo y recién después se acomoda. En la medición continua se ve el otro extremo: la perilla movida a mano durante 20 s, con el sensor siguiéndola de cerca.",
   diagram: {
     supply20: "Fuente bucle",
     supply5: "Fuente bobina",
@@ -139,12 +139,12 @@ const ES: Lab1Copy = {
     coilCurrent: "I bobina",
     speed: "Velocidad",
     playStep: "▶ Escalón",
-    playRamp: "▶ Progresivo",
+    playRamp: "▶ Medición continua",
     pause: "■ Detener",
     replayHint:
       "Reproduciendo el escalón real en bucle. Toda la parte interesante dura unas décimas de segundo, así que bajá la velocidad para verla: la corriente ya está arriba mientras la espira todavía está subiendo.",
     replayRampHint:
-      "Reproduciendo el barrido progresivo en bucle: los 20 s de la perilla movida a mano, subiendo hasta 20 A y volviendo. A este ritmo el sensor sigue a la corriente de cerca — el retardo está ahí igual, pero hace falta el gráfico para verlo.",
+      "Reproduciendo la medición continua en bucle: los 20 s de la perilla movida a mano, subiendo hasta 20 A y volviendo. A este ritmo el sensor sigue a la corriente de cerca — el retardo está ahí igual, pero hace falta el gráfico para verlo.",
     manualHint:
       "Modo manual: la fuerza se calcula como F = I · l · B con el campo medido. El barrido del ensayo va de 0 a 12 A en pasos de 2 A.",
     elapsed: "t",
@@ -187,9 +187,9 @@ const ES: Lab1Copy = {
     "El compromiso del ensayo está acá: la guía pide hacerlo rápido porque el bucle no aguanta 20 A mucho tiempo, pero cada punto necesita el tiempo de asentamiento que se mide abajo. Ese es el número que hay que respetar entre escalón y escalón.",
   ],
 
-  rampTitle: "5. El barrido progresivo",
+  rampTitle: "5. La medición continua",
   rampBody:
-    "La hoja «progresivo» es la medición que el informe realmente pide: F en función de I. En vez de ir por escalones de 2 A, acá la perilla se movió a mano de forma continua mientras el CASSY registraba solo, 201 muestras cada 100 ms durante 20 s. La corriente sube hasta el pico y después vuelve a bajar, así que el registro tiene las dos ramas del barrido — y eso es lo que convierte el retardo del sensor en algo que se ve de una.",
+    "La hoja «Medicion_continua» es la medición que el informe realmente pide: F en función de I. En vez de ir por escalones de 2 A, acá la perilla se movió a mano de forma continua mientras el CASSY registraba solo, 201 muestras cada 100 ms durante 20 s. La corriente sube hasta el pico y después vuelve a bajar, así que el registro tiene las dos ramas del barrido — y eso es lo que convierte el retardo del sensor en algo que se ve de una.",
   rampTimeBody:
     "Primero, el registro en el tiempo: se nota el pulso de la mano en la corriente, y la fuerza siguiéndola de cerca porque a este ritmo (≈1 A/s) el sensor tiene tiempo de acomodarse entre muestra y muestra.",
   rampHysteresis:
@@ -197,7 +197,7 @@ const ES: Lab1Copy = {
   rampLagNote:
     "¿Es el retardo del sensor? En parte, y se puede medir sin suponer ningún modelo — porque el registro de escalón es, literalmente, la respuesta de este sensor a un escalón. Superponiendo una copia suya por cada incremento de la corriente del barrido se obtiene lo que ese mismo sensor habría marcado: la predicción sigue a la fuerza medida con un r² de 0,997, así que es el mismo instrumento en los dos ensayos. Pero abre un lazo de apenas la mitad del ancho del real. El retardo explica cerca de la mitad de la histéresis y no más; el resto no es demora, porque corregir el desfase incluso agranda la diferencia entre ramas. Con estos datos no se puede separar si es rozamiento mecánico de la balanza o deriva del banco con 20 A circulando durante 20 s.",
   rampDelayNote:
-    "De ahí sale también la respuesta a cuánto demora el sensor. El número que importa para una entrada lenta no es el tiempo de subida ni el de asentamiento, sino el retardo efectivo: el área entre la respuesta al escalón y su meseta, dividida por la meseta. Es el centroide de la respuesta, no hace falta ningún modelo para calcularlo, y da bastante menos que el tiempo de asentamiento porque casi todo el final del transitorio transcurre ya pegado al valor final. Ese es el desplazamiento que el escalón le pronostica a la fuerza en un barrido lento. El retardo aparente que sale de alinear F con I en el progresivo es más de un 50 % más largo, y ahora se entiende por qué: ese estimador le atribuye al retardo todo el ancho del lazo, incluida la mitad que no es retardo.",
+    "De ahí sale también la respuesta a cuánto demora el sensor. El número que importa para una entrada lenta no es el tiempo de subida ni el de asentamiento, sino el retardo efectivo: el área entre la respuesta al escalón y su meseta, dividida por la meseta. Es el centroide de la respuesta, no hace falta ningún modelo para calcularlo, y da bastante menos que el tiempo de asentamiento porque casi todo el final del transitorio transcurre ya pegado al valor final. Ese es el desplazamiento que el escalón le pronostica a la fuerza en un barrido lento. El retardo aparente que sale de alinear F con I en la medición continua es más de un 50 % más largo, y ahora se entiende por qué: ese estimador le atribuye al retardo todo el ancho del lazo, incluida la mitad que no es retardo.",
   rampAxisI: "I (A)",
   rampAxisF: "F (mN)",
   rampRising: "Subida",
@@ -223,7 +223,7 @@ const ES: Lab1Copy = {
     `El valor de régimen da B = ${measured} mT. La medición directa con la sonda de campo (hoja «Medicion_directa») da ${direct} mT en su meseta: una diferencia del ${deltaPct} %, dentro de lo esperable para un método indirecto con un solo punto de corriente.`,
 
   fieldThree: (ramp, spreadPct) =>
-    `Y el barrido progresivo, con su ajuste sobre 201 puntos, da ${ramp} mT. Los tres caminos —la fuerza en régimen tras un escalón, la pendiente de un barrido continuo y la sonda de campo— caen dentro del ${spreadPct} % entre sí, que para un ensayo de banco es un acuerdo muy razonable.`,
+    `Y la medición continua, con su ajuste sobre 201 puntos, da ${ramp} mT. Los tres caminos —la fuerza en régimen tras un escalón, la pendiente de un barrido continuo y la sonda de campo— caen dentro del ${spreadPct} % entre sí, que para un ensayo de banco es un acuerdo muy razonable.`,
   checklistTitle: "7. Qué pide el informe",
   checklist: [
     "Tabla del instrumental usado con alcance y error de cada equipo (trazabilidad).",
@@ -271,7 +271,7 @@ const EN: Lab1Copy = {
 
   diagramTitle: "The bench, in motion",
   diagramBody:
-    "Schematic of the setup from figure 2.1 of the guide. The dashed strokes trace where each current flows: the solenoid's (fixed at 5 A) and the loop's (variable). Note the loop circuit: CASSY input B measures current, so it sits in series — in through one terminal and out through the other — and from there the current goes on to the loop and back to the supply. Drag the slider to see the force on the loop grow with current, or replay either of the two real captures to drive the animation from the data. The step is where the point lands: the current jumps at once while the loop arrives late, overshoots, and only then settles. The sweep shows the other extreme: the knob turned by hand over 20 s, with the sensor tracking it closely.",
+    "Schematic of the setup from figure 2.1 of the guide. The dashed strokes trace where each current flows: the solenoid's (fixed at 5 A) and the loop's (variable). Note the loop circuit: CASSY input B measures current, so it sits in series — in through one terminal and out through the other — and from there the current goes on to the loop and back to the supply. Drag the slider to see the force on the loop grow with current, or replay either of the two real captures to drive the animation from the data. The step is where the point lands: the current jumps at once while the loop arrives late, overshoots, and only then settles. The continuous measurement shows the other extreme: the knob turned by hand over 20 s, with the sensor tracking it closely.",
   diagram: {
     supply20: "Loop supply",
     supply5: "Coil supply",
@@ -286,12 +286,12 @@ const EN: Lab1Copy = {
     coilCurrent: "I coil",
     speed: "Speed",
     playStep: "▶ Step",
-    playRamp: "▶ Sweep",
+    playRamp: "▶ Continuous",
     pause: "■ Stop",
     replayHint:
       "Replaying the real step on a loop. The interesting part lasts a few tenths of a second, so slow it down to watch it: the current is already up while the loop is still rising.",
     replayRampHint:
-      "Replaying the progressive sweep on a loop: the 20 s of the knob turned by hand, up to 20 A and back. At this pace the sensor tracks the current closely — the lag is still there, but it takes the chart to see it.",
+      "Replaying the continuous measurement on a loop: the 20 s of the knob turned by hand, up to 20 A and back. At this pace the sensor tracks the current closely — the lag is still there, but it takes the chart to see it.",
     manualHint:
       "Manual mode: force is computed as F = I · l · B with the measured field. The experiment's sweep runs 0 to 12 A in 2 A steps.",
     elapsed: "t",
@@ -334,9 +334,9 @@ const EN: Lab1Copy = {
     "This is the trade-off of the experiment: the guide asks you to work fast because the loop cannot hold 20 A for long, yet each point needs the settling time measured below. That is the number to respect between steps.",
   ],
 
-  rampTitle: "5. The progressive sweep",
+  rampTitle: "5. The continuous measurement",
   rampBody:
-    "The «progresivo» sheet holds the measurement the report actually asks for: F against I. Instead of stepping in 2 A increments, the knob was turned by hand continuously while CASSY logged on its own — 201 samples every 100 ms across 20 s. The current rises to a peak and then comes back down, so the record holds both branches of the sweep, and that is what turns the sensor's lag into something you can see at a glance.",
+    "The «Medicion_continua» sheet holds the measurement the report actually asks for: F against I. Instead of stepping in 2 A increments, the knob was turned by hand continuously while CASSY logged on its own — 201 samples every 100 ms across 20 s. The current rises to a peak and then comes back down, so the record holds both branches of the sweep, and that is what turns the sensor's lag into something you can see at a glance.",
   rampTimeBody:
     "First the time record: you can see the hand's pace in the current, with the force tracking it closely because at this rate (≈1 A/s) the sensor has time to settle between samples.",
   rampHysteresis:
@@ -344,7 +344,7 @@ const EN: Lab1Copy = {
   rampLagNote:
     "Is it the sensor's lag? Partly — and it can be measured without assuming any model, because the step record is literally this sensor's response to a step. Superposing a copy of it for every increment of the sweep's current gives what that same sensor would have reported: the prediction tracks the measured force with an r² of 0.997, so it is the same instrument in both experiments. But it opens a loop only half as wide as the real one. The lag accounts for about half of the hysteresis and no more; the rest is not delay, since correcting the shift actually widens the gap between branches. These data cannot separate whether it is mechanical friction in the balance or drift of the bench with 20 A flowing for 20 s.",
   rampDelayNote:
-    "That also answers how much the sensor delays. The number that matters for a slow input is neither the rise time nor the settling time, but the effective delay: the area between the step response and its plateau, divided by the plateau. It is the centroid of the response, it needs no model at all, and it comes out well under the settling time because the tail of the transient plays out right next to the final value. That is the shift the step record predicts for the force in a slow sweep. The apparent lag from aligning F with I in the sweep comes out over 50 % longer, and now we know why: that estimator blames the delay for the entire loop, including the half that is not delay.",
+    "That also answers how much the sensor delays. The number that matters for a slow input is neither the rise time nor the settling time, but the effective delay: the area between the step response and its plateau, divided by the plateau. It is the centroid of the response, it needs no model at all, and it comes out well under the settling time because the tail of the transient plays out right next to the final value. That is the shift the step record predicts for the force in a slow sweep. The apparent lag from aligning F with I in the continuous measurement comes out over 50 % longer, and now we know why: that estimator blames the delay for the entire loop, including the half that is not delay.",
   rampAxisI: "I (A)",
   rampAxisF: "F (mN)",
   rampRising: "Rising",
@@ -370,7 +370,7 @@ const EN: Lab1Copy = {
     `The steady-state value gives B = ${measured} mT. The direct field probe («Medicion_directa» sheet) reads ${direct} mT on its plateau: a ${deltaPct} % difference, well within what an indirect method at a single current point can be expected to give.`,
 
   fieldThree: (ramp, spreadPct) =>
-    `And the progressive sweep, fitted over 201 points, gives ${ramp} mT. All three routes — the steady force after a step, the slope of a continuous sweep, and the field probe — land within ${spreadPct} % of each other, which for a bench experiment is very reasonable agreement.`,
+    `And the continuous measurement, fitted over 201 points, gives ${ramp} mT. All three routes — the steady force after a step, the slope of a continuous sweep, and the field probe — land within ${spreadPct} % of each other, which for a bench experiment is very reasonable agreement.`,
   checklistTitle: "7. What the report asks for",
   checklist: [
     "A table of the instruments used, with range and error for each (traceability).",

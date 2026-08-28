@@ -25,10 +25,10 @@ import {
   analyzeRamp,
   branchGap,
   predictFromStepResponse,
-  PROGRESIVO_DT_S,
-  progresivoCurrentA,
-  progresivoForceMn,
-} from "@/lib/lab1Progresivo";
+  RAMP_DT_S,
+  rampCurrentA,
+  rampForceMn,
+} from "@/lib/lab1MedicionContinua";
 
 import { LAB1_COPY } from "./copy";
 
@@ -66,7 +66,7 @@ export function Lab1Page() {
   );
 
   const ramp = useMemo(
-    () => analyzeRamp(progresivoForceMn, progresivoCurrentA, LOOP_LENGTH_M),
+    () => analyzeRamp(rampForceMn, rampCurrentA, LOOP_LENGTH_M),
     [],
   );
 
@@ -74,21 +74,21 @@ export function Lab1Page() {
   // hysteresis were purely its lag, this would open the same loop.
   const lagLoop = useMemo(() => {
     const perAmp = predictFromStepResponse(
-      progresivoCurrentA,
+      rampCurrentA,
       escalonForceMn,
       analysis.forceSteadyMn,
-      Math.round(PROGRESIVO_DT_S / ESCALON_DT_S),
+      Math.round(RAMP_DT_S / ESCALON_DT_S),
     );
     const predicted = Float64Array.from(
       perAmp,
       (v) => v * ramp.overall.slopeMnPerA,
     );
     const measured = branchGap(
-      progresivoForceMn,
-      progresivoCurrentA,
+      rampForceMn,
+      rampCurrentA,
       ramp.peakIndex,
     );
-    const fromLag = branchGap(predicted, progresivoCurrentA, ramp.peakIndex);
+    const fromLag = branchGap(predicted, rampCurrentA, ramp.peakIndex);
     return {
       measuredGapMn: measured.gapMn,
       explainedPct: (fromLag.gapMn / measured.gapMn) * 100,
@@ -98,13 +98,13 @@ export function Lab1Page() {
   const rampSeries = useMemo<ChartSeries[]>(
     () => [
       {
-        values: progresivoForceMn,
+        values: rampForceMn,
         axis: "left",
         label: c.chartForce,
         color: "force",
       },
       {
-        values: progresivoCurrentA,
+        values: rampCurrentA,
         axis: "right",
         label: c.chartCurrent,
         color: "current",
@@ -327,12 +327,12 @@ export function Lab1Page() {
           showMarkers={false}
           timeLabel={c.chartTime}
           hoverHint={c.hoverHint}
-          dtS={PROGRESIVO_DT_S}
+          dtS={RAMP_DT_S}
         />
         <p className={BODY}>{c.rampHysteresis}</p>
         <Lab1XYChart
-          xs={progresivoCurrentA}
-          ys={progresivoForceMn}
+          xs={rampCurrentA}
+          ys={rampForceMn}
           splitIndex={ramp.peakIndex}
           lines={rampFits}
           xLabel={c.rampAxisI}
@@ -341,7 +341,7 @@ export function Lab1Page() {
           fallingLabel={c.rampFalling}
           hoverHint={c.hoverHint}
           formatSample={(index, i, f) =>
-            `t = ${(index * PROGRESIVO_DT_S).toFixed(1)} s  ·  I = ${i.toFixed(2)} A  ·  F = ${f.toFixed(2)} mN`
+            `t = ${(index * RAMP_DT_S).toFixed(1)} s  ·  I = ${i.toFixed(2)} A  ·  F = ${f.toFixed(2)} mN`
           }
         />
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

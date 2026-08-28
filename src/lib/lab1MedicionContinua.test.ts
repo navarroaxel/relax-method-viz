@@ -14,18 +14,18 @@ import {
   branchGap,
   fitLine,
   predictFromStepResponse,
-  PROGRESIVO_DT_S,
-  progresivoCurrentA,
-  progresivoForceMn,
-  progresivoTime,
-} from "./lab1Progresivo";
+  RAMP_DT_S,
+  rampCurrentA,
+  rampForceMn,
+  rampTime,
+} from "./lab1MedicionContinua";
 
-describe("progresivo capture", () => {
+describe("continuous-measurement capture", () => {
   it("carries 201 aligned samples spanning 20 s", () => {
-    expect(progresivoForceMn.length).toBe(201);
-    expect(progresivoCurrentA.length).toBe(201);
-    expect(PROGRESIVO_DT_S).toBe(0.1);
-    expect(progresivoTime(200)).toBeCloseTo(20, 9);
+    expect(rampForceMn.length).toBe(201);
+    expect(rampCurrentA.length).toBe(201);
+    expect(RAMP_DT_S).toBe(0.1);
+    expect(rampTime(200)).toBeCloseTo(20, 9);
   });
 });
 
@@ -42,7 +42,7 @@ describe("fitLine", () => {
 });
 
 describe("analyzeRamp", () => {
-  const a = analyzeRamp(progresivoForceMn, progresivoCurrentA, LOOP_LENGTH_M);
+  const a = analyzeRamp(rampForceMn, rampCurrentA, LOOP_LENGTH_M);
 
   it("finds where the knob turned back", () => {
     expect(a.peakTimeS).toBeCloseTo(11.7, 6);
@@ -109,26 +109,22 @@ describe("effectiveDelayS", () => {
 
 describe("predictFromStepResponse", () => {
   const step = analyzeStep(escalonForceMn, escalonCurrentA);
-  const oversample = Math.round(PROGRESIVO_DT_S / ESCALON_DT_S);
+  const oversample = Math.round(RAMP_DT_S / ESCALON_DT_S);
   const perAmp = predictFromStepResponse(
-    progresivoCurrentA,
+    rampCurrentA,
     escalonForceMn,
     step.forceSteadyMn,
     oversample,
   );
 
   it("reproduces the measured sweep from the step record alone", () => {
-    const ramp = analyzeRamp(
-      progresivoForceMn,
-      progresivoCurrentA,
-      LOOP_LENGTH_M,
-    );
+    const ramp = analyzeRamp(rampForceMn, rampCurrentA, LOOP_LENGTH_M);
     const predicted = Float64Array.from(
       perAmp,
       (v) => v * ramp.overall.slopeMnPerA,
     );
     const indices = Array.from({ length: predicted.length }, (_, k) => k);
-    const fit = fitLine(progresivoForceMn, predicted, indices, LOOP_LENGTH_M);
+    const fit = fitLine(rampForceMn, predicted, indices, LOOP_LENGTH_M);
     expect(fit.r2).toBeGreaterThan(0.99);
   });
 
@@ -136,26 +132,18 @@ describe("predictFromStepResponse", () => {
     // Late in the record the sweep is gentle, so the prediction should sit
     // close to the current itself.
     const k = 190;
-    expect(perAmp[k] ?? 0).toBeGreaterThan((progresivoCurrentA[k] ?? 0) * 0.9);
-    expect(perAmp[k] ?? 0).toBeLessThan((progresivoCurrentA[k] ?? 0) * 1.1);
+    expect(perAmp[k] ?? 0).toBeGreaterThan((rampCurrentA[k] ?? 0) * 0.9);
+    expect(perAmp[k] ?? 0).toBeLessThan((rampCurrentA[k] ?? 0) * 1.1);
   });
 
   it("opens a smaller loop than the one actually measured", () => {
-    const ramp = analyzeRamp(
-      progresivoForceMn,
-      progresivoCurrentA,
-      LOOP_LENGTH_M,
-    );
+    const ramp = analyzeRamp(rampForceMn, rampCurrentA, LOOP_LENGTH_M);
     const predicted = Float64Array.from(
       perAmp,
       (v) => v * ramp.overall.slopeMnPerA,
     );
-    const measured = branchGap(
-      progresivoForceMn,
-      progresivoCurrentA,
-      ramp.peakIndex,
-    );
-    const fromLag = branchGap(predicted, progresivoCurrentA, ramp.peakIndex);
+    const measured = branchGap(rampForceMn, rampCurrentA, ramp.peakIndex);
+    const fromLag = branchGap(predicted, rampCurrentA, ramp.peakIndex);
     expect(measured.gapMn).toBeGreaterThan(0);
     expect(fromLag.gapMn).toBeGreaterThan(0);
     // The sensor's delay accounts for part of the hysteresis, not all of it.
