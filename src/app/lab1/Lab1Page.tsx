@@ -8,8 +8,15 @@ import {
   type ChartMarker,
   type ChartSeries,
 } from "@/components/Lab1Chart";
+import { Lab1CompassDiagram } from "@/components/Lab1CompassDiagram";
 import { Lab1Diagram } from "@/components/Lab1Diagram";
+import { Lab1DirectDiagram } from "@/components/Lab1DirectDiagram";
+import {
+  Lab1IndirectChart,
+  type IndirectChartSession,
+} from "@/components/Lab1IndirectChart";
 import { Lab1XYChart, type XYFitLine } from "@/components/Lab1XYChart";
+import { ProjectCredits } from "@/components/ProjectCredits";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   analyzeStep,
@@ -29,6 +36,27 @@ import {
   rampCurrentA,
   rampForceMn,
 } from "@/lib/lab1MedicionContinua";
+
+import {
+  indirectSessions,
+  summarizeIndirect,
+} from "@/lib/lab1MedicionIndirecta";
+
+import {
+  COIL_CURRENT_A,
+  COIL_CURRENT_ERROR_A,
+  directFieldMt,
+  POSITION_LABELS,
+  summarizeDirect,
+} from "@/lib/lab1MedicionDirecta";
+
+import {
+  SOLENOID_LENGTH_M,
+  SOLENOID_TURNS,
+  theoreticalFieldMt,
+} from "@/lib/lab1Solenoid";
+
+import { percentDelta, summarizeFieldRoutes } from "@/lib/lab1FieldSummary";
 
 import { LAB1_COPY } from "./copy";
 
@@ -55,6 +83,9 @@ export function Lab1Page() {
   const { language, toggle } = useLanguage();
   const c = LAB1_COPY[language];
   const [showMarkers, setShowMarkers] = useState(true);
+  const [directHoverIndex, setDirectHoverIndex] = useState<number | null>(
+    null,
+  );
 
   const analysis = useMemo(
     () => analyzeStep(escalonForceMn, escalonCurrentA),
@@ -69,6 +100,54 @@ export function Lab1Page() {
     () => analyzeRamp(rampForceMn, rampCurrentA, LOOP_LENGTH_M),
     [],
   );
+
+  const indirect = useMemo(
+    () => summarizeIndirect(indirectSessions, LOOP_LENGTH_M),
+    [],
+  );
+
+  const indirectChartSessions = useMemo<IndirectChartSession[]>(
+    () =>
+      indirectSessions.map((s, i) => ({
+        label: s.label,
+        n: s.n,
+        forceMn: s.forceMn,
+        currentA: s.currentA,
+        outlierIndices: indirect.sessions[i]?.outlierIndices ?? [],
+        slopeMnPerA: indirect.sessions[i]?.fitClean.slopeMnPerA ?? 0,
+        interceptMn: indirect.sessions[i]?.fitClean.interceptMn ?? 0,
+      })),
+    [indirect],
+  );
+
+  const direct = useMemo(() => summarizeDirect(), []);
+
+  const directSeries = useMemo<ChartSeries[]>(
+    () => [
+      { values: directFieldMt, axis: "left", label: c.chartField, color: "field" },
+    ],
+    [c.chartField],
+  );
+
+  const directMarkers = useMemo<ChartMarker[]>(() => {
+    const marks: ChartMarker[] = [];
+    let prev: string | null = null;
+    POSITION_LABELS.forEach((label, i) => {
+      if (label === prev) return;
+      prev = label;
+      marks.push({
+        timeS: i,
+        label:
+          label === "center"
+            ? c.markerCenter
+            : label === "end"
+              ? c.markerEnd
+              : c.markerOutside,
+        faint: label === "outside",
+      });
+    });
+    return marks;
+  }, [c.markerCenter, c.markerEnd, c.markerOutside]);
 
   // What the escalón's own sensor would have reported for this sweep. If the
   // hysteresis were purely its lag, this would open the same loop.
@@ -173,14 +252,37 @@ export function Lab1Page() {
     [analysis, c],
   );
 
-  const deltaPct = Math.abs(
-    ((analysis.fieldMt - DIRECT_B_MT) / DIRECT_B_MT) * 100,
-  );
+  const deltaPct = Math.abs(percentDelta(analysis.fieldMt, DIRECT_B_MT));
   // Spread across the three independent routes to B, as a percentage of the
   // smallest of them.
   const fields = [analysis.fieldMt, ramp.overall.fieldMt, DIRECT_B_MT];
   const spreadPct =
     ((Math.max(...fields) - Math.min(...fields)) / Math.min(...fields)) * 100;
+
+  // Same spread, with the point-by-point indirect measurement added as a
+  // fourth route.
+  const fieldsFour = [...fields, indirect.meanFieldMt];
+  const spreadFourPct =
+    ((Math.max(...fieldsFour) - Math.min(...fieldsFour)) /
+      Math.min(...fieldsFour)) *
+    100;
+
+  // The average B the guide asks for, combining the four independent routes
+  // — with the spread between them (sample std) standing in for its error,
+  // since each route's own instrument error is dwarfed by the disagreement
+  // between methods.
+  const { meanMt: measuredAvgMt, stdMt: measuredStdMt } =
+    summarizeFieldRoutes(fieldsFour);
+
+  // The ideal-solenoid formula against that same average — not against any
+  // single route, since none of them is "the" answer.
+  const theory = theoreticalFieldMt(COIL_CURRENT_A, COIL_CURRENT_ERROR_A);
+  const theoryDeltaPct = percentDelta(theory.fieldMt, measuredAvgMt);
+
+  // What the guide literally asks for: both calculated results (the
+  // force-based measurement and the theoretical formula) checked against the
+  // direct probe measurement specifically, not the four-way average.
+  const theoryVsDirectPct = Math.abs(percentDelta(theory.fieldMt, DIRECT_B_MT));
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -221,6 +323,58 @@ export function Lab1Page() {
       </section>
 
       <section className={SECTION}>
+        <h2 className={H2}>{c.directTitle}</h2>
+        <p className={BODY}>{c.directCompassNote}</p>
+        <Lab1CompassDiagram
+          labels={c.compassDiagram}
+          coilCurrentA={COIL_CURRENT_A}
+        />
+        <p className={BODY}>{c.directBody}</p>
+        <Lab1DirectDiagram
+          labels={c.directDiagram}
+          fieldMt={directFieldMt}
+          positions={POSITION_LABELS}
+          coilCurrentA={COIL_CURRENT_A}
+          highlightIndex={directHoverIndex}
+        />
+        <Lab1Chart
+          series={directSeries}
+          leftLabel={c.chartField}
+          markers={directMarkers}
+          showMarkers={true}
+          timeLabel={c.chartN}
+          hoverHint={c.hoverHint}
+          dtS={1}
+          formatX={(n) => `n = ${n.toFixed(0)}`}
+          onHoverIndex={setDirectHoverIndex}
+        />
+        <p className={BODY}>{c.directOrthogonalNote}</p>
+        <p className={BODY}>{c.directValidityNote}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric
+            label={c.mCenterField}
+            value={`${direct.groups.center.meanMt.toFixed(2)} mT`}
+          />
+          <Metric
+            label={c.mEndField}
+            value={`${direct.groups.end.meanMt.toFixed(2)} mT`}
+          />
+          <Metric
+            label={c.mEndRatio}
+            value={direct.endToCenterRatio.toFixed(2)}
+          />
+          <Metric
+            label={c.mOutsideField}
+            value={`${direct.groups.outside.meanMt.toFixed(2)} mT`}
+          />
+          <Metric
+            label={c.mCoilCurrent}
+            value={`${COIL_CURRENT_A.toFixed(2)} ± ${COIL_CURRENT_ERROR_A.toFixed(3)} A`}
+          />
+        </div>
+      </section>
+
+      <section className={SECTION}>
         <h2 className={H2}>{c.setupTitle}</h2>
         <ol className={`${BODY} list-decimal pl-5`}>
           {c.setupSteps.map((s) => (
@@ -240,6 +394,38 @@ export function Lab1Page() {
           fieldMt={analysis.fieldMt}
           referenceForceMn={analysis.forceSteadyMn}
         />
+      </section>
+
+      <section className={SECTION}>
+        <h2 className={H2}>{c.indirectTitle}</h2>
+        <p className={BODY}>{c.indirectBody}</p>
+        <Lab1IndirectChart
+          sessions={indirectChartSessions}
+          xLabel={c.indirectAxisI}
+          yLabel={c.indirectAxisF}
+          hoverHint={c.hoverHint}
+          outlierLabel={c.indirectOutlierLabel}
+          formatSample={(session, k) =>
+            `${session.label} · n=${session.n[k]}  ·  I = ${(session.currentA[k] ?? 0).toFixed(2)} A  ·  F = ${(session.forceMn[k] ?? 0).toFixed(2)} mN`
+          }
+        />
+        <p className={BODY}>{c.indirectOutlierNote}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric label={c.mSessions} value={`${indirect.sessions.length}`} />
+          <Metric label={c.mIndirectPoints} value={`${indirect.totalPoints}`} />
+          <Metric
+            label={c.mIndirectOutliers}
+            value={`${indirect.totalOutliers}`}
+          />
+          <Metric
+            label={c.mFieldIndirect}
+            value={`${indirect.meanFieldMt.toFixed(2)} mT`}
+          />
+          <Metric
+            label={c.mFieldSpread}
+            value={`± ${indirect.fieldSpreadMt.toFixed(2)} mT`}
+          />
+        </div>
       </section>
 
       <section className={SECTION}>
@@ -415,12 +601,61 @@ export function Lab1Page() {
         <p className={BODY}>
           {c.fieldThree(ramp.overall.fieldMt.toFixed(2), spreadPct.toFixed(1))}
         </p>
+        <p className={BODY}>
+          {c.fieldFour(
+            indirect.meanFieldMt.toFixed(2),
+            spreadFourPct.toFixed(1),
+          )}
+        </p>
+        <h3 className="pt-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          {c.averageTitle}
+        </h3>
+        <p className={BODY}>
+          {c.fieldAverage(measuredAvgMt.toFixed(2), measuredStdMt.toFixed(2))}
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric
+            label={c.mFieldAverage}
+            value={`${measuredAvgMt.toFixed(2)} ± ${measuredStdMt.toFixed(2)} mT`}
+          />
+        </div>
+        <h3 className="pt-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          {c.theoryTitle}
+        </h3>
+        <p className={BODY}>
+          {c.fieldTheory(
+            theory.fieldMt.toFixed(2),
+            theory.errorMt.toFixed(3),
+            theoryDeltaPct.toFixed(1),
+          )}
+        </p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric label={c.mTheoryTurns} value={`${SOLENOID_TURNS}`} />
+          <Metric
+            label={c.mTheoryLength}
+            value={`${(SOLENOID_LENGTH_M * 1000).toFixed(0)} mm`}
+          />
+          <Metric
+            label={c.mTheoryField}
+            value={`${theory.fieldMt.toFixed(2)} ± ${theory.errorMt.toFixed(3)} mT`}
+          />
+          <Metric
+            label={c.mTheoryDelta}
+            value={`${theoryDeltaPct >= 0 ? "+" : ""}${theoryDeltaPct.toFixed(1)} %`}
+          />
+        </div>
+        <p className={BODY}>
+          {c.fieldCalculatedVsDirect(
+            deltaPct.toFixed(1),
+            theoryVsDirectPct.toFixed(1),
+          )}
+        </p>
       </section>
 
       <section className={SECTION}>
-        <h2 className={H2}>{c.checklistTitle}</h2>
+        <h2 className={H2}>{c.conclusionsTitle}</h2>
         <ul className={`${BODY} list-disc pl-5`}>
-          {c.checklist.map((s) => (
+          {c.conclusionsBody.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ul>
@@ -430,6 +665,12 @@ export function Lab1Page() {
         <h2 className={H2}>{c.bridgeTitle}</h2>
         <p className={BODY}>{c.bridgeBody}</p>
       </section>
+
+      <ProjectCredits
+        tag="Laboratorio · Teoría de los Campos · UTN · FRBA"
+        subtitle={c.title}
+        description={c.subtitle}
+      />
     </main>
   );
 }

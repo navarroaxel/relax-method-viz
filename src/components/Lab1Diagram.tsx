@@ -306,7 +306,7 @@ export function Lab1Diagram({
         <g className="fill-white stroke-zinc-400 dark:fill-zinc-900 dark:stroke-zinc-600">
           <rect x="16" y="20" width="116" height="46" rx="4" />
           <rect x="16" y="92" width="116" height="46" rx="4" />
-          <rect x="600" y="20" width="102" height="62" rx="4" />
+          <rect x="600" y="20" width="102" height="78" rx="4" />
           <rect x={LOOP_X - 47} y="96" width="94" height="38" rx="4" />
         </g>
         <g className="lbl fill-zinc-700 dark:fill-zinc-200">
@@ -319,7 +319,7 @@ export function Lab1Diagram({
             textAnchor="middle"
             className="fill-zinc-500 dark:fill-zinc-400"
           >
-            20 A
+            {loopCurrentA.toFixed(2)} A
           </text>
           <text x="74" y="112" textAnchor="middle">
             {labels.supply5}
@@ -342,6 +342,14 @@ export function Lab1Diagram({
             className="fill-zinc-500 dark:fill-zinc-400"
           >
             A: F · B: I
+          </text>
+          <text
+            x="651"
+            y="80"
+            textAnchor="middle"
+            className="font-mono fill-rose-700 dark:fill-rose-400"
+          >
+            {labels.forceF} = {forceMn.toFixed(2)} mN
           </text>
           <text x={LOOP_X} y="120" textAnchor="middle">
             {labels.forceSensor}

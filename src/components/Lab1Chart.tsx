@@ -44,6 +44,13 @@ interface Lab1ChartProps {
   hoverHint: string;
   /** Sampling interval of the series, in seconds. */
   dtS?: number;
+  /**
+   * Overrides the "t = … s" prefix of the hover readout — for series whose
+   * x axis is not actually time (e.g. a sample index `n`).
+   */
+  formatX?: (t: number) => string;
+  /** Fires with the hovered sample index, or null when the pointer leaves. */
+  onHoverIndex?: (index: number | null) => void;
 }
 
 interface Palette {
@@ -148,11 +155,17 @@ export function Lab1Chart({
   timeLabel,
   hoverHint,
   dtS = ESCALON_DT_S,
+  formatX,
+  onHoverIndex,
 }: Lab1ChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDark = useIsDarkMode();
   const palette = isDark ? DARK_PALETTE : LIGHT_PALETTE;
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    onHoverIndex?.(hoverIndex);
+  }, [hoverIndex, onHoverIndex]);
 
   const sampleCount = series[0]?.values.length ?? 0;
   const tMax = (sampleCount - 1) * dtS;
@@ -336,7 +349,9 @@ export function Lab1Chart({
   const readout =
     hoverIndex === null
       ? hoverHint
-      : `t = ${(hoverIndex * dtS).toFixed(3)} s` +
+      : (formatX
+          ? formatX(hoverIndex * dtS)
+          : `t = ${(hoverIndex * dtS).toFixed(3)} s`) +
         series
           .map((s) => `  ·  ${s.label} = ${(s.values[hoverIndex] ?? 0).toFixed(2)}`)
           .join("");

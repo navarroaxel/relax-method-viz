@@ -11,19 +11,34 @@ const MEMBERS = [
   "VÁZQUEZ, Hernán",
 ];
 
-export function ProjectCredits() {
+interface ProjectCreditsProps {
+  /** Overrides the small uppercase tag line — not translated, same as the default. */
+  tag?: string;
+  /** Overrides the subtitle heading (defaults to the relax-method simulator's). */
+  subtitle?: string;
+  /** Overrides the description paragraph (defaults to the relax-method simulator's). */
+  description?: string;
+}
+
+export function ProjectCredits({
+  tag = "Trabajo Práctico · Teoría de los Campos · UTN · FRBA",
+  subtitle,
+  description,
+}: ProjectCreditsProps) {
   const { t } = useLanguage();
   return (
     <footer className="rounded-md border border-zinc-200 bg-white p-4 text-xs leading-relaxed text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">
       <header className="mb-3 border-b border-zinc-200 pb-2 dark:border-zinc-700">
         <p className="text-[10px] font-medium tracking-wider text-zinc-500 uppercase dark:text-zinc-400">
-          Trabajo Práctico · Teoría de los Campos · UTN · FRBA
+          {tag}
         </p>
         <h2 className="mt-0.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-          {t("credits.subtitle")}
+          {subtitle ?? t("credits.subtitle")}
         </h2>
       </header>
-      <p className="mb-3 dark:text-zinc-200">{t("credits.description")}</p>
+      <p className="mb-3 dark:text-zinc-200">
+        {description ?? t("credits.description")}
+      </p>
       <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
         <div>
           <h3 className="mb-1 font-medium text-zinc-700 dark:text-zinc-100">
