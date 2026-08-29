@@ -199,6 +199,20 @@ export function Lab1DirectDiagram({
     [n],
   );
 
+  // Keyboard equivalent of the Prev/Next buttons: a focusable proxy sitting
+  // over the (otherwise non-interactive) diagram so ArrowLeft/ArrowRight
+  // step the same index those buttons drive, without having to tab past
+  // them first. Reuses `step()` itself, so pausing playback and wrap-around
+  // stay identical between the two input methods.
+  const handleProxyKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      step(e.key === "ArrowRight" ? 1 : -1);
+    },
+    [step],
+  );
+
   // A hovered point on the chart below takes over which point is shown.
   const effectiveIndex = highlightIndex ?? index;
   const linked = highlightIndex !== null;
@@ -239,14 +253,17 @@ export function Lab1DirectDiagram({
   const amber = "stroke-amber-600 dark:stroke-amber-400";
   const violet = "stroke-violet-600 dark:stroke-violet-400";
 
+  const valueText = `${labels.point(effectiveIndex + 1)} · ${positionLabel} · ${labels.fieldB} = ${bMt.toFixed(2)} mT`;
+
   return (
     <div className="flex flex-col gap-2">
-      <svg
-        viewBox="0 0 620 220"
-        role="img"
-        aria-label={`${labels.coil} — ${labels.probe}`}
-        className="w-full rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950"
-      >
+      <div className="relative">
+        <svg
+          viewBox="0 0 620 220"
+          role="img"
+          aria-label={`${labels.coil} — ${labels.probe}`}
+          className="w-full rounded-md border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950"
+        >
         <style>{`
           .lbl { font: 11px ui-sans-serif, system-ui, sans-serif; }
           .pulse {
@@ -467,6 +484,23 @@ export function Lab1DirectDiagram({
           strokeDasharray="2 3"
         />
       </svg>
+        {/* Focusable keyboard proxy: pointer-events stay off so the diagram
+            underneath is untouched, but Tab order and ArrowLeft/ArrowRight
+            land here — the accessible name/value live on this element,
+            not just an aria-live region. */}
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label={`${labels.coil} — ${labels.probe}`}
+          aria-valuemin={0}
+          aria-valuemax={Math.max(0, n - 1)}
+          aria-valuenow={effectiveIndex}
+          aria-valuetext={valueText}
+          className="absolute inset-0 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          style={{ pointerEvents: "none" }}
+          onKeyDown={handleProxyKeyDown}
+        />
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Chip
