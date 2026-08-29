@@ -16,6 +16,7 @@ import {
   type IndirectChartSession,
 } from "@/components/Lab1IndirectChart";
 import { Lab1XYChart, type XYFitLine } from "@/components/Lab1XYChart";
+import { GitHubLink } from "@/components/GitHubLink";
 import { ProjectCredits } from "@/components/ProjectCredits";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -291,13 +292,16 @@ export function Lab1Page() {
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
             {c.title}
           </h1>
-          <button
-            type="button"
-            onClick={toggle}
-            className="shrink-0 rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
-            {language === "es" ? "EN" : "ES"}
-          </button>
+          <div className="flex items-center gap-2">
+            <GitHubLink />
+            <button
+              type="button"
+              onClick={toggle}
+              className="shrink-0 rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              {language === "es" ? "EN" : "ES"}
+            </button>
+          </div>
         </div>
         <p className={BODY}>{c.subtitle}</p>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">{c.source}</p>
