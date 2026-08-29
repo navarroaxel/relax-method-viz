@@ -173,6 +173,31 @@ export function Lab1Chart({
   const plotW = WIDTH - MARGIN.left - MARGIN.right;
   const plotH = HEIGHT - MARGIN.top - MARGIN.bottom;
 
+  const clampIndex = useCallback(
+    (i: number) => Math.min(sampleCount - 1, Math.max(0, i)),
+    [sampleCount],
+  );
+
+  // Keyboard equivalent of hovering: a single focusable proxy sitting over
+  // the canvas (role="slider" — one roving stop, since there is only one
+  // time axis to step through) so ArrowLeft/ArrowRight walk the same
+  // hoverIndex the pointer drives. Focus lands here as soon as arrow-key
+  // navigation starts, not only via aria-describedby/aria-live.
+  const handleProxyKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      setHoverIndex((prev) =>
+        prev === null ? 0 : clampIndex(prev + (e.key === "ArrowRight" ? 1 : -1)),
+      );
+    },
+    [clampIndex],
+  );
+
+  const handleProxyFocus = useCallback(() => {
+    setHoverIndex((prev) => prev ?? 0);
+  }, []);
+
   const handleMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const rect = e.currentTarget.getBoundingClientRect();
@@ -358,13 +383,32 @@ export function Lab1Chart({
 
   return (
     <div className="flex flex-col gap-1">
-      <canvas
-        ref={canvasRef}
-        style={{ width: "100%", height: "auto", aspectRatio: `${WIDTH} / ${HEIGHT}` }}
-        className="rounded-md border border-zinc-200 dark:border-zinc-700"
-        onPointerMove={handleMove}
-        onPointerLeave={() => setHoverIndex(null)}
-      />
+      <div className="relative">
+        <canvas
+          ref={canvasRef}
+          style={{ width: "100%", height: "auto", aspectRatio: `${WIDTH} / ${HEIGHT}` }}
+          className="rounded-md border border-zinc-200 dark:border-zinc-700"
+          onPointerMove={handleMove}
+          onPointerLeave={() => setHoverIndex(null)}
+        />
+        {/* Focusable keyboard proxy: pointer-events stay off so clicks and
+            hover still reach the canvas underneath untouched, but Tab order
+            and ArrowLeft/ArrowRight land here — the accessible name/value
+            live on this element, not just an aria-live announcement. */}
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label={`${leftLabel} vs ${timeLabel}`}
+          aria-valuemin={0}
+          aria-valuemax={Math.max(0, sampleCount - 1)}
+          aria-valuenow={hoverIndex ?? 0}
+          aria-valuetext={readout}
+          className="absolute inset-0 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          style={{ pointerEvents: "none" }}
+          onFocus={handleProxyFocus}
+          onKeyDown={handleProxyKeyDown}
+        />
+      </div>
       <p className="font-mono text-xs text-zinc-600 dark:text-zinc-300">{readout}</p>
     </div>
   );
