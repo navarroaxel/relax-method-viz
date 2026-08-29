@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { formatNum, niceTicks } from "@/lib/chartUtils";
 
@@ -104,6 +104,55 @@ export function Lab1IndirectChart({
 
   const plotW = WIDTH - MARGIN.left - MARGIN.right;
   const plotH = HEIGHT - MARGIN.top - MARGIN.bottom;
+
+  // Points span multiple sessions, so keyboard stepping walks one flat
+  // ordering — session 0's points, then session 1's, and so on — rather
+  // than indexing by x, which the sessions don't share a single sweep over.
+  const flat = useMemo(
+    () =>
+      sessions.flatMap((_, si) =>
+        Array.from({ length: sessions[si]?.currentA.length ?? 0 }, (_, k) => ({
+          session: si,
+          point: k,
+        })),
+      ),
+    [sessions],
+  );
+
+  const flatIndexOfHover = hover
+    ? flat.findIndex(
+        (f) => f.session === hover.session && f.point === hover.point,
+      )
+    : -1;
+
+  const clampFlat = useCallback(
+    (i: number) => Math.min(flat.length - 1, Math.max(0, i)),
+    [flat.length],
+  );
+
+  // Keyboard equivalent of hovering: a single focusable proxy sitting over
+  // the canvas (role="slider" — one roving stop over the flattened point
+  // order) so ArrowLeft/ArrowRight walk the same hover state the pointer
+  // already drives. Focus lands here as soon as arrow navigation starts,
+  // not only via aria-describedby/aria-live.
+  const handleProxyKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      if (flat.length === 0) return;
+      const current = flatIndexOfHover < 0 ? 0 : flatIndexOfHover;
+      const next =
+        flatIndexOfHover < 0
+          ? current
+          : clampFlat(current + (e.key === "ArrowRight" ? 1 : -1));
+      setHover(flat[next] ?? null);
+    },
+    [clampFlat, flat, flatIndexOfHover],
+  );
+
+  const handleProxyFocus = useCallback(() => {
+    setHover((prev) => prev ?? flat[0] ?? null);
+  }, [flat]);
 
   const handleMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -275,17 +324,36 @@ export function Lab1IndirectChart({
 
   return (
     <div className="flex flex-col gap-1">
-      <canvas
-        ref={canvasRef}
-        style={{
-          width: "100%",
-          height: "auto",
-          aspectRatio: `${WIDTH} / ${HEIGHT}`,
-        }}
-        className="rounded-md border border-zinc-200 dark:border-zinc-700"
-        onPointerMove={handleMove}
-        onPointerLeave={() => setHover(null)}
-      />
+      <div className="relative">
+        <canvas
+          ref={canvasRef}
+          style={{
+            width: "100%",
+            height: "auto",
+            aspectRatio: `${WIDTH} / ${HEIGHT}`,
+          }}
+          className="rounded-md border border-zinc-200 dark:border-zinc-700"
+          onPointerMove={handleMove}
+          onPointerLeave={() => setHover(null)}
+        />
+        {/* Focusable keyboard proxy: pointer-events stay off so clicks and
+            hover still reach the canvas underneath untouched, but Tab order
+            and ArrowLeft/ArrowRight land here — the accessible name/value
+            live on this element, not just an aria-live announcement. */}
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label={`${yLabel} vs ${xLabel}`}
+          aria-valuemin={0}
+          aria-valuemax={Math.max(0, flat.length - 1)}
+          aria-valuenow={flatIndexOfHover < 0 ? 0 : flatIndexOfHover}
+          aria-valuetext={readout}
+          className="absolute inset-0 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+          style={{ pointerEvents: "none" }}
+          onFocus={handleProxyFocus}
+          onKeyDown={handleProxyKeyDown}
+        />
+      </div>
       <p className="font-mono text-xs text-zinc-600 dark:text-zinc-300">
         {readout}
       </p>
