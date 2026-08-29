@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { GitHubLink } from "@/components/GitHubLink";
 import { MethodExplanation } from "@/components/MethodExplanation";
@@ -66,6 +67,12 @@ export function SimulatorRoot() {
         <p className="text-sm text-zinc-600 dark:text-zinc-200">
           {t("page.description")}
         </p>
+        <Link
+          href="/lab1"
+          className="text-xs text-blue-700 hover:underline dark:text-blue-400"
+        >
+          {t("page.lab1_link")}
+        </Link>
       </header>
       {mode === "2d" ? <Simulator /> : <Simulator3D />}
       <MethodExplanation />
