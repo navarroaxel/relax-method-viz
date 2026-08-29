@@ -14,8 +14,12 @@
 /** Sampling interval of the CASSY capture, in seconds. */
 export const ESCALON_DT_S = 0.001;
 
-/** Length of the conductor loop inside the solenoid, in metres (guía §2.2). */
-export const LOOP_LENGTH_M = 0.08;
+/**
+ * Length of the conductor loop inside the solenoid, in metres. The guide
+ * (§2.2) calls it "8 cm", but it was measured by hand on the day of the
+ * practice at 8.1 cm ± 0.5 mm — that measured value is what's used here.
+ */
+export const LOOP_LENGTH_M = 0.081;
 
 /** Direct-probe plateau of B measured on the "Medicion_directa" sheet, in mT. */
 export const DIRECT_B_MT = 1.7;

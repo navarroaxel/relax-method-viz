@@ -54,7 +54,7 @@ describe("analyzeRamp", () => {
 
   it("fits the sweep to a line through the measured field", () => {
     expect(a.overall.slopeMnPerA).toBeCloseTo(0.1323, 3);
-    expect(a.overall.fieldMt).toBeCloseTo(1.654, 2);
+    expect(a.overall.fieldMt).toBeCloseTo(1.634, 2);
     expect(a.overall.r2).toBeGreaterThan(0.99);
     // Residual tare: the sensor was not perfectly zeroed.
     expect(Math.abs(a.overall.interceptMn)).toBeLessThan(0.3);

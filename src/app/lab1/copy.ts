@@ -145,17 +145,17 @@ const ES: Lab1Copy = {
 
   goalTitle: "1. Qué se mide y por qué",
   goalBody:
-    "Un solenoide sin núcleo, alimentado con 5 A, genera un campo B homogéneo en su interior. Dentro de ese campo se sumerge un bucle conductor de 8 cm por el que circula una corriente I regulable de 0 a 12 A. La fuerza de Lorentz sobre un tramo recto perpendicular al campo vale F = I·l·B, así que basta medir F e I para despejar el campo:",
+    "Un solenoide sin núcleo, alimentado con 5 A, genera un campo B homogéneo en su interior. Dentro de ese campo se sumerge un bucle conductor de 8,1 cm por el que circula una corriente I regulable de 0 a 12 A. La fuerza de Lorentz sobre un tramo recto perpendicular al campo vale F = I·l·B, así que basta medir F e I para despejar el campo:",
   formula: "B = F / (I · l)",
   formulaNote:
-    "con l = 8 cm, la longitud del bucle. El sensor de fuerza entra al CASSY por la entrada A (F_A1) y la corriente del bucle por la entrada B (I_B1); ambas se registran en simultáneo.",
+    "con l = 8,1 cm, la longitud del bucle medida a mano (la guía da 8 cm nominales). El sensor de fuerza entra al CASSY por la entrada A (F_A1) y la corriente del bucle por la entrada B (I_B1); ambas se registran en simultáneo.",
   errorFormula: "ΔB = (F/I²l)·ΔI + (F/I l²)·Δl + (1/I l)·ΔF",
   errorNote:
     "El error absoluto se propaga como la suma de las derivadas parciales de B respecto de I, l y F, evaluadas en cada punto de medición. El resultado se informa como B ± ΔB.",
 
   setupTitle: "3. El montaje",
   setupSteps: [
-    "El sensor de fuerza sostiene el bucle conductor de 8 cm y lo baja hasta que quede sumergido entre las espiras del solenoide, sin tocarlo.",
+    "El sensor de fuerza sostiene el bucle conductor de 8,1 cm y lo baja hasta que quede sumergido entre las espiras del solenoide, sin tocarlo.",
     "La fuente de 20 A alimenta el bucle a través de la unidad 30-A y de la entrada B del CASSY (medición de I).",
     "La fuente de 5 A alimenta la bobina sin núcleo, que es la que crea el campo.",
     "El sensor de fuerza se conecta a la entrada A del CASSY mediante la unidad Puente.",
@@ -197,7 +197,7 @@ const ES: Lab1Copy = {
   stepBody:
     "Esta captura no mide el campo: registra la respuesta mecánica del banco frente a un escalón de corriente, es decir, un salto brusco e instantáneo. La corriente pasa de ~1 A a 20,2 A en unos 2 ms, un escalón prácticamente perfecto para el sensor, y a partir de ahí todo lo que hace la curva de fuerza es la respuesta del sensor, no física del campo. Deslice el cursor por el gráfico para leer valores.",
   inrushNote:
-    "¿Y por qué no hay pico de arranque (inrush)? Porque en este circuito no hay nada que lo produzca. Un inrush aparece cuando algo pide por un instante mucha más corriente que en régimen: un núcleo de hierro que se satura al energizarse, o un capacitor de filtro descargado. Acá la carga es el bucle de 8 cm con sus cables —prácticamente resistiva, sin núcleo ni capacidad—, y la bobina, que sí es inductiva, es sin núcleo: una inductancia sin hierro no satura, así que al energizarse crece exponencialmente hacia su valor final y nunca por encima (y además está en el otro circuito, estabilizada en 5 A desde antes de la captura). A eso se suma que la fuente es electrónica regulada con límite de corriente: su lazo de control lleva la corriente a la consigna y la sujeta ahí. La medición es coherente con eso — subida monótona con τ ≈ 1 ms, 99 % del valor final a los 4 ms y una excursión máxima de 0,6 % sobre el régimen, dentro del ruido propio del canal (±0,1 A). Ese τ de 1 ms es además demasiado lento para la inductancia del bucle (del orden de 1 µH, que se establecería en decenas de microsegundos), así que lo que se ve es el lazo de la fuente y no la carga. En este banco lo único que oscila es la mecánica del sensor.",
+    "¿Y por qué no hay pico de arranque (inrush)? Porque en este circuito no hay nada que lo produzca. Un inrush aparece cuando algo pide por un instante mucha más corriente que en régimen: un núcleo de hierro que se satura al energizarse, o un capacitor de filtro descargado. Acá la carga es el bucle de 8,1 cm con sus cables —prácticamente resistiva, sin núcleo ni capacidad—, y la bobina, que sí es inductiva, es sin núcleo: una inductancia sin hierro no satura, así que al energizarse crece exponencialmente hacia su valor final y nunca por encima (y además está en el otro circuito, estabilizada en 5 A desde antes de la captura). A eso se suma que la fuente es electrónica regulada con límite de corriente: su lazo de control lleva la corriente a la consigna y la sujeta ahí. La medición es coherente con eso — subida monótona con τ ≈ 1 ms, 99 % del valor final a los 4 ms y una excursión máxima de 0,6 % sobre el régimen, dentro del ruido propio del canal (±0,1 A). Ese τ de 1 ms es además demasiado lento para la inductancia del bucle (del orden de 1 µH, que se establecería en decenas de microsegundos), así que lo que se ve es el lazo de la fuente y no la carga. En este banco lo único que oscila es la mecánica del sensor.",
   markersToggle: "Marcar los tiempos característicos",
   chartTime: "t (s)",
   chartForce: "F (mN)",
@@ -373,17 +373,17 @@ const EN: Lab1Copy = {
 
   goalTitle: "1. What is measured, and why",
   goalBody:
-    "An air-core solenoid driven at 5 A produces a uniform field B inside it. An 8 cm conductor loop carrying an adjustable current I (0 to 12 A) is lowered into that field. The Lorentz force on a straight segment perpendicular to the field is F = I·l·B, so measuring F and I is enough to solve for the field:",
+    "An air-core solenoid driven at 5 A produces a uniform field B inside it. An 8.1 cm conductor loop carrying an adjustable current I (0 to 12 A) is lowered into that field. The Lorentz force on a straight segment perpendicular to the field is F = I·l·B, so measuring F and I is enough to solve for the field:",
   formula: "B = F / (I · l)",
   formulaNote:
-    "with l = 8 cm, the loop length. The force sensor feeds CASSY input A (F_A1) and the loop current feeds input B (I_B1); both are logged simultaneously.",
+    "with l = 8.1 cm, the loop length measured by hand (the guide gives a nominal 8 cm). The force sensor feeds CASSY input A (F_A1) and the loop current feeds input B (I_B1); both are logged simultaneously.",
   errorFormula: "ΔB = (F/I²l)·ΔI + (F/I l²)·Δl + (1/I l)·ΔF",
   errorNote:
     "The absolute error propagates as the sum of the partial derivatives of B with respect to I, l and F, evaluated at each measurement point. The result is reported as B ± ΔB.",
 
   setupTitle: "3. The bench",
   setupSteps: [
-    "The force sensor holds the 8 cm conductor loop and lowers it between the solenoid windings without touching them.",
+    "The force sensor holds the 8.1 cm conductor loop and lowers it between the solenoid windings without touching them.",
     "The 20 A supply drives the loop through the 30-A unit and CASSY input B (current measurement).",
     "The 5 A supply drives the air-core coil, which is what creates the field.",
     "The force sensor connects to CASSY input A through the Bridge unit.",
@@ -425,7 +425,7 @@ const EN: Lab1Copy = {
   stepBody:
     "This capture is not a field measurement: it is the bench's response to a current step. The current goes from ~1 A to 20.2 A in about 2 ms — a perfect step as far as the sensor is concerned — and everything the force curve does afterwards is the sensor's mechanical response, not field physics. Hover the chart to read values.",
   inrushNote:
-    "So why is there no inrush peak? Because nothing in this circuit can produce one. Inrush appears when something momentarily draws far more current than it does in steady state: an iron core saturating as it is energised, or a discharged bulk capacitor. Here the load is the 8 cm loop and its leads — essentially resistive, with no core and no capacitance — and the coil, which is the inductive part, is air-core: an inductor without iron cannot saturate, so energising it grows exponentially towards its final value and never above it (and it is on the other circuit anyway, settled at 5 A well before this capture). On top of that the supply is an electronically regulated, current-limited source: its control loop drives the current to the setpoint and holds it there. The measurement agrees — a monotonic rise with τ ≈ 1 ms, 99 % of the final value by 4 ms, and a largest excursion of 0.6 % above steady state, within the channel's own noise (±0.1 A). That 1 ms is also far too slow for the loop's own inductance (of order 1 µH, which would settle in tens of microseconds), so what we see is the supply's loop rather than the load. On this bench the only thing that rings is the sensor's mechanics.",
+    "So why is there no inrush peak? Because nothing in this circuit can produce one. Inrush appears when something momentarily draws far more current than it does in steady state: an iron core saturating as it is energised, or a discharged bulk capacitor. Here the load is the 8.1 cm loop and its leads — essentially resistive, with no core and no capacitance — and the coil, which is the inductive part, is air-core: an inductor without iron cannot saturate, so energising it grows exponentially towards its final value and never above it (and it is on the other circuit anyway, settled at 5 A well before this capture). On top of that the supply is an electronically regulated, current-limited source: its control loop drives the current to the setpoint and holds it there. The measurement agrees — a monotonic rise with τ ≈ 1 ms, 99 % of the final value by 4 ms, and a largest excursion of 0.6 % above steady state, within the channel's own noise (±0.1 A). That 1 ms is also far too slow for the loop's own inductance (of order 1 µH, which would settle in tens of microseconds), so what we see is the supply's loop rather than the load. On this bench the only thing that rings is the sensor's mechanics.",
   markersToggle: "Mark the characteristic times",
   chartTime: "t (s)",
   chartForce: "F (mN)",
