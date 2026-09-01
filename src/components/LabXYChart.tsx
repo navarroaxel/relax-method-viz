@@ -13,7 +13,7 @@ export interface XYFitLine {
   label: string;
 }
 
-interface Lab1XYChartProps {
+interface LabXYChartProps {
   xs: Float64Array;
   ys: Float64Array;
   /** Sample where the sweep turns back: everything after it is the down leg. */
@@ -91,7 +91,7 @@ function extent(values: Float64Array): [number, number] {
   return [lo - pad, hi + pad];
 }
 
-export function Lab1XYChart({
+export function LabXYChart({
   xs,
   ys,
   splitIndex,
@@ -102,7 +102,7 @@ export function Lab1XYChart({
   fallingLabel,
   hoverHint,
   formatSample,
-}: Lab1XYChartProps) {
+}: LabXYChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDark = useIsDarkMode();
   const palette = isDark ? DARK_PALETTE : LIGHT_PALETTE;
@@ -126,7 +126,9 @@ export function Lab1XYChart({
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       e.preventDefault();
       setHoverIndex((prev) =>
-        prev === null ? 0 : clampIndex(prev + (e.key === "ArrowRight" ? 1 : -1)),
+        prev === null
+          ? 0
+          : clampIndex(prev + (e.key === "ArrowRight" ? 1 : -1)),
       );
     },
     [clampIndex],
