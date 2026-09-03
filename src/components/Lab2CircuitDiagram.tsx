@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { stepCurrentA, stepForceMn, STEP_DT_S } from "@/lib/lab2Escalon";
 import {
-  LOWER_LOOP_HEIGHT_M,
   SEPARATION_M,
   UPPER_LENGTH_M,
   UPPER_LOOP_HEIGHT_M,
@@ -25,7 +24,6 @@ export interface Lab2CircuitLabels {
   forceF: string;
   separation: string;
   upperHeight: string;
-  lowerHeight: string;
   speed: string;
   playStep: string;
   playRamp: string;
@@ -54,22 +52,25 @@ const LOOP_X = 300;
 const HALF_W = 74;
 const SENSOR_BOTTOM = 158;
 /**
- * The four horizontal conductors, top to bottom. Vertically these are not to
- * scale — r is 3 mm against loop heights of 20 and 58 mm, so drawing it true
- * would leave no room for the force arrow that belongs in that gap. The
- * dimension stack carries the real figures.
+ * The three horizontal conductors, top to bottom. Vertically these are not to
+ * scale — r is 3 mm against the suspended loop's own height of 58 mm, so
+ * drawing it true would leave no room for the force arrow that belongs in
+ * that gap. The dimension stack carries the real figures.
  */
 const Y_RET_UP = 176;
 const Y_ACTIVE = 236;
-const Y_FACING = 282;
-const Y_RET_LOW = 330;
+const Y_LOWER = 282;
 /** x of the lead feeding the suspended loop, just outside its right leg. */
 const FEED_UP_X = LOOP_X + HALF_W + 10;
-/** x of the lead feeding the holder loop, coming up from its base. */
+/** x of the lead feeding the holder conductor, on its right end. */
 const FEED_LOW_X = LOOP_X + HALF_W + 36;
 const BASE_Y = 366;
-/** x of the height-adjustable holder's post. */
-const HOLDER_X = LOOP_X + HALF_W + 60;
+/**
+ * x of the height-adjustable holder's post — the middle of the lower
+ * conductor's visible span, since the post supports the rod, not its feed
+ * lead.
+ */
+const HOLDER_X = (FEED_LOW_X + (LOOP_X - HALF_W)) / 2;
 /** x of the lead running between the two loops, clear of the holder post. */
 const LINK_X = 462;
 /** x of the dimension stack, clear of every lead. */
@@ -225,12 +226,14 @@ function Dim({
  * two conductors are the same circuit. The pulses show it — there is a single
  * loop of charge, not two independent ones.
  *
- * The four horizontal conductors are drawn in the same top-to-bottom order as
+ * The three horizontal conductors are drawn in the same top-to-bottom order as
  * the cross-section further up the page, and the current directions are drawn
- * true: the two facing conductors run the same way (they attract), while each
- * loop's return runs the other way (it pushes back). Replaying a capture drives
- * the force readout and the arrow from the recorded samples rather than from
- * the formula.
+ * true: the two facing conductors run the same way (they attract), while the
+ * suspended loop's own return runs the other way (it pushes back). The lower
+ * conductor is a single straight rod — current enters on one side and leaves
+ * on the other, with no nearby return to answer back. Replaying a capture
+ * drives the force readout and the arrow from the recorded samples rather
+ * than from the formula.
  */
 export function Lab2CircuitDiagram({
   labels,
@@ -308,12 +311,14 @@ export function Lab2CircuitDiagram({
     `L${LOOP_X - HALF_W} ${Y_ACTIVE} L${LOOP_X - HALF_W} ${Y_RET_UP} ` +
     `L${LOOP_X + HALF_W} ${Y_RET_UP} L${LOOP_X + HALF_W} ${SENSOR_BOTTOM}`;
 
-  // Holder loop, fed from its base. Its facing conductor runs the same way as
-  // the weighed one above it — that is what makes the pair attract.
-  const lowerLoopPath =
-    `M${FEED_LOW_X} ${BASE_Y} L${FEED_LOW_X} ${Y_FACING} ` +
-    `L${LOOP_X - HALF_W} ${Y_FACING} L${LOOP_X - HALF_W} ${Y_RET_LOW} ` +
-    `L${LOOP_X + HALF_W} ${Y_RET_LOW} L${LOOP_X + HALF_W} ${BASE_Y}`;
+  // Holder conductor: a single straight rod, not a loop. Fed on the right, it
+  // runs the same way as the suspended loop's facing side above it — that is
+  // what makes the pair attract — then leaves on the left and is routed away,
+  // clear of the interaction zone, back to the supply. It never doubles back
+  // near itself, so there is no return side to draw here.
+  const lowerWirePath =
+    `M${FEED_LOW_X} ${Y_LOWER} L${LOOP_X - HALF_W} ${Y_LOWER} ` +
+    `L${LOOP_X - HALF_W} ${BASE_Y + 14} L128 ${BASE_Y + 14} L128 60`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -463,13 +468,12 @@ export function Lab2CircuitDiagram({
           <path d={`M${LOOP_X - 74} 44 L${LOOP_X + 74} 44`} />
         </g>
 
-        {/* Height-adjustable holder carrying the lower loop. */}
+        {/* Height-adjustable holder carrying the lower conductor, planted
+            under its middle rather than under either feed lead. */}
         <g className={grey} strokeWidth="4" fill="none">
+          <path d={`M${HOLDER_X} ${Y_LOWER} L${HOLDER_X} ${BASE_Y}`} />
           <path
-            d={`M${LOOP_X + HALF_W + 60} ${Y_FACING} L${LOOP_X + HALF_W + 60} ${BASE_Y}`}
-          />
-          <path
-            d={`M${LOOP_X + HALF_W + 12} ${BASE_Y} L${LOOP_X + HALF_W + 108} ${BASE_Y}`}
+            d={`M${HOLDER_X - 48} ${BASE_Y} L${HOLDER_X + 48} ${BASE_Y}`}
           />
         </g>
         {/* Knob of the height adjustment — the control that sets r. */}
@@ -527,17 +531,17 @@ export function Lab2CircuitDiagram({
           d={upperLoopPath}
         />
 
-        {/* Suspended loop → holder loop: the two are in series, so the same
-            current runs through both. */}
+        {/* Suspended loop → holder conductor: the two are in series, so the
+            same current runs through both. */}
         <Wire
           className={sky}
           period={period}
           delayFraction={0.55}
-          d={`M${LOOP_X + HALF_W} ${SENSOR_BOTTOM} L${LOOP_X + HALF_W} 146 L${LINK_X} 146 L${LINK_X} ${BASE_Y + 10} L${FEED_LOW_X} ${BASE_Y + 10} L${FEED_LOW_X} ${BASE_Y}`}
+          d={`M${LOOP_X + HALF_W} ${SENSOR_BOTTOM} L${LOOP_X + HALF_W} 146 L${LINK_X} 146 L${LINK_X} ${Y_LOWER} L${FEED_LOW_X} ${Y_LOWER}`}
         />
 
         <path
-          d={lowerLoopPath}
+          d={lowerWirePath}
           className="stroke-zinc-50 dark:stroke-zinc-950"
           fill="none"
           strokeWidth="9"
@@ -546,15 +550,7 @@ export function Lab2CircuitDiagram({
           className={sky}
           period={period}
           delayFraction={0.75}
-          d={lowerLoopPath}
-        />
-
-        {/* Holder loop → back to the supply. */}
-        <Wire
-          className={sky}
-          period={period}
-          delayFraction={0.9}
-          d={`M${LOOP_X + HALF_W} ${BASE_Y} L${LOOP_X + HALF_W} ${BASE_Y + 14} L140 ${BASE_Y + 14} L140 60 L128 60`}
+          d={lowerWirePath}
         />
 
         {/* ---- Dimensions ------------------------------------------------ */}
@@ -566,14 +562,8 @@ export function Lab2CircuitDiagram({
             text={`${labels.upperHeight} = ${(UPPER_LOOP_HEIGHT_M * 1000).toFixed(1)} mm`}
           />
           <Dim
-            y1={Y_FACING}
-            y2={Y_RET_LOW}
-            x={DIM_X}
-            text={`${labels.lowerHeight} = ${(LOWER_LOOP_HEIGHT_M * 1000).toFixed(1)} mm`}
-          />
-          <Dim
             y1={Y_ACTIVE}
-            y2={Y_FACING}
+            y2={Y_LOWER}
             x={DIM_X}
             text={`${labels.separation} = ${(SEPARATION_M * 1000).toFixed(2)} mm`}
           />
@@ -607,7 +597,7 @@ export function Lab2CircuitDiagram({
           <text x={LOOP_X} y={Y_RET_UP + 42}>
             l = {(UPPER_LENGTH_M * 100).toFixed(1)} cm
           </text>
-          <text x={LOOP_X} y={(Y_FACING + Y_RET_LOW) / 2 + 4}>
+          <text x={LOOP_X} y={Y_LOWER + 20}>
             {labels.lowerLoop}
           </text>
         </g>

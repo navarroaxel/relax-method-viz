@@ -37,7 +37,6 @@ import {
   LENGTH_ERROR_M,
   LOWER_DIAMETER_M,
   LOWER_LENGTH_M,
-  LOWER_LOOP_HEIGHT_M,
   MU0_ACCEPTED,
   SEPARATION_ERROR_M,
   SEPARATION_M,
@@ -172,7 +171,6 @@ export function Lab2Page() {
       `${(UPPER_DIAMETER_M * 1000).toFixed(3)} mm`,
       `${(SEPARATION_M * 1000).toFixed(2)} ± ${(SEPARATION_ERROR_M * 1000).toFixed(2)} mm`,
       `${(UPPER_LOOP_HEIGHT_M * 1000).toFixed(1)} mm`,
-      `${(LOWER_LOOP_HEIGHT_M * 1000).toFixed(1)} mm`,
     ],
     [],
   );

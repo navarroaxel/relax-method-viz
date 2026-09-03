@@ -67,7 +67,9 @@ describe("analyzeStep", () => {
 
   it("lands in the same place as the other routes on μ₀", () => {
     expect(deltaFromAcceptedPct(a.mu0IdealHPerM)).toBeLessThan(-15);
-    expect(Math.abs(deltaFromAcceptedPct(a.mu0CorrectedHPerM))).toBeLessThan(5);
+    const delta = Math.abs(deltaFromAcceptedPct(a.mu0CorrectedHPerM));
+    expect(delta).toBeLessThan(15);
+    expect(delta).toBeGreaterThan(10);
   });
 
   it("reports the tightest error budget of any single point", () => {

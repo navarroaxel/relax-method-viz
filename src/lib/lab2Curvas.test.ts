@@ -62,10 +62,13 @@ describe("summarizeCurves", () => {
     expect(deltaFromAcceptedPct(s.meanMu0IdealHPerM)).toBeLessThan(-15);
   });
 
-  it("brings μ₀ inside a few percent once the loop returns are kept in", () => {
-    expect(
-      Math.abs(deltaFromAcceptedPct(s.meanMu0CorrectedHPerM)),
-    ).toBeLessThan(5);
+  it("narrows the gap once the suspended loop's return is kept in, though it doesn't close it", () => {
+    // Only one of the two conductors is actually a loop, so the correction is
+    // smaller than the old four-wire model assumed — it shaves a few percent
+    // off the ideal model's ~19 % shortfall, not most of it.
+    const delta = Math.abs(deltaFromAcceptedPct(s.meanMu0CorrectedHPerM));
+    expect(delta).toBeLessThan(15);
+    expect(delta).toBeGreaterThan(10);
     expect(s.meanMu0CorrectedHPerM).toBeGreaterThan(s.meanMu0IdealHPerM);
   });
 

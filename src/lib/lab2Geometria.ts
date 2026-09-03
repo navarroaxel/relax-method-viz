@@ -10,12 +10,14 @@
  *
  *     F = μ₀ I² l / (2π r)      ⇒      μ₀ = 2π F r / (I² l)
  *
- * The bench is not that. Both conductors are the near sides of *closed
- * rectangular loops* — the suspended one hanging from the force sensor, the
- * lower one on the height-adjustable holder — and each loop's far side
- * carries the same current back the other way. The guide's own Nota (§4.2)
- * points at exactly this and asks whether the effect can be dropped. It
- * cannot: see {@link geometryFactor}.
+ * The bench is not quite that. The lower conductor, on the height-adjustable
+ * holder, really is a single straight rod — its own return is routed away
+ * from the interaction zone and does not measurably pull or push back. The
+ * *suspended* conductor is the one that is not lone: it is the near side of a
+ * closed rectangular loop hanging from the force sensor, and its far side
+ * carries the same current back the other way, close enough to matter. The
+ * guide's own Nota (§4.2) points at exactly this and asks whether the effect
+ * can be dropped. It cannot: see {@link geometryFactor}.
  */
 
 /** Accepted value of the vacuum permeability, in H/m (guide §4.2). */
@@ -80,13 +82,6 @@ export const SEPARATION_ERROR_M = 0.0001;
  */
 export const UPPER_LOOP_HEIGHT_M = 0.0601 - MEAN_DIAMETER_M;
 
-/**
- * Height of the lower holder loop, in metres: from its upper (facing) side
- * down to its return side. Measured as an 18.3 mm clear separation, so one
- * diameter goes *on* to get centre to centre.
- */
-export const LOWER_LOOP_HEIGHT_M = 0.0183 + MEAN_DIAMETER_M;
-
 /** Instrument error on the CASSY current channel I_B1, in A (30 A unit). */
 export const CURRENT_ERROR_A = 0.05;
 /** Instrument error on the CASSY force channel F_A1, in mN. */
@@ -97,7 +92,7 @@ export const FORCE_ERROR_MN = 0.05;
 // ---------------------------------------------------------------------------
 
 export interface GeometryFactor {
-  /** Σ ±1/dᵢ over the four wire pairs, in 1/m. */
+  /** Σ ±1/dᵢ over the wire pairs that matter, in 1/m. */
   factorPerM: number;
   /** The idealised two-wire value 1/r it replaces, in 1/m. */
   idealPerM: number;
@@ -108,36 +103,30 @@ export interface GeometryFactor {
 }
 
 /**
- * The geometric sum that replaces 1/r once both conductors are recognised as
- * loop sides rather than lone infinite wires.
+ * The geometric sum that replaces 1/r once the suspended conductor is
+ * recognised as one side of a loop rather than a lone infinite wire.
  *
- * Four wires, all carrying the same I. Writing the suspended loop's lower
- * side as the one the sensor weighs, and taking downward force as positive:
+ * Three wires carry the same I: the lower conductor (a single straight rod,
+ * its own return too far away to matter), and the suspended loop's two
+ * sides. Taking downward force as positive:
  *
- *   - lower side ↔ holder's upper side, distance r, currents parallel → +1/r
- *   - lower side ↔ holder's lower side, distance r + h_low, antiparallel
- *     → −1/(r + h_low)
- *   - suspended return ↔ holder's upper side, distance r + h_up,
+ *   - lower conductor ↔ suspended near side, distance r, currents parallel
+ *     → +1/r
+ *   - lower conductor ↔ suspended return side, distance r + h_up,
  *     antiparallel → −1/(r + h_up)
- *   - suspended return ↔ holder's lower side, distance r + h_up + h_low,
- *     parallel again → +1/(r + h_up + h_low)
  *
- * so F = μ₀ I² l / (2π) · factorPerM. With the measured heights the three
- * extra terms cancel about 14 % of the force the ideal pair would give —
- * an order of magnitude more than any instrument error in {@link errorTerms},
- * which is the answer to the guide's Nota: the effect cannot be dropped.
+ * so F = μ₀ I² l / (2π) · factorPerM. With the measured height this shaves a
+ * few percent off the force the ideal pair would give — enough to matter
+ * next to the instrument errors in {@link errorTerms}, which is the answer to
+ * the guide's Nota: the effect cannot be dropped, even though only one of the
+ * two conductors is actually a loop.
  */
 export function geometryFactor(
   separationM = SEPARATION_M,
   upperHeightM = UPPER_LOOP_HEIGHT_M,
-  lowerHeightM = LOWER_LOOP_HEIGHT_M,
 ): GeometryFactor {
   const idealPerM = 1 / separationM;
-  const factorPerM =
-    idealPerM -
-    1 / (separationM + lowerHeightM) -
-    1 / (separationM + upperHeightM) +
-    1 / (separationM + upperHeightM + lowerHeightM);
+  const factorPerM = idealPerM - 1 / (separationM + upperHeightM);
   const ratio = factorPerM / idealPerM;
   return {
     factorPerM,

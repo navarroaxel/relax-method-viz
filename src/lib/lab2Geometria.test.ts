@@ -6,7 +6,6 @@ import {
   errorTerms,
   FORCE_LENGTH_M,
   geometryFactor,
-  LOWER_LOOP_HEIGHT_M,
   MEAN_DIAMETER_M,
   mu0FromSlopeCorrected,
   mu0FromSlopeIdeal,
@@ -22,11 +21,9 @@ describe("bench dimensions", () => {
     expect(SEPARATION_M).toBeCloseTo(0.0029975, 7);
   });
 
-  it("converts the caliper readings to centre-to-centre loop heights", () => {
-    // 60.1 mm was read outside to outside, so a diameter comes off...
+  it("converts the caliper reading to a centre-to-centre loop height", () => {
+    // 60.1 mm was read outside to outside, so a diameter comes off.
     expect(UPPER_LOOP_HEIGHT_M).toBeCloseTo(0.0581, 4);
-    // ...while 18.3 mm was a clear gap, so a diameter goes on.
-    expect(LOWER_LOOP_HEIGHT_M).toBeCloseTo(0.0203, 4);
   });
 
   it("uses the sensor-carrying conductor as l, not the longer one", () => {
@@ -37,20 +34,20 @@ describe("bench dimensions", () => {
 describe("geometryFactor", () => {
   const f = geometryFactor();
 
-  it("cancels a substantial fraction of the ideal two-wire force", () => {
+  it("cancels a modest fraction of the ideal two-wire force", () => {
     expect(f.idealPerM).toBeCloseTo(1 / SEPARATION_M, 6);
     expect(f.factorPerM).toBeLessThan(f.idealPerM);
-    expect(f.shortfallPct).toBeGreaterThan(13);
-    expect(f.shortfallPct).toBeLessThan(15);
+    expect(f.shortfallPct).toBeGreaterThan(4);
+    expect(f.shortfallPct).toBeLessThan(6);
   });
 
-  it("collapses back onto 1/r as the loops are made infinitely tall", () => {
-    const tall = geometryFactor(SEPARATION_M, 1e6, 1e6);
+  it("collapses back onto 1/r as the suspended loop is made infinitely tall", () => {
+    const tall = geometryFactor(SEPARATION_M, 1e6);
     expect(tall.ratio).toBeCloseTo(1, 5);
   });
 
-  it("cancels more of the force as the loops are made shorter", () => {
-    const short = geometryFactor(SEPARATION_M, 0.01, 0.005);
+  it("cancels more of the force as the suspended loop is made shorter", () => {
+    const short = geometryFactor(SEPARATION_M, 0.01);
     expect(short.shortfallPct).toBeGreaterThan(f.shortfallPct);
   });
 });

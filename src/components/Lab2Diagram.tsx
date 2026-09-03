@@ -2,12 +2,7 @@
 
 import { useId, useMemo } from "react";
 
-import {
-  geometryFactor,
-  LOWER_LOOP_HEIGHT_M,
-  SEPARATION_M,
-  UPPER_LOOP_HEIGHT_M,
-} from "@/lib/lab2Geometria";
+import { geometryFactor, SEPARATION_M, UPPER_LOOP_HEIGHT_M } from "@/lib/lab2Geometria";
 
 export interface Lab2DiagramLabels {
   /** Label on the wire the sensor actually weighs. */
@@ -16,8 +11,6 @@ export interface Lab2DiagramLabels {
   returnWire: string;
   /** Symbol used for the suspended loop's height, e.g. "h₁". */
   upperHeight: string;
-  /** Symbol used for the holder loop's height, e.g. "h₂". */
-  lowerHeight: string;
   attract: string;
   repel: string;
   /** Caption under the "what the guide models" panel. */
@@ -44,7 +37,6 @@ const WIRE_MID = (WIRE_X1 + WIRE_X2) / 2;
 const Y_UPPER_RETURN = 44;
 const Y_ACTIVE = 116;
 const Y_FACING = 144;
-const Y_LOWER_RETURN = 208;
 
 const WIRE_CLASS =
   "stroke-sky-700 dark:stroke-sky-400 text-sky-700 dark:text-sky-400";
@@ -56,8 +48,9 @@ const LABEL_CLASS = "fill-zinc-600 dark:fill-zinc-300";
 
 /**
  * Wire seen end-on, with the current-direction glyph: ⊙ out of the page,
- * ⊗ into it. The two loops each carry I out along one side and back along
- * the other, which is exactly why the return sides push the wrong way.
+ * ⊗ into it. The suspended loop carries I out along its active side and
+ * back along its return side, which is exactly why that return pushes the
+ * wrong way; the lower conductor has no such return nearby.
  */
 function Wire({
   y,
@@ -184,13 +177,15 @@ function Force({
 
 /**
  * Cross-section of the two models the report has to choose between: the
- * guide's pair of lone infinite wires on the left, and the four wires the
- * bench actually has once both loops are drawn in full on the right.
+ * guide's pair of lone infinite wires on the left, and the three wires the
+ * bench actually has once the suspended loop is drawn in full on the right —
+ * the lower conductor stays a single straight rod, its own return routed too
+ * far away to matter.
  *
- * They are not a small correction apart. The three extra pairs all act
- * against the one the guide counts, and the readout under the panels says how
- * much of the ideal force survives them — the number the guide's Nota asks
- * the report to judge.
+ * They are not a small correction apart. The extra pair acts against the one
+ * the guide counts, and the readout under the panels says how much of the
+ * ideal force survives it — the number the guide's Nota asks the report to
+ * judge.
  */
 export function Lab2Diagram({
   labels,
@@ -312,20 +307,18 @@ export function Lab2Diagram({
           className="stroke-zinc-300 dark:stroke-zinc-700"
         />
 
-        {/* -------- right panel: four wires, two closed loops -------------- */}
+        {/* -------- right panel: three wires, one closed loop -------------- */}
         <g transform="translate(470, 0)">
           <Wire y={Y_UPPER_RETURN} className={RETURN_CLASS} dir="in" />
           <Wire y={Y_ACTIVE} className={WIRE_CLASS} dir="out" />
           <Wire y={Y_FACING} className={WIRE_CLASS} dir="out" />
-          <Wire y={Y_LOWER_RETURN} className={RETURN_CLASS} dir="in" />
 
           {/* the one pair the guide counts... */}
           <Force x={WIRE_X1 + 20} y={Y_ACTIVE} up={false} attract uid={uid} />
-          {/* ...the holder's return wire pushing the weighed one back up... */}
-          <Force x={WIRE_X1 + 48} y={Y_ACTIVE} up attract={false} uid={uid} />
-          {/* ...and the suspended loop's own return wire, pushed away too */}
+          {/* ...and the suspended loop's own return wire, pushed away —
+              the lower conductor's own return is too far off to answer back */}
           <Force
-            x={WIRE_X1 + 76}
+            x={WIRE_X1 + 48}
             y={Y_UPPER_RETURN}
             up
             attract={false}
@@ -344,13 +337,6 @@ export function Lab2Diagram({
             y2={Y_ACTIVE}
             x={WIRE_X2 + 56}
             text={labels.upperHeight}
-            uid={uid}
-          />
-          <Dim
-            y1={Y_FACING}
-            y2={Y_LOWER_RETURN}
-            x={WIRE_X2 + 12}
-            text={labels.lowerHeight}
             uid={uid}
           />
 
@@ -395,8 +381,7 @@ export function Lab2Diagram({
         </span>
         <span className="font-mono">
           r = {(separationM * 1000).toFixed(2)} mm · {labels.upperHeight} ={" "}
-          {(UPPER_LOOP_HEIGHT_M * 1000).toFixed(1)} mm · {labels.lowerHeight} ={" "}
-          {(LOWER_LOOP_HEIGHT_M * 1000).toFixed(1)} mm
+          {(UPPER_LOOP_HEIGHT_M * 1000).toFixed(1)} mm
         </span>
         <span className="font-mono">
           {labels.survives}: {(factor.ratio * 100).toFixed(1)} %

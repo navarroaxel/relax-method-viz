@@ -206,32 +206,27 @@ const ES: Lab2Copy = {
       quantity: "Altura h₁ del bucle suspendido",
       how: "Calibre, 60,1 mm por fuera; menos un diámetro para pasar a centro a centro.",
     },
-    {
-      quantity: "Altura h₂ del bucle del soporte",
-      how: "Calibre, 18,3 mm de luz; más un diámetro para pasar a centro a centro.",
-    },
   ],
   geometryDiagramBody:
-    "Y acá aparece la discrepancia que gobierna todo el ensayo. La guía modela dos alambres solos e infinitos, pero en el banco cada conductor es el lado de un bucle cerrado, y el lado de vuelta de cada bucle lleva la misma corriente en sentido contrario. Son cuatro alambres, no dos, y de los cuatro pares que forman, tres empujan al revés del que la guía cuenta.",
+    "Y acá aparece la discrepancia que gobierna todo el ensayo. La guía modela dos alambres solos e infinitos, pero en el banco el conductor pesado no está solo: es el lado activo de un bucle cerrado, y el lado de vuelta de ese bucle lleva la misma corriente en sentido contrario. El conductor del soporte, en cambio, es un alambre lineal —entra por un lado y sale por el otro— y su propia vuelta queda demasiado lejos como para influir. Son tres alambres, no dos, y del par extra que forman, uno empuja al revés del que la guía cuenta.",
   geometryDiagramNote:
-    "El dibujo está en corte, mirando los conductores de punta: ⊙ es corriente saliendo del papel y ⊗ entrando. La escala vertical está deformada a propósito — r son 3 mm y las alturas de los bucles 20 y 58 mm, así que a escala real los conductores de vuelta quedarían fuera de la hoja y se perdería justamente lo que hay que ver. La cuenta es directa: en vez de 1/r la fuerza va con 1/r − 1/(r+h₂) − 1/(r+h₁) + 1/(r+h₁+h₂), y el porcentaje de abajo dice cuánto de la fuerza ideal sobrevive.",
+    "El dibujo está en corte, mirando los conductores de punta: ⊙ es corriente saliendo del papel y ⊗ entrando. La escala vertical está deformada a propósito — r son 3 mm y la altura del bucle suspendido 58 mm, así que a escala real el conductor de vuelta quedaría fuera de la hoja y se perdería justamente lo que hay que ver. La cuenta es directa: en vez de 1/r la fuerza va con 1/r − 1/(r+h₁), y el porcentaje de abajo dice cuánto de la fuerza ideal sobrevive.",
   diagram: {
     activeWire: "conductor pesado",
     returnWire: "vuelta del bucle",
     upperHeight: "h₁",
-    lowerHeight: "h₂",
     attract: "atracción (corrientes paralelas)",
     repel: "repulsión (corrientes antiparalelas)",
     idealCaption: "Lo que modela la guía: dos alambres infinitos",
-    realCaption: "Lo que hay en el banco: dos bucles cerrados",
+    realCaption: "Lo que hay en el banco: un bucle cerrado y un conductor lineal",
     survives: "Fuerza que sobrevive",
   },
 
   circuitTitle: "4. El banco, en movimiento",
   circuitBody:
-    "Esquema del montaje de la figura 2.1 de la guía, con la corriente circulando. El detalle que importa es que hay un solo circuito: la fuente de 20 A alimenta la unidad de 30 A, que entra por el canal B del CASSY —en serie, porque B mide corriente— y de ahí pasa por los dos bucles, uno atrás del otro, antes de volver a la fuente. Por eso la misma I aparece dos veces en F = μ₀I²l/2πr: no son dos corrientes independientes sino la misma dando una vuelta. Ese es también el motivo de que la fuerza vaya con el cuadrado y no lineal.",
+    "Esquema del montaje de la figura 2.1 de la guía, con la corriente circulando. El detalle que importa es que hay un solo circuito: la fuente de 20 A alimenta la unidad de 30 A, que entra por el canal B del CASSY —en serie, porque B mide corriente— y de ahí pasa por el bucle suspendido y el conductor del soporte, uno atrás del otro, antes de volver a la fuente. Por eso la misma I aparece dos veces en F = μ₀I²l/2πr: no son dos corrientes independientes sino la misma dando una vuelta. Ese es también el motivo de que la fuerza vaya con el cuadrado y no lineal.",
   circuitNote:
-    "Los cuatro conductores horizontales están en el mismo orden que en el corte de la sección 3, y los pulsos van en el sentido real de la corriente: los dos conductores enfrentados van para el mismo lado —por eso se atraen— y la vuelta de cada bucle va para el otro, que es la que resta. Mueva el slider para ver F crecer con el cuadrado de I, o apriete ▶ Escalón para que el banco siga la captura real: ahí se ve que la corriente ya llegó y la fuerza todavía está subiendo, se pasa de largo y recién después se acomoda. Baje la velocidad a 0,1× para alcanzar a verlo. La flecha, la barra de carga del sensor y el readout salen de las muestras registradas, no de la fórmula. Los bucles se dibujan quietos a propósito: r se fija con el tornillo de altura y no se mueve durante la medición.",
+    "Los tres conductores horizontales están en el mismo orden que en el corte de la sección 3, y los pulsos van en el sentido real de la corriente: el conductor del soporte y el lado activo del bucle suspendido van para el mismo lado —por eso se atraen— y la vuelta del bucle suspendido va para el otro, que es la que resta. El conductor del soporte entra por un lado y sale por el otro, sin volver cerca de sí mismo. Mueva el slider para ver F crecer con el cuadrado de I, o apriete ▶ Escalón para que el banco siga la captura real: ahí se ve que la corriente ya llegó y la fuerza todavía está subiendo, se pasa de largo y recién después se acomoda. Baje la velocidad a 0,1× para alcanzar a verlo. La flecha, la barra de carga del sensor y el readout salen de las muestras registradas, no de la fórmula. El bucle se dibuja quieto a propósito: r se fija con el tornillo de altura y no se mueve durante la medición.",
   circuit: {
     supply: "Fuente 20 A",
     unit30: "Unidad 30 A",
@@ -241,12 +236,11 @@ const ES: Lab2Copy = {
     supportTop: "Estructura soporte",
     supportBottom: "Ajuste de altura",
     upperLoop: "Bucle suspendido",
-    lowerLoop: "Bucle del soporte",
+    lowerLoop: "Conductor del soporte",
     current: "I",
     forceF: "F",
     separation: "r",
     upperHeight: "h₁",
-    lowerHeight: "h₂",
     speed: "Velocidad",
     playStep: "▶ Escalón",
     playRamp: "▶ Barrido continuo",
@@ -330,7 +324,7 @@ const ES: Lab2Copy = {
 
   resultTitle: "8. El valor de μ₀",
   resultBody:
-    "Tres caminos independientes a la misma pendiente: las series por escalones, el barrido continuo y la meseta del escalón. Cada uno se convierte en μ₀ dos veces — con el modelo ideal de la guía y con los cuatro conductores reales.",
+    "Tres caminos independientes a la misma pendiente: las series por escalones, el barrido continuo y la meseta del escalón. Cada uno se convierte en μ₀ dos veces — con el modelo ideal de la guía y con los tres conductores reales.",
   resultTableCaption: "Tabla 7.1. μ₀ por cada camino, con y sin corrección.",
   colRoute: "Camino",
   colDelta: "Δ respecto del aceptado",
@@ -340,7 +334,7 @@ const ES: Lab2Copy = {
   resultIdealNote: (mu0, deltaPct) =>
     `Con la fórmula tal cual la escribe la guía, μ₀ = ${mu0} H/m: ${deltaPct} % por debajo del valor aceptado. La dispersión entre los tres caminos es de menos del 1 %, así que no es ruido: los tres se equivocan junto, y hacia el mismo lado. Un desvío sistemático de ese tamaño, con datos tan limpios, apunta al modelo y no a la medición.`,
   resultCorrectedNote: (mu0, deltaPct) =>
-    `Reemplazando 1/r por la suma sobre los cuatro conductores, el mismo dato da μ₀ = ${mu0} H/m, a ${deltaPct} % del valor aceptado. La corrección no se ajustó a nada — sale de dos cotas medidas con calibre — y sin embargo se come casi todo el desvío. Esa es la evidencia de que el problema era el modelo.`,
+    `Reemplazando 1/r por la suma sobre los tres conductores, el mismo dato da μ₀ = ${mu0} H/m, a ${deltaPct} % del valor aceptado. La corrección no se ajustó a nada — sale de una cota medida con calibre — y sin embargo se come casi todo el desvío. Esa es la evidencia de que el problema era el modelo.`,
   resultFinal: (mu0, errorPct, deltaPct) =>
     `Resultado reportado: μ₀ = ${mu0} H/m ± ${errorPct} % (error de la guía §2.2 evaluado en el punto más fuerte de la curva). El valor aceptado queda a ${deltaPct} % — dentro del intervalo de error.`,
   mMu0Final: "μ₀ medido (corregido)",
@@ -452,32 +446,27 @@ const EN: Lab2Copy = {
       quantity: "Height h₁ of the suspended loop",
       how: "Caliper, 60.1 mm outside to outside; minus one diameter to get centre to centre.",
     },
-    {
-      quantity: "Height h₂ of the holder loop",
-      how: "Caliper, 18.3 mm of clear gap; plus one diameter to get centre to centre.",
-    },
   ],
   geometryDiagramBody:
-    "And here is the discrepancy that governs the whole experiment. The guide models two lone infinite wires, but on the bench each conductor is the side of a closed loop, and each loop's return side carries the same current the other way. Four wires, not two — and of the four pairs they form, three push against the one the guide counts.",
+    "And here is the discrepancy that governs the whole experiment. The guide models two lone infinite wires, but on the bench the weighed conductor is not alone: it is the active side of a closed loop, and that loop's return side carries the same current the other way. The holder conductor, on the other hand, is a straight wire — current enters on one side and leaves on the other — and its own return is too far away to matter. Three wires, not two — and of the extra pair they form, one pushes against the one the guide counts.",
   geometryDiagramNote:
-    "The drawing is a cross-section, looking at the conductors end-on: ⊙ is current out of the page, ⊗ into it. The vertical scale is distorted on purpose — r is 3 mm while the loop heights are 20 and 58 mm, so a true-to-scale drawing would push the return conductors off the page and hide the very thing worth seeing. The arithmetic is direct: instead of 1/r the force goes as 1/r − 1/(r+h₂) − 1/(r+h₁) + 1/(r+h₁+h₂), and the percentage below says how much of the ideal force survives.",
+    "The drawing is a cross-section, looking at the conductors end-on: ⊙ is current out of the page, ⊗ into it. The vertical scale is distorted on purpose — r is 3 mm while the suspended loop's own height is 58 mm, so a true-to-scale drawing would push the return conductor off the page and hide the very thing worth seeing. The arithmetic is direct: instead of 1/r the force goes as 1/r − 1/(r+h₁), and the percentage below says how much of the ideal force survives.",
   diagram: {
     activeWire: "weighed conductor",
     returnWire: "loop return",
     upperHeight: "h₁",
-    lowerHeight: "h₂",
     attract: "attraction (parallel currents)",
     repel: "repulsion (antiparallel currents)",
     idealCaption: "What the guide models: two infinite wires",
-    realCaption: "What the bench has: two closed loops",
+    realCaption: "What the bench has: one closed loop and one straight conductor",
     survives: "Force that survives",
   },
 
   circuitTitle: "4. The bench, running",
   circuitBody:
-    "The setup of the guide's figure 2.1, with the current flowing. The detail that matters is that there is only one circuit: the 20 A supply feeds the 30 A unit, which enters CASSY channel B — in series, because B measures current — and from there passes through both loops, one after the other, before returning to the supply. That is why the same I appears twice in F = μ₀I²l/2πr: not two independent currents but one making a lap. It is also why the force goes as the square rather than linearly.",
+    "The setup of the guide's figure 2.1, with the current flowing. The detail that matters is that there is only one circuit: the 20 A supply feeds the 30 A unit, which enters CASSY channel B — in series, because B measures current — and from there passes through the suspended loop and the holder conductor, one after the other, before returning to the supply. That is why the same I appears twice in F = μ₀I²l/2πr: not two independent currents but one making a lap. It is also why the force goes as the square rather than linearly.",
   circuitNote:
-    "The four horizontal conductors are in the same order as the cross-section in section 3, and the pulses run the way the current really does: the two facing conductors run the same way — which is why they attract — and each loop's return runs the other way, which is what subtracts. Move the slider to watch F grow as the square of I, or press ▶ Escalón to have the bench follow the real capture: the current has already arrived while the force is still rising, overshoots, and only then settles. Drop the rate to 0.1× to catch it. The arrow, the sensor's load bar and the readout come from the recorded samples, not from the formula. The loops are drawn still on purpose: r is set with the height screw and does not move during the measurement.",
+    "The three horizontal conductors are in the same order as the cross-section in section 3, and the pulses run the way the current really does: the holder conductor and the suspended loop's active side run the same way — which is why they attract — and the suspended loop's own return runs the other way, which is what subtracts. The holder conductor enters on one side and leaves on the other, never doubling back near itself. Move the slider to watch F grow as the square of I, or press ▶ Escalón to have the bench follow the real capture: the current has already arrived while the force is still rising, overshoots, and only then settles. Drop the rate to 0.1× to catch it. The arrow, the sensor's load bar and the readout come from the recorded samples, not from the formula. The loop is drawn still on purpose: r is set with the height screw and does not move during the measurement.",
   circuit: {
     supply: "20 A supply",
     unit30: "30 A unit",
@@ -487,12 +476,11 @@ const EN: Lab2Copy = {
     supportTop: "Support structure",
     supportBottom: "Height adjustment",
     upperLoop: "Suspended loop",
-    lowerLoop: "Holder loop",
+    lowerLoop: "Holder conductor",
     current: "I",
     forceF: "F",
     separation: "r",
     upperHeight: "h₁",
-    lowerHeight: "h₂",
     speed: "Speed",
     playStep: "▶ Step",
     playRamp: "▶ Continuous sweep",
@@ -576,7 +564,7 @@ const EN: Lab2Copy = {
 
   resultTitle: "8. The value of μ₀",
   resultBody:
-    "Three independent routes to the same slope: the stepped runs, the continuous sweep and the step plateau. Each is turned into μ₀ twice — with the guide's ideal model, and with the four real conductors.",
+    "Three independent routes to the same slope: the stepped runs, the continuous sweep and the step plateau. Each is turned into μ₀ twice — with the guide's ideal model, and with the three real conductors.",
   resultTableCaption:
     "Table 7.1. μ₀ by route, with and without the correction.",
   colRoute: "Route",
@@ -587,7 +575,7 @@ const EN: Lab2Copy = {
   resultIdealNote: (mu0, deltaPct) =>
     `With the formula exactly as the guide writes it, μ₀ = ${mu0} H/m: ${deltaPct} % below the accepted value. The spread between the three routes is under 1 %, so this is not noise: all three are wrong together, and in the same direction. A systematic offset that size, on data this clean, points at the model rather than at the measurement.`,
   resultCorrectedNote: (mu0, deltaPct) =>
-    `Replacing 1/r with the sum over the four conductors, the same data gives μ₀ = ${mu0} H/m, ${deltaPct} % from the accepted value. Nothing was fitted — the correction comes from two caliper readings — and it still absorbs almost the whole offset. That is the evidence that the model was the problem.`,
+    `Replacing 1/r with the sum over the three conductors, the same data gives μ₀ = ${mu0} H/m, ${deltaPct} % from the accepted value. Nothing was fitted — the correction comes from one caliper reading — and it still absorbs almost the whole offset. That is the evidence that the model was the problem.`,
   resultFinal: (mu0, errorPct, deltaPct) =>
     `Reported result: μ₀ = ${mu0} H/m ± ${errorPct} % (the guide's §2.2 error evaluated at the strongest point of the curve). The accepted value sits ${deltaPct} % away — inside the error interval.`,
   mMu0Final: "Measured μ₀ (corrected)",

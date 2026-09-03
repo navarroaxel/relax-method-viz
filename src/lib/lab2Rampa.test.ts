@@ -63,6 +63,8 @@ describe("analyzeRamp", () => {
 
   it("lands in the same place as the other routes on μ₀", () => {
     expect(deltaFromAcceptedPct(r.mu0IdealHPerM)).toBeLessThan(-15);
-    expect(Math.abs(deltaFromAcceptedPct(r.mu0CorrectedHPerM))).toBeLessThan(5);
+    const delta = Math.abs(deltaFromAcceptedPct(r.mu0CorrectedHPerM));
+    expect(delta).toBeLessThan(15);
+    expect(delta).toBeGreaterThan(10);
   });
 });
