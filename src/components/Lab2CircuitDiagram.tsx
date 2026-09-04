@@ -12,7 +12,6 @@ import { rampCurrentA, rampForceMn } from "@/lib/lab2Rampa";
 
 export interface Lab2CircuitLabels {
   supply: string;
-  unit30: string;
   cassy: string;
   bridge: string;
   forceSensor: string;
@@ -50,7 +49,6 @@ const MAX_MANUAL_CURRENT_A = 20;
 // --- Bench geometry, in user units ------------------------------------------
 const LOOP_X = 300;
 const HALF_W = 74;
-const SENSOR_BOTTOM = 158;
 /**
  * The three horizontal conductors, top to bottom. Vertically these are not to
  * scale — r is 3 mm against the suspended loop's own height of 58 mm, so
@@ -60,19 +58,36 @@ const SENSOR_BOTTOM = 158;
 const Y_RET_UP = 176;
 const Y_ACTIVE = 236;
 const Y_LOWER = 282;
-/** x of the lead feeding the suspended loop, just outside its right leg. */
-const FEED_UP_X = LOOP_X + HALF_W + 10;
+/**
+ * x of the safe corridor the CASSY feed drops through on its way down —
+ * the narrow gap between the sensor's signal cable (which turns up into
+ * CASSY at x = 576) and the CASSY box itself (which starts at x = 596).
+ */
+const CASSY_FEED_X = 585;
+/**
+ * x either side of the post the feed and the holder link run at, so the
+ * three read as parallel lines: cable in, post, cable out. Both cables pass
+ * straight through the sensor's footprint — the sensor box is redrawn after
+ * the circuit wires (see below) so it occludes them, reading as "behind".
+ */
+const CABLE_IN_X = LOOP_X - 12;
+const CABLE_OUT_X = LOOP_X + 14;
+/**
+ * x of the sensor's own signal lead, between the post and the holder link
+ * — it enters from above too, behind the sensor, same as the other two.
+ */
+const BRIDGE_ENTRY_X = LOOP_X + 6;
 /** x of the lead feeding the holder conductor, on its right end. */
 const FEED_LOW_X = LOOP_X + HALF_W + 36;
+/** x of the lead linking the suspended loop to the holder conductor. */
+const LINK_X = 462;
 const BASE_Y = 366;
 /**
- * x of the height-adjustable holder's post — the middle of the lower
- * conductor's visible span, since the post supports the rod, not its feed
- * lead.
+ * x of the height-adjustable holder's post — aligned with the force sensor
+ * above it, so the two supports read as one vertical column through the
+ * bench.
  */
-const HOLDER_X = (FEED_LOW_X + (LOOP_X - HALF_W)) / 2;
-/** x of the lead running between the two loops, clear of the holder post. */
-const LINK_X = 462;
+const HOLDER_X = LOOP_X;
 /** x of the dimension stack, clear of every lead. */
 const DIM_X = 556;
 
@@ -304,21 +319,25 @@ export function Lab2CircuitDiagram({
   const sky = "stroke-sky-600 dark:stroke-sky-400";
   const grey = "stroke-zinc-400 dark:stroke-zinc-500";
 
-  // Suspended loop, traced the way the current runs: down the feed lead, left
-  // along the weighed conductor, up the far leg, back right along the return.
+  // Suspended loop, traced the way the current runs: in along the return
+  // wire from the post's left flank, down the far leg, right along the
+  // weighed conductor, up the near leg, and back out along the return wire
+  // to the post's right flank. Both leads attach at the return wire, right
+  // under the sensor — see CABLE_IN_X / CABLE_OUT_X.
   const upperLoopPath =
-    `M${FEED_UP_X} ${SENSOR_BOTTOM} L${FEED_UP_X} ${Y_ACTIVE} ` +
-    `L${LOOP_X - HALF_W} ${Y_ACTIVE} L${LOOP_X - HALF_W} ${Y_RET_UP} ` +
-    `L${LOOP_X + HALF_W} ${Y_RET_UP} L${LOOP_X + HALF_W} ${SENSOR_BOTTOM}`;
+    `M${CABLE_IN_X} ${Y_RET_UP} L${LOOP_X - HALF_W} ${Y_RET_UP} ` +
+    `L${LOOP_X - HALF_W} ${Y_ACTIVE} L${LOOP_X + HALF_W} ${Y_ACTIVE} ` +
+    `L${LOOP_X + HALF_W} ${Y_RET_UP} L${CABLE_OUT_X} ${Y_RET_UP}`;
 
-  // Holder conductor: a single straight rod, not a loop. Fed on the right, it
-  // runs the same way as the suspended loop's facing side above it — that is
-  // what makes the pair attract — then leaves on the left and is routed away,
-  // clear of the interaction zone, back to the supply. It never doubles back
-  // near itself, so there is no return side to draw here.
+  // Holder conductor: a single straight rod, not a loop. Traced from its
+  // supply return up to its feed, so the body of the rod (left to right)
+  // runs the same physical direction as the suspended loop's facing side —
+  // that is what makes the pair attract. Current pulses run this way with
+  // the reversed keyframe (see .pulse below); tracing both wires left-to-
+  // right is what keeps their visual directions in agreement.
   const lowerWirePath =
-    `M${FEED_LOW_X} ${Y_LOWER} L${LOOP_X - HALF_W} ${Y_LOWER} ` +
-    `L${LOOP_X - HALF_W} ${BASE_Y + 14} L128 ${BASE_Y + 14} L128 60`;
+    `M128 60 L148 60 L148 ${Y_LOWER} ` +
+    `L${LOOP_X - HALF_W} ${Y_LOWER} L${FEED_LOW_X} ${Y_LOWER}`;
 
   return (
     <div className="flex flex-col gap-2">
@@ -335,7 +354,7 @@ export function Lab2CircuitDiagram({
             animation-timing-function: linear;
             animation-iteration-count: infinite;
           }
-          @keyframes lab2-pulse { to { stroke-dashoffset: -100; } }
+          @keyframes lab2-pulse { to { stroke-dashoffset: 100; } }
           @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
           .lbl { font: 11px ui-sans-serif, system-ui, sans-serif; }
         `}</style>
@@ -375,12 +394,12 @@ export function Lab2CircuitDiagram({
         </defs>
 
         {/* ---- Instrument boxes ------------------------------------------ */}
+        {/* The force sensor's own box is drawn later, after the circuit
+            wires, so it occludes the two leads that pass behind it at E. */}
         <g className="fill-white stroke-zinc-400 dark:fill-zinc-900 dark:stroke-zinc-600">
           <rect x="16" y="26" width="112" height="48" rx="4" />
-          <rect x="152" y="26" width="88" height="48" rx="4" />
           <rect x="596" y="26" width="106" height="92" rx="4" />
-          <rect x="474" y="122" width="84" height="30" rx="4" />
-          <rect x={LOOP_X - 56} y="116" width="112" height="42" rx="4" />
+          <rect x="474" y="90" width="84" height="30" rx="4" />
         </g>
 
         <g className="lbl fill-zinc-700 dark:fill-zinc-200">
@@ -394,9 +413,6 @@ export function Lab2CircuitDiagram({
             className="fill-zinc-500 dark:fill-zinc-400"
           >
             {currentA.toFixed(2)} A
-          </text>
-          <text x="196" y="54" textAnchor="middle">
-            {labels.unit30}
           </text>
           <text x="649" y="46" textAnchor="middle">
             {labels.cassy}
@@ -425,11 +441,8 @@ export function Lab2CircuitDiagram({
           >
             I = {currentA.toFixed(2)} A
           </text>
-          <text x="516" y="141" textAnchor="middle">
+          <text x="516" y="109" textAnchor="middle">
             {labels.bridge}
-          </text>
-          <text x={LOOP_X} y="134" textAnchor="middle">
-            {labels.forceSensor}
           </text>
           <text
             x={LOOP_X}
@@ -441,40 +454,28 @@ export function Lab2CircuitDiagram({
           </text>
         </g>
 
-        {/* Load bar inside the sensor body: how much of the top of the range
-            the sensor is carrying right now. */}
-        <g>
-          <rect
-            x={LOOP_X - 44}
-            y="142"
-            width="88"
-            height="7"
-            rx="3.5"
-            className="fill-zinc-200 dark:fill-zinc-800"
-          />
-          <rect
-            x={LOOP_X - 44}
-            y="142"
-            width={88 * Math.min(load, 1)}
-            height="7"
-            rx="3.5"
-            className="fill-rose-500 dark:fill-rose-400"
-          />
-        </g>
-
         {/* Support structure holding the force sensor. */}
         <g className={grey} strokeWidth="4" fill="none">
           <path d={`M${LOOP_X} 44 L${LOOP_X} 116`} />
           <path d={`M${LOOP_X - 74} 44 L${LOOP_X + 74} 44`} />
         </g>
+        {/* Q marks the lead leaving the holder conductor toward the
+            suspended loop — current now runs this way, per the reversed
+            pulse direction. */}
+        <text
+          x={(CABLE_OUT_X + LINK_X) / 2}
+          y="140"
+          textAnchor="middle"
+          className="lbl fill-zinc-500 dark:fill-zinc-400"
+        >
+          Q
+        </text>
 
         {/* Height-adjustable holder carrying the lower conductor, planted
             under its middle rather than under either feed lead. */}
         <g className={grey} strokeWidth="4" fill="none">
           <path d={`M${HOLDER_X} ${Y_LOWER} L${HOLDER_X} ${BASE_Y}`} />
-          <path
-            d={`M${HOLDER_X - 48} ${BASE_Y} L${HOLDER_X + 48} ${BASE_Y}`}
-          />
+          <path d={`M${HOLDER_X - 48} ${BASE_Y} L${HOLDER_X + 48} ${BASE_Y}`} />
         </g>
         {/* Knob of the height adjustment — the control that sets r. */}
         <circle
@@ -493,28 +494,33 @@ export function Lab2CircuitDiagram({
         </text>
 
         {/* Sensor signal cable: force sensor → Bridge unit → CASSY input A.
-            Thin and grey because it carries no experiment current. */}
+            Thin and grey because it carries no experiment current. Enters
+            the sensor from above too, between the current feed and the
+            post, same as the other two leads. */}
         <g className={grey} fill="none" strokeWidth="1.6">
-          <path d={`M${LOOP_X + 56} 137 L474 137`} />
-          <path d="M558 137 L576 137 L576 96 L596 96" />
+          <path
+            d={`M${BRIDGE_ENTRY_X} 130 L${BRIDGE_ENTRY_X} 70 L516 70 L516 90`}
+          />
+          <path d="M558 105 L576 105 L596 105" />
         </g>
 
         {/* ---- The series circuit ---------------------------------------- */}
-        {/* Supply → 30 A unit → CASSY input B. Input B measures current, so it
-            sits in the circuit with two leads rather than probing it. */}
-        <Wire className={sky} period={period} d="M128 44 L152 44" />
+        {/* Supply → CASSY input B, which measures current, so it sits in the
+            circuit with two leads rather than probing it. */}
         <Wire
           className={sky}
           period={period}
           delayFraction={0.1}
-          d="M240 40 L262 40 L262 10 L578 10 L578 40 L596 40"
+          d="M128 44 L148 44 L148 10 L578 10 L578 40 L596 40"
         />
-        {/* CASSY B out → the suspended loop's feed lead. */}
+        {/* CASSY B out → the suspended loop's feed lead. Drops through the
+            gap to the left of the CASSY box, then straight down past the
+            post's left flank, in behind the sensor at E, to the loop. */}
         <Wire
           className={sky}
           period={period}
           delayFraction={0.2}
-          d={`M596 74 L570 74 L570 100 L${FEED_UP_X} 100 L${FEED_UP_X} ${SENSOR_BOTTOM}`}
+          d={`M596 50 L${CABLE_IN_X} 50 L${CABLE_IN_X} ${Y_RET_UP}`}
         />
 
         {/* Halo in the page colour so the loops read in front of the holder. */}
@@ -532,12 +538,14 @@ export function Lab2CircuitDiagram({
         />
 
         {/* Suspended loop → holder conductor: the two are in series, so the
-            same current runs through both. */}
+            same current runs through both. It rises past the post's right
+            flank, in behind the sensor, out above at E, then back down past
+            it again before turning off for the holder. */}
         <Wire
           className={sky}
           period={period}
           delayFraction={0.55}
-          d={`M${LOOP_X + HALF_W} ${SENSOR_BOTTOM} L${LOOP_X + HALF_W} 146 L${LINK_X} 146 L${LINK_X} ${Y_LOWER} L${FEED_LOW_X} ${Y_LOWER}`}
+          d={`M${CABLE_OUT_X} ${Y_RET_UP} L${CABLE_OUT_X} 100 L${LINK_X} 100 L${LINK_X} ${Y_LOWER} L${FEED_LOW_X} ${Y_LOWER}`}
         />
 
         <path
@@ -551,6 +559,42 @@ export function Lab2CircuitDiagram({
           period={period}
           delayFraction={0.75}
           d={lowerWirePath}
+        />
+
+        {/* Force sensor: drawn last of the fixed geometry, on top of the
+            circuit wires, so the two leads that pass behind it at E read as
+            going in behind the sensor rather than crossing over it. */}
+        <rect
+          x={LOOP_X - 56}
+          y="116"
+          width="112"
+          height="42"
+          rx="4"
+          className="fill-white stroke-zinc-400 dark:fill-zinc-900 dark:stroke-zinc-600"
+        />
+        <text
+          x={LOOP_X}
+          y="134"
+          textAnchor="middle"
+          className="lbl fill-zinc-700 dark:fill-zinc-200"
+        >
+          {labels.forceSensor}
+        </text>
+        <rect
+          x={LOOP_X - 44}
+          y="142"
+          width="88"
+          height="7"
+          rx="3.5"
+          className="fill-zinc-200 dark:fill-zinc-800"
+        />
+        <rect
+          x={LOOP_X - 44}
+          y="142"
+          width={88 * Math.min(load, 1)}
+          height="7"
+          rx="3.5"
+          className="fill-rose-500 dark:fill-rose-400"
         />
 
         {/* ---- Dimensions ------------------------------------------------ */}

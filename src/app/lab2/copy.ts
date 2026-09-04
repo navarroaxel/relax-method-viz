@@ -165,7 +165,7 @@ const ES: Lab2Copy = {
   setupTitle: "2. Montaje y procedimiento",
   setupSteps: [
     "El sensor de fuerzas sostiene el bucle conductor superior; el bucle inferior va sobre el soporte de altura ajustable. Ambos se conectan en serie, así que por los dos circula la misma corriente I.",
-    "El sensor de fuerza va a la entrada A del Sensor-CASSY por la unidad Puente; la corriente pasa por la unidad de 30 A hacia la entrada B.",
+    "El sensor de fuerza va a la entrada A del Sensor-CASSY por la unidad Puente; la corriente va directo a la entrada B.",
     "Se acercan los dos bucles hasta que apenas se tocan — ahí la distancia entre centros es un diámetro, r ≈ 2 mm — y se corrige el paralelismo con el tornillo de ajuste.",
     "Se pone en cero el sensor (→0← en Ajustes Fuerza FA1) y se corrige el offset de corriente en Ajustes Corriente IB1.",
     "Se sube I de 0 a 20 A en pasos de ~2 A registrando un punto con F9 en cada paso, y se vuelve a 0 A al terminar.",
@@ -224,12 +224,11 @@ const ES: Lab2Copy = {
 
   circuitTitle: "4. El banco, en movimiento",
   circuitBody:
-    "Esquema del montaje de la figura 2.1 de la guía, con la corriente circulando. El detalle que importa es que hay un solo circuito: la fuente de 20 A alimenta la unidad de 30 A, que entra por el canal B del CASSY —en serie, porque B mide corriente— y de ahí pasa por el bucle suspendido y el conductor del soporte, uno atrás del otro, antes de volver a la fuente. Por eso la misma I aparece dos veces en F = μ₀I²l/2πr: no son dos corrientes independientes sino la misma dando una vuelta. Ese es también el motivo de que la fuerza vaya con el cuadrado y no lineal.",
+    "Esquema del montaje de la figura 2.1 de la guía, con la corriente circulando. El detalle que importa es que hay un solo circuito: la fuente de 20 A entra por el canal B del CASSY —en serie, porque B mide corriente— y de ahí pasa por el bucle suspendido y el conductor del soporte, uno atrás del otro, antes de volver a la fuente. Por eso la misma I aparece dos veces en F = μ₀I²l/2πr: no son dos corrientes independientes sino la misma dando una vuelta. Ese es también el motivo de que la fuerza vaya con el cuadrado y no lineal.",
   circuitNote:
     "Los tres conductores horizontales están en el mismo orden que en el corte de la sección 3, y los pulsos van en el sentido real de la corriente: el conductor del soporte y el lado activo del bucle suspendido van para el mismo lado —por eso se atraen— y la vuelta del bucle suspendido va para el otro, que es la que resta. El conductor del soporte entra por un lado y sale por el otro, sin volver cerca de sí mismo. Mueva el slider para ver F crecer con el cuadrado de I, o apriete ▶ Escalón para que el banco siga la captura real: ahí se ve que la corriente ya llegó y la fuerza todavía está subiendo, se pasa de largo y recién después se acomoda. Baje la velocidad a 0,1× para alcanzar a verlo. La flecha, la barra de carga del sensor y el readout salen de las muestras registradas, no de la fórmula. El bucle se dibuja quieto a propósito: r se fija con el tornillo de altura y no se mueve durante la medición.",
   circuit: {
     supply: "Fuente 20 A",
-    unit30: "Unidad 30 A",
     cassy: "Sensor-CASSY",
     bridge: "Unidad Puente",
     forceSensor: "Sensor de fuerza",
@@ -411,7 +410,7 @@ const EN: Lab2Copy = {
   setupTitle: "2. Setup and procedure",
   setupSteps: [
     "The force sensor holds the upper conductor loop; the lower loop sits on the height-adjustable holder. They are wired in series, so the same current I runs through both.",
-    "The force sensor goes to Sensor-CASSY input A through the Bridge unit; the current goes through the 30 A unit into input B.",
+    "The force sensor goes to Sensor-CASSY input A through the Bridge unit; the current goes straight into input B.",
     "Bring the loops together until they just touch — centre-to-centre distance is one diameter there, r ≈ 2 mm — and correct the parallelism with the adjusting screw.",
     "Zero the sensor (→0← under Force FA1 settings) and correct the current offset under Current IB1 settings.",
     "Raise I from 0 to 20 A in ~2 A steps, logging one point with F9 at each step, and return to 0 A at the end.",
@@ -464,12 +463,11 @@ const EN: Lab2Copy = {
 
   circuitTitle: "4. The bench, running",
   circuitBody:
-    "The setup of the guide's figure 2.1, with the current flowing. The detail that matters is that there is only one circuit: the 20 A supply feeds the 30 A unit, which enters CASSY channel B — in series, because B measures current — and from there passes through the suspended loop and the holder conductor, one after the other, before returning to the supply. That is why the same I appears twice in F = μ₀I²l/2πr: not two independent currents but one making a lap. It is also why the force goes as the square rather than linearly.",
+    "The setup of the guide's figure 2.1, with the current flowing. The detail that matters is that there is only one circuit: the 20 A supply enters CASSY channel B — in series, because B measures current — and from there passes through the suspended loop and the holder conductor, one after the other, before returning to the supply. That is why the same I appears twice in F = μ₀I²l/2πr: not two independent currents but one making a lap. It is also why the force goes as the square rather than linearly.",
   circuitNote:
     "The three horizontal conductors are in the same order as the cross-section in section 3, and the pulses run the way the current really does: the holder conductor and the suspended loop's active side run the same way — which is why they attract — and the suspended loop's own return runs the other way, which is what subtracts. The holder conductor enters on one side and leaves on the other, never doubling back near itself. Move the slider to watch F grow as the square of I, or press ▶ Escalón to have the bench follow the real capture: the current has already arrived while the force is still rising, overshoots, and only then settles. Drop the rate to 0.1× to catch it. The arrow, the sensor's load bar and the readout come from the recorded samples, not from the formula. The loop is drawn still on purpose: r is set with the height screw and does not move during the measurement.",
   circuit: {
     supply: "20 A supply",
-    unit30: "30 A unit",
     cassy: "Sensor-CASSY",
     bridge: "Bridge unit",
     forceSensor: "Force sensor",
