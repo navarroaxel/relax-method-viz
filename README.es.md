@@ -70,6 +70,32 @@ real mientras el solver converge.
 - **Export estático**: produce un `out/` totalmente estático, sin
   runtime de servidor — deploya en cualquier hosting estático.
 
+## Informes de laboratorio
+
+Dos rutas independientes del simulador de arriba presentan ensayos
+reales de la cátedra (Teoría de los Campos, UTN.BA) con gráficos y
+diagramas interactivos armados a partir de los datos registrados en
+CASSY:
+
+- **`/lab1` — Fuerzas entre corrientes y campos magnéticos**: un bucle
+  con corriente conocida se sumerge en el campo de un solenoide y se
+  despeja `B = F/(I·l)`. Cuatro caminos independientes verifican el
+  mismo campo: una captura de escalón de corriente (respuesta mecánica
+  del sensor), una medición continua a mano (histéresis entre subida y
+  bajada), cuatro sesiones punto por punto (detección robusta de
+  outliers) y un recorrido de 14 puntos con sonda Hall que confirma
+  que el campo es axial.
+- **`/lab2` — Medición de la permeabilidad del vacío**: la fuerza
+  entre dos conductores paralelos con corriente da
+  `μ₀ = 2π·F·r/(I²·l)` a partir de la pendiente ajustada de `F` contra
+  `I²`. Incluye tres series F(I) por escalones, un barrido continuo,
+  una captura de escalón, y un reparto del error relativo por término
+  a lo largo del rango de corriente — más una corrección por los
+  conductores de vuelta del bucle que el modelo ideal de dos alambres
+  ignora.
+
+Las dos vuelven al simulador (y entre sí) desde su header.
+
 ## Arranque rápido
 
 ```bash

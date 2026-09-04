@@ -64,6 +64,30 @@ time as the solver converges.
 - **Static export**: produces a fully static `out/` directory with no
   server runtime — deploys to any static host.
 
+## Lab write-ups
+
+Two standalone routes, independent of the simulator above, present real
+bench experiments from the course (Cátedra Teoría de los Campos, UTN.BA)
+with interactive charts and diagrams built from the actual CASSY-logged
+data:
+
+- **`/lab1` — Forces between currents and magnetic fields**: a
+  current-carrying loop is lowered into a solenoid's field and `B` is
+  recovered from `B = F/(I·l)`. Four independent routes cross-check the
+  same field: a current-step capture (sensor step response), a
+  continuous hand-swept ramp (rising/falling hysteresis), four
+  point-by-point sessions (robust outlier detection), and a 14-point
+  Hall-probe traverse confirming the field is axial.
+- **`/lab2` — Measuring the permeability of free space**: the force
+  between two parallel current-carrying conductors gives
+  `μ₀ = 2π·F·r/(I²·l)` from the fitted slope of `F` vs `I²`. Includes
+  three stepped F(I) runs, a continuous sweep, a step-response capture,
+  and a per-term relative-error budget across the current range —
+  plus a correction for the extra loop-return conductors the idealized
+  two-wire model ignores.
+
+Both link back to the simulator (and to each other) from their header.
+
 ## Quick start
 
 ```bash
