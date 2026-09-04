@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { formatNum, niceTicks } from "@/lib/chartUtils";
-import { ESCALON_DT_S } from "@/lib/lab1Escalon";
 
 export interface ChartSeries {
   /** Samples, one per `dtS` (defaults to the escalón interval). */
@@ -30,7 +29,7 @@ export interface ChartBand {
   label: string;
 }
 
-interface Lab1ChartProps {
+interface LabTimeChartProps {
   series: ChartSeries[];
   leftLabel: string;
   rightLabel?: string;
@@ -143,7 +142,7 @@ function axisRange(
   return [lo, hi];
 }
 
-export function Lab1Chart({
+export function LabTimeChart({
   series,
   leftLabel,
   rightLabel,
@@ -154,10 +153,10 @@ export function Lab1Chart({
   showMarkers,
   timeLabel,
   hoverHint,
-  dtS = ESCALON_DT_S,
+  dtS = 0.001,
   formatX,
   onHoverIndex,
-}: Lab1ChartProps) {
+}: LabTimeChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDark = useIsDarkMode();
   const palette = isDark ? DARK_PALETTE : LIGHT_PALETTE;
@@ -188,7 +187,9 @@ export function Lab1Chart({
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       e.preventDefault();
       setHoverIndex((prev) =>
-        prev === null ? 0 : clampIndex(prev + (e.key === "ArrowRight" ? 1 : -1)),
+        prev === null
+          ? 0
+          : clampIndex(prev + (e.key === "ArrowRight" ? 1 : -1)),
       );
     },
     [clampIndex],
@@ -378,7 +379,10 @@ export function Lab1Chart({
           ? formatX(hoverIndex * dtS)
           : `t = ${(hoverIndex * dtS).toFixed(3)} s`) +
         series
-          .map((s) => `  ·  ${s.label} = ${(s.values[hoverIndex] ?? 0).toFixed(2)}`)
+          .map(
+            (s) =>
+              `  ·  ${s.label} = ${(s.values[hoverIndex] ?? 0).toFixed(2)}`,
+          )
           .join("");
 
   return (
@@ -386,7 +390,11 @@ export function Lab1Chart({
       <div className="relative">
         <canvas
           ref={canvasRef}
-          style={{ width: "100%", height: "auto", aspectRatio: `${WIDTH} / ${HEIGHT}` }}
+          style={{
+            width: "100%",
+            height: "auto",
+            aspectRatio: `${WIDTH} / ${HEIGHT}`,
+          }}
           className="rounded-md border border-zinc-200 dark:border-zinc-700"
           onPointerMove={handleMove}
           onPointerLeave={() => setHoverIndex(null)}
@@ -409,7 +417,9 @@ export function Lab1Chart({
           onKeyDown={handleProxyKeyDown}
         />
       </div>
-      <p className="font-mono text-xs text-zinc-600 dark:text-zinc-300">{readout}</p>
+      <p className="font-mono text-xs text-zinc-600 dark:text-zinc-300">
+        {readout}
+      </p>
     </div>
   );
 }

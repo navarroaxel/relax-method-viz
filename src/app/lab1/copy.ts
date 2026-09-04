@@ -10,6 +10,7 @@ import type { Language } from "@/contexts/LanguageContext";
  */
 export interface Lab1Copy {
   backToSim: string;
+  toLab2: string;
   title: string;
   subtitle: string;
   source: string;
@@ -121,7 +122,11 @@ export interface Lab1Copy {
   fieldAverage: (avgMt: string, errorMt: string) => string;
   mFieldAverage: string;
   theoryTitle: string;
-  fieldTheory: (theoryMt: string, theoryErrorMt: string, deltaPct: string) => string;
+  fieldTheory: (
+    theoryMt: string,
+    theoryErrorMt: string,
+    deltaPct: string,
+  ) => string;
   fieldCalculatedVsDirect: (forcePct: string, theoryPct: string) => string;
   mTheoryField: string;
   mTheoryTurns: string;
@@ -137,6 +142,7 @@ export interface Lab1Copy {
 
 const ES: Lab1Copy = {
   backToSim: "← Volver al simulador",
+  toLab2: "Laboratorio 2 — Medición de la permeabilidad del vacío →",
   title: "Laboratorio 1 — Fuerzas entre corrientes y campos magnéticos",
   subtitle:
     "Cómo leer el ensayo del solenoide a través de sus cuatro mediciones —directa con sonda, indirecta por puntos, continua y de escalón—: qué mide cada una, por qué hace falta el CASSY para captar fuerzas tan chicas, y qué campo produce ese flujo de corriente.",
@@ -365,6 +371,7 @@ const ES: Lab1Copy = {
 
 const EN: Lab1Copy = {
   backToSim: "← Back to the simulator",
+  toLab2: "Lab 2 — Measuring the permeability of free space →",
   title: "Lab 1 — Forces between currents and magnetic fields",
   subtitle:
     "How to read the solenoid experiment through its four measurements — direct probe, point-by-point indirect, continuous, and step — what each one measures, why CASSY is needed to pick up such small forces, and what field that current flow produces.",

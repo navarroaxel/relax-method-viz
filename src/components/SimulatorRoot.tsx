@@ -67,12 +67,20 @@ export function SimulatorRoot() {
         <p className="text-sm text-zinc-600 dark:text-zinc-200">
           {t("page.description")}
         </p>
-        <Link
-          href="/lab1"
-          className="text-xs text-blue-700 hover:underline dark:text-blue-400"
-        >
-          {t("page.lab1_link")}
-        </Link>
+        <div className="flex flex-col gap-1">
+          <Link
+            href="/lab1"
+            className="text-xs text-blue-700 hover:underline dark:text-blue-400"
+          >
+            {t("page.lab1_link")}
+          </Link>
+          <Link
+            href="/lab2"
+            className="text-xs text-blue-700 hover:underline dark:text-blue-400"
+          >
+            {t("page.lab2_link")}
+          </Link>
+        </div>
       </header>
       {mode === "2d" ? <Simulator /> : <Simulator3D />}
       <MethodExplanation />

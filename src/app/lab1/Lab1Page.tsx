@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import {
-  Lab1Chart,
+  LabTimeChart,
   type ChartMarker,
   type ChartSeries,
-} from "@/components/Lab1Chart";
+} from "@/components/LabTimeChart";
 import { Lab1CompassDiagram } from "@/components/Lab1CompassDiagram";
 import { Lab1Diagram } from "@/components/Lab1Diagram";
 import { Lab1DirectDiagram } from "@/components/Lab1DirectDiagram";
@@ -15,7 +15,7 @@ import {
   Lab1IndirectChart,
   type IndirectChartSession,
 } from "@/components/Lab1IndirectChart";
-import { Lab1XYChart, type XYFitLine } from "@/components/Lab1XYChart";
+import { LabXYChart, type XYFitLine } from "@/components/LabXYChart";
 import { GitHubLink } from "@/components/GitHubLink";
 import { ProjectCredits } from "@/components/ProjectCredits";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -84,9 +84,7 @@ export function Lab1Page() {
   const { language, toggle } = useLanguage();
   const c = LAB1_COPY[language];
   const [showMarkers, setShowMarkers] = useState(true);
-  const [directHoverIndex, setDirectHoverIndex] = useState<number | null>(
-    null,
-  );
+  const [directHoverIndex, setDirectHoverIndex] = useState<number | null>(null);
 
   const analysis = useMemo(
     () => analyzeStep(escalonForceMn, escalonCurrentA),
@@ -125,7 +123,12 @@ export function Lab1Page() {
 
   const directSeries = useMemo<ChartSeries[]>(
     () => [
-      { values: directFieldMt, axis: "left", label: c.chartField, color: "field" },
+      {
+        values: directFieldMt,
+        axis: "left",
+        label: c.chartField,
+        color: "field",
+      },
     ],
     [c.chartField],
   );
@@ -163,11 +166,7 @@ export function Lab1Page() {
       perAmp,
       (v) => v * ramp.overall.slopeMnPerA,
     );
-    const measured = branchGap(
-      rampForceMn,
-      rampCurrentA,
-      ramp.peakIndex,
-    );
+    const measured = branchGap(rampForceMn, rampCurrentA, ramp.peakIndex);
     const fromLag = branchGap(predicted, rampCurrentA, ramp.peakIndex);
     return {
       measuredGapMn: measured.gapMn,
@@ -305,12 +304,20 @@ export function Lab1Page() {
         </div>
         <p className={BODY}>{c.subtitle}</p>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">{c.source}</p>
-        <Link
-          href="/"
-          className="text-xs text-blue-700 hover:underline dark:text-blue-400"
-        >
-          {c.backToSim}
-        </Link>
+        <div className="flex flex-col gap-1">
+          <Link
+            href="/lab2"
+            className="text-xs text-blue-700 hover:underline dark:text-blue-400"
+          >
+            {c.toLab2}
+          </Link>
+          <Link
+            href="/"
+            className="text-xs text-blue-700 hover:underline dark:text-blue-400"
+          >
+            {c.backToSim}
+          </Link>
+        </div>
       </header>
 
       <section className={SECTION}>
@@ -341,7 +348,7 @@ export function Lab1Page() {
           coilCurrentA={COIL_CURRENT_A}
           highlightIndex={directHoverIndex}
         />
-        <Lab1Chart
+        <LabTimeChart
           series={directSeries}
           leftLabel={c.chartField}
           markers={directMarkers}
@@ -446,7 +453,7 @@ export function Lab1Page() {
           />
           {c.markersToggle}
         </label>
-        <Lab1Chart
+        <LabTimeChart
           series={stepSeries}
           leftLabel={c.chartForce}
           rightLabel={c.chartCurrent}
@@ -510,7 +517,7 @@ export function Lab1Page() {
         <h2 className={H2}>{c.rampTitle}</h2>
         <p className={BODY}>{c.rampBody}</p>
         <p className={BODY}>{c.rampTimeBody}</p>
-        <Lab1Chart
+        <LabTimeChart
           series={rampSeries}
           leftLabel={c.chartForce}
           rightLabel={c.chartCurrent}
@@ -520,7 +527,7 @@ export function Lab1Page() {
           dtS={RAMP_DT_S}
         />
         <p className={BODY}>{c.rampHysteresis}</p>
-        <Lab1XYChart
+        <LabXYChart
           xs={rampCurrentA}
           ys={rampForceMn}
           splitIndex={ramp.peakIndex}
@@ -581,7 +588,7 @@ export function Lab1Page() {
       <section className={SECTION}>
         <h2 className={H2}>{c.fieldTitle}</h2>
         <p className={BODY}>{c.fieldBody}</p>
-        <Lab1Chart
+        <LabTimeChart
           series={fieldSeries}
           leftLabel={`${c.chartField} — l = ${LOOP_LENGTH_M * 100} cm`}
           markers={markers}
