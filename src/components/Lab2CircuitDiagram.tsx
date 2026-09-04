@@ -59,12 +59,6 @@ const Y_RET_UP = 176;
 const Y_ACTIVE = 236;
 const Y_LOWER = 282;
 /**
- * x of the safe corridor the CASSY feed drops through on its way down —
- * the narrow gap between the sensor's signal cable (which turns up into
- * CASSY at x = 576) and the CASSY box itself (which starts at x = 596).
- */
-const CASSY_FEED_X = 585;
-/**
  * x either side of the post the feed and the holder link run at, so the
  * three read as parallel lines: cable in, post, cable out. Both cables pass
  * straight through the sensor's footprint — the sensor box is redrawn after
