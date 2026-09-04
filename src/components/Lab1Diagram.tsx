@@ -47,7 +47,7 @@ interface Lab1DiagramProps {
 /** Coil current is fixed at 5 A for the whole experiment (guía §3.2 c). */
 const COIL_CURRENT_A = 5;
 /** Loop current range of the main sweep, in A. */
-const MAX_MANUAL_CURRENT_A = 12;
+const MAX_MANUAL_CURRENT_A = 20;
 
 const TURNS = 17;
 const COIL_X0 = 206;
@@ -60,7 +60,7 @@ const LOOP_TURN = 8;
 
 const LOOP_X = COIL_X0 + (LOOP_TURN + 0.5) * COIL_DX;
 const LOOP_HALF_W = 16;
-const LOOP_BOTTOM = COIL_CY + 28;
+const LOOP_BOTTOM = COIL_CY - 20;
 /** Bottom edge of the force-sensor body: where the loop holder hangs from. */
 const SENSOR_BOTTOM = 134;
 /** Height at which the supply leads join the loop holder. */
@@ -100,7 +100,7 @@ function rateLabel(rate: number): string {
   return `${rate}×`;
 }
 
-/** Max upward travel of the loop when the sensor is fully loaded, in px. */
+/** Max downward travel of the loop when the sensor is fully loaded, in px. */
 const MAX_DEFLECTION = 13;
 
 function useReducedMotion(): boolean {
@@ -244,7 +244,7 @@ export function Lab1Diagram({
 
   const turns = Array.from({ length: TURNS }, (_, k) => COIL_X0 + k * COIL_DX);
   const coilX1 = COIL_X0 + (TURNS - 1) * COIL_DX;
-  const loopBottom = LOOP_BOTTOM - deflection;
+  const loopBottom = LOOP_BOTTOM + deflection;
 
   const amber = "stroke-amber-600 dark:stroke-amber-400";
   const sky = "stroke-sky-600 dark:stroke-sky-400";
@@ -511,16 +511,16 @@ export function Lab1Diagram({
         {/* ---- Force on the loop ----------------------------------------- */}
         <line
           x1={LOOP_X}
-          y1={loopBottom - 4}
+          y1={loopBottom + 4}
           x2={LOOP_X}
-          y2={loopBottom - 4 - arrowLen}
+          y2={loopBottom + 4 + arrowLen}
           className="stroke-rose-600 dark:stroke-rose-400"
           strokeWidth="3"
           markerEnd="url(#lab1-arrow-f)"
         />
         <text
           x={LOOP_X - 24}
-          y={loopBottom - 6 - arrowLen}
+          y={loopBottom + 6 + arrowLen}
           textAnchor="end"
           className="lbl fill-rose-700 dark:fill-rose-400"
         >
