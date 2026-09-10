@@ -21,6 +21,9 @@ export const FORCE_ERROR_REL = 0.01;
 /** Absolute tolerance of the ruler used to measure the loop, per §3.1. */
 export const LENGTH_ERROR_M = 0.0005;
 
+/** Below this, a current or a field is treated as zero rather than divided by. */
+const EPSILON = 1e-9;
+
 export interface PointFieldError {
   currentA: number;
   forceMn: number;
@@ -53,6 +56,26 @@ export function propagatePointError(
   forceErrorRel = FORCE_ERROR_REL,
   lengthErrorM = LENGTH_ERROR_M,
 ): PointFieldError {
+  if (
+    !Number.isFinite(forceMn) ||
+    !Number.isFinite(currentA) ||
+    !Number.isFinite(lengthM)
+  ) {
+    throw new RangeError(
+      `propagatePointError: forceMn, currentA and lengthM must be finite (got forceMn=${forceMn}, currentA=${currentA}, lengthM=${lengthM})`,
+    );
+  }
+  if (Math.abs(currentA) < EPSILON) {
+    throw new RangeError(
+      `propagatePointError: currentA must be non-zero (got ${currentA}) — B = F/(I·l) is undefined at I ≈ 0`,
+    );
+  }
+  if (lengthM <= EPSILON) {
+    throw new RangeError(
+      `propagatePointError: lengthM must be a positive length (got ${lengthM})`,
+    );
+  }
+
   const fieldMt = forceMn / (currentA * lengthM);
   const currentErrorA = currentErrorRel * Math.abs(currentA);
   const forceErrorMn = forceErrorRel * Math.abs(forceMn);
@@ -72,7 +95,9 @@ export function propagatePointError(
     errorMt,
     upperMt,
     lowerMt,
-    errorPct: (errorMt / Math.abs(fieldMt)) * 100,
+    // Undefined (not just large) when the field itself is ~0 — a relative
+    // error has no meaning there, so report 0 rather than ±Infinity/NaN.
+    errorPct: Math.abs(fieldMt) < EPSILON ? 0 : (errorMt / Math.abs(fieldMt)) * 100,
     containsReference:
       reference === undefined
         ? false

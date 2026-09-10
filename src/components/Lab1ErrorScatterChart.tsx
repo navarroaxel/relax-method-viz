@@ -18,6 +18,8 @@ interface Lab1ErrorScatterChartProps {
   pointLabel: string;
   meanLabel: string;
   hoverHint: string;
+  /** Shown centered in the plot area when `points` is empty. */
+  emptyLabel: string;
   /** Formats the hover readout for one point. */
   formatSample: (point: ErrorScatterPoint, index: number) => string;
 }
@@ -74,6 +76,7 @@ function useIsDarkMode(): boolean {
 }
 
 function extentX(points: ErrorScatterPoint[]): [number, number] {
+  if (points.length === 0) return [0, 1];
   let lo = Infinity;
   let hi = -Infinity;
   for (const p of points) {
@@ -113,6 +116,7 @@ export function Lab1ErrorScatterChart({
   pointLabel,
   meanLabel,
   hoverHint,
+  emptyLabel,
   formatSample,
 }: Lab1ErrorScatterChartProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -186,6 +190,20 @@ export function Lab1ErrorScatterChart({
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+    if (points.length === 0) {
+      ctx.fillStyle = palette.bg;
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      ctx.strokeStyle = palette.border;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0.5, 0.5, WIDTH - 1, HEIGHT - 1);
+      ctx.font = "13px ui-sans-serif, system-ui, sans-serif";
+      ctx.fillStyle = palette.label;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(emptyLabel, WIDTH / 2, HEIGHT / 2);
+      return;
+    }
 
     const [xLo, xHi] = extentX(points);
     const [yLo, yHi] = extentY(points, meanFieldMt);
@@ -306,7 +324,19 @@ export function Lab1ErrorScatterChart({
         ctx.stroke();
       }
     }
-  }, [hoverIndex, meanFieldMt, meanLabel, palette, plotH, plotW, pointLabel, points, xLabel, yLabel]);
+  }, [
+    emptyLabel,
+    hoverIndex,
+    meanFieldMt,
+    meanLabel,
+    palette,
+    plotH,
+    plotW,
+    pointLabel,
+    points,
+    xLabel,
+    yLabel,
+  ]);
 
   const readout =
     hoverIndex === null

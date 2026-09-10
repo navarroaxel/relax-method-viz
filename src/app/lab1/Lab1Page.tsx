@@ -570,6 +570,7 @@ export function Lab1Page() {
           pointLabel={c.errorChartPoint}
           meanLabel={c.errorChartMean}
           hoverHint={c.hoverHint}
+          emptyLabel={c.errorChartEmpty}
           formatSample={(p, i) => {
             const r = filteredErrorTable.rows[i];
             return r
@@ -819,6 +820,7 @@ export function Lab1Page() {
           pointLabel={c.errorChartPoint}
           meanLabel={c.errorChartMean}
           hoverHint={c.hoverHint}
+          emptyLabel={c.errorChartEmpty}
           formatSample={(p, i) => {
             const r = filteredRampErrorTable.rows[i];
             return r

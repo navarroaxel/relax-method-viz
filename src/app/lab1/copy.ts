@@ -104,6 +104,7 @@ export interface Lab1Copy {
   errorTableNote: string;
   errorChartPoint: string;
   errorChartMean: string;
+  errorChartEmpty: string;
   errorSessionFilterLabel: string;
   errorSessionAll: string;
   colSession: string;
@@ -317,6 +318,7 @@ const ES: Lab1Copy = {
     "La columna «¿incluye B₀?» marca si el valor teórico del solenoide ideal cae dentro de la banda [B−ΔB, B+ΔB] de ese punto — así se ve directamente si el campo «real» está dentro de las tolerancias de la medición o si la discrepancia excede el error instrumental.",
   errorChartPoint: "B [mT]",
   errorChartMean: "Promedio",
+  errorChartEmpty: "Sin puntos para esta selección.",
   errorSessionFilterLabel: "Sesión:",
   errorSessionAll: "Todas",
   colSession: "Sesión",
@@ -577,6 +579,7 @@ const EN: Lab1Copy = {
     "The \"contains B₀?\" column flags whether the ideal-solenoid theoretical value falls inside that point's own [B−ΔB, B+ΔB] band — this is the direct way to see whether the \"real\" field sits within the measurement's tolerances, or whether the discrepancy exceeds the instrumental error.",
   errorChartPoint: "B [mT]",
   errorChartMean: "Average",
+  errorChartEmpty: "No points for this selection.",
   errorSessionFilterLabel: "Session:",
   errorSessionAll: "All",
   colSession: "Session",

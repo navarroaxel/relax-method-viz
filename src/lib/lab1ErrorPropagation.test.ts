@@ -32,6 +32,34 @@ describe("propagatePointError", () => {
     const outOfBand = propagatePointError(0.6, 4.38, EXAMPLE_L_M, 5);
     expect(outOfBand.containsReference).toBe(false);
   });
+
+  it("reports 0% relative error instead of NaN/Infinity when the field itself is ~0", () => {
+    const point = propagatePointError(0, 4.38, EXAMPLE_L_M);
+    expect(point.fieldMt).toBe(0);
+    expect(point.errorMt).toBe(0);
+    expect(point.errorPct).toBe(0);
+  });
+
+  it("rejects a near-zero current instead of returning Infinity/NaN", () => {
+    expect(() => propagatePointError(0.6, 0, EXAMPLE_L_M)).toThrow(RangeError);
+    expect(() => propagatePointError(0.6, 1e-12, EXAMPLE_L_M)).toThrow(
+      RangeError,
+    );
+  });
+
+  it("rejects a non-positive length", () => {
+    expect(() => propagatePointError(0.6, 4.38, 0)).toThrow(RangeError);
+    expect(() => propagatePointError(0.6, 4.38, -0.08)).toThrow(RangeError);
+  });
+
+  it("rejects non-finite inputs", () => {
+    expect(() => propagatePointError(NaN, 4.38, EXAMPLE_L_M)).toThrow(
+      RangeError,
+    );
+    expect(() => propagatePointError(0.6, Infinity, EXAMPLE_L_M)).toThrow(
+      RangeError,
+    );
+  });
 });
 
 describe("buildFieldErrorTable", () => {
