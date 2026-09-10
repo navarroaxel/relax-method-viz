@@ -83,6 +83,9 @@ export interface Lab1Copy {
   mDelayStep: string;
   mLoop: string;
   mLoopExplained: string;
+  rampErrorTitle: string;
+  rampErrorBody: string;
+  rampErrorFilterLabel: string;
 
   indirectTitle: string;
   indirectBody: string;
@@ -95,6 +98,29 @@ export interface Lab1Copy {
   mIndirectOutliers: string;
   mFieldIndirect: string;
   mFieldSpread: string;
+
+  errorTableTitle: string;
+  errorTableBody: string;
+  errorTableNote: string;
+  errorChartPoint: string;
+  errorChartMean: string;
+  errorSessionFilterLabel: string;
+  errorSessionAll: string;
+  colSession: string;
+  colCurrent: string;
+  colForce: string;
+  colField: string;
+  colFieldError: string;
+  colUpper: string;
+  colLower: string;
+  colErrorPct: string;
+  colTheory: string;
+  colContainsTheory: string;
+  containsTheoryYes: string;
+  containsTheoryNo: string;
+  mErrorMeanField: string;
+  mErrorMeanDelta: string;
+  mErrorSpread: string;
 
   directTitle: string;
   directBody: string;
@@ -265,6 +291,10 @@ const ES: Lab1Copy = {
   mDelayStep: "Retardo efectivo (del escalón)",
   mLoop: "Ancho del lazo",
   mLoopExplained: "Del lazo explicado por el retardo",
+  rampErrorTitle: "7.1. Error propagado, muestra a muestra",
+  rampErrorBody:
+    "La misma propagación de error de la sección 4.1 (ΔB a partir de las tolerancias de fuente, sensor y regla) aplicada a cada una de las 201 muestras del barrido continuo, en vez de a los escalones discretos. Al haber una muestra cada 100 ms, la nube de puntos y sus bandas de error se superponen — lo interesante acá no es leer un punto individual sino comparar el ancho de las bandas entre la rama de subida y la de bajada.",
+  rampErrorFilterLabel: "Rama:",
 
   indirectTitle: "4. La medición indirecta por puntos",
   indirectBody:
@@ -279,6 +309,31 @@ const ES: Lab1Copy = {
   mIndirectOutliers: "Puntos descartados",
   mFieldIndirect: "B promedio (sesiones limpias)",
   mFieldSpread: "Dispersión entre sesiones",
+
+  errorTableTitle: "4.1. Tabla de errores por punto",
+  errorTableBody:
+    "Para cada punto (I, F) registrado en las cuatro sesiones (sin los puntos de tara cercanos a I = 0 ni los descartados por outlier) se calcula B = F/(I·l) y se propaga el error absoluto ΔB con la fórmula de la guía, usando las tolerancias del instrumental de §3.1: fuente de corriente <2,5 %, sensor de fuerza <1 % y regla ±0,5 mm sobre l = 8,1 cm.",
+  errorTableNote:
+    "La columna «¿incluye B₀?» marca si el valor teórico del solenoide ideal cae dentro de la banda [B−ΔB, B+ΔB] de ese punto — así se ve directamente si el campo «real» está dentro de las tolerancias de la medición o si la discrepancia excede el error instrumental.",
+  errorChartPoint: "B [mT]",
+  errorChartMean: "Promedio",
+  errorSessionFilterLabel: "Sesión:",
+  errorSessionAll: "Todas",
+  colSession: "Sesión",
+  colCurrent: "I [A]",
+  colForce: "F [mN]",
+  colField: "B [mT]",
+  colFieldError: "ΔB [mT]",
+  colUpper: "B+ΔB [mT]",
+  colLower: "B−ΔB [mT]",
+  colErrorPct: "Error [%]",
+  colTheory: "B₀ [mT]",
+  colContainsTheory: "¿incluye B₀?",
+  containsTheoryYes: "sí",
+  containsTheoryNo: "no",
+  mErrorMeanField: "Bₘ (media de los puntos)",
+  mErrorMeanDelta: "ΔBₘ (media de los ΔB)",
+  mErrorSpread: "Dispersión entre puntos",
 
   directTitle: "2. La medición directa con sonda",
   directBody:
@@ -360,6 +415,8 @@ const ES: Lab1Copy = {
   conclusionsBody: [
     "Las cuatro vías para llegar a B —la fuerza en régimen tras un escalón, la pendiente de un barrido continuo, el promedio de 4 sesiones punto por punto, y la sonda Hall— concuerdan entre sí dentro de unos pocos puntos porcentuales, a pesar de partir de instrumentos y procedimientos completamente distintos.",
     "El valor medido resulta sistemáticamente más bajo que el que predice la fórmula ideal del solenoide (B = μ₀·n·I): la diferencia es consistente con el efecto de borde de un solenoide corto y ancho (L/D ≈ 3,4), no con error experimental — la fórmula ideal asume un solenoide mucho más largo que este.",
+    "Propagando el error instrumental punto a punto (sección 4.1) se confirma que esa diferencia no es atribuible a la incertidumbre de la medición: el valor teórico cae dentro de la banda B±ΔB de apenas 2 de los 39 puntos registrados, mientras que el error instrumental propagado (±4,1 %) es varias veces menor que la discrepancia del 13,1 % con la fórmula ideal.",
+    "El mismo análisis muestra a muestra en el barrido continuo (sección 7.1) es todavía más categórico: en ninguno de los 201 puntos la banda B±ΔB llega a incluir el valor teórico, y la dispersión punto a punto (±0,17 mT) casi triplica el error instrumental propagado (±0,06 mT) — pero esa dispersión no es pareja: se concentra en la rama de subida (±0,20 mT) y casi desaparece en la de bajada (±0,03 mT), la misma asimetría que la sección 7 atribuye al retardo del sensor, no al campo.",
     "La medición directa confirmó dos supuestos de los que depende todo lo anterior: que el campo es axial (ortogonal a la espira, la condición que hace válida F = I·l·B) y que cae a aproximadamente la mitad en los extremos, tal como predice la teoría de un solenoide finito.",
     "El mayor desafío del ensayo estuvo en la mecánica del instrumental: la respuesta subamortiguada del sensor de fuerza exige tiempos de asentamiento de varios cientos de milisegundos entre punto y punto, y la rendija angosta del solenoide dejó al menos un roce accidental registrado como outlier en la medición indirecta.",
   ],
@@ -494,6 +551,10 @@ const EN: Lab1Copy = {
   mDelayStep: "Effective delay (from the step)",
   mLoop: "Loop width",
   mLoopExplained: "Of the loop explained by the lag",
+  rampErrorTitle: "7.1. Propagated error, sample by sample",
+  rampErrorBody:
+    "The same error propagation from section 4.1 (ΔB from the source, sensor and ruler tolerances) applied to each of the 201 samples of the continuous sweep instead of the discrete steps. With one sample every 100 ms, the cloud of points and their error bands overlap — the point here is not to read a single sample but to compare how wide the bands are on the rising branch versus the falling one.",
+  rampErrorFilterLabel: "Branch:",
 
   indirectTitle: "4. The point-by-point indirect measurement",
   indirectBody:
@@ -508,6 +569,31 @@ const EN: Lab1Copy = {
   mIndirectOutliers: "Points dropped",
   mFieldIndirect: "Mean B (clean sessions)",
   mFieldSpread: "Spread across sessions",
+
+  errorTableTitle: "4.1. Per-point error table",
+  errorTableBody:
+    "For every (I, F) point logged across the four sessions (excluding the near-zero tare points and the flagged outlier) B = F/(I·l) is computed and its absolute error ΔB propagated with the guide's own formula, using the instrument tolerances from §3.1: current source <2.5 %, force sensor <1 %, and a ±0.5 mm ruler on l = 8.1 cm.",
+  errorTableNote:
+    "The \"contains B₀?\" column flags whether the ideal-solenoid theoretical value falls inside that point's own [B−ΔB, B+ΔB] band — this is the direct way to see whether the \"real\" field sits within the measurement's tolerances, or whether the discrepancy exceeds the instrumental error.",
+  errorChartPoint: "B [mT]",
+  errorChartMean: "Average",
+  errorSessionFilterLabel: "Session:",
+  errorSessionAll: "All",
+  colSession: "Session",
+  colCurrent: "I [A]",
+  colForce: "F [mN]",
+  colField: "B [mT]",
+  colFieldError: "ΔB [mT]",
+  colUpper: "B+ΔB [mT]",
+  colLower: "B−ΔB [mT]",
+  colErrorPct: "Error [%]",
+  colTheory: "B₀ [mT]",
+  colContainsTheory: "contains B₀?",
+  containsTheoryYes: "yes",
+  containsTheoryNo: "no",
+  mErrorMeanField: "Bₘ (mean of points)",
+  mErrorMeanDelta: "ΔBₘ (mean of ΔB)",
+  mErrorSpread: "Spread across points",
 
   directTitle: "2. The direct probe measurement",
   directBody:
@@ -589,6 +675,8 @@ const EN: Lab1Copy = {
   conclusionsBody: [
     "The four routes to B — the steady force after a step, the slope of a continuous sweep, the average of 4 point-by-point sessions, and the Hall probe — agree with each other within a few percentage points, despite starting from completely different instruments and procedures.",
     "The measured value is systematically lower than what the ideal solenoid formula (B = μ₀·n·I) predicts: the difference is consistent with the end effect of a short, wide solenoid (L/D ≈ 3.4), not with experimental error — the ideal formula assumes a solenoid much longer than this one.",
+    "Propagating the instrumental error point by point (section 4.1) confirms that this difference is not attributable to measurement uncertainty: the theoretical value falls inside the B±ΔB band of only 2 of the 39 logged points, while the propagated instrumental error (±4.1 %) is several times smaller than the 13.1 % discrepancy with the ideal formula.",
+    "The same sample-by-sample analysis on the continuous sweep (section 7.1) is even more conclusive: none of its 201 points' B±ΔB bands reach the theoretical value, and the point-to-point spread (±0.17 mT) is nearly triple the propagated instrumental error (±0.06 mT) — but that spread is not even: it concentrates on the rising branch (±0.20 mT) and nearly vanishes on the falling one (±0.03 mT), the same asymmetry section 7 attributes to the sensor's lag, not the field.",
     "The direct measurement confirmed two assumptions everything else depends on: that the field is axial (orthogonal to the loop, the condition that makes F = I·l·B valid) and that it drops to roughly half at the ends, exactly as finite-solenoid theory predicts.",
     "The experiment's biggest challenge was the mechanics of the instruments: the force sensor's underdamped response demands settling times of several hundred milliseconds between points, and the solenoid's narrow slit left at least one accidental graze on record as an outlier in the indirect measurement.",
   ],

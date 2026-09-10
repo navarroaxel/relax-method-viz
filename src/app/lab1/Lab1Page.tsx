@@ -15,6 +15,7 @@ import {
   Lab1IndirectChart,
   type IndirectChartSession,
 } from "@/components/Lab1IndirectChart";
+import { Lab1ErrorScatterChart } from "@/components/Lab1ErrorScatterChart";
 import { LabXYChart, type XYFitLine } from "@/components/LabXYChart";
 import { GitHubLink } from "@/components/GitHubLink";
 import { ProjectCredits } from "@/components/ProjectCredits";
@@ -43,6 +44,8 @@ import {
   summarizeIndirect,
 } from "@/lib/lab1MedicionIndirecta";
 
+import { propagatePointError } from "@/lib/lab1ErrorPropagation";
+
 import {
   COIL_CURRENT_A,
   COIL_CURRENT_ERROR_A,
@@ -66,6 +69,31 @@ const CARD =
 const SECTION = `${CARD} flex flex-col gap-2`;
 const H2 = "text-base font-semibold text-zinc-900 dark:text-zinc-100";
 const BODY = "text-sm leading-relaxed text-zinc-600 dark:text-zinc-300";
+const TH = "px-2 py-1 text-left font-medium";
+const TD = "border-t border-zinc-200 px-2 py-1 dark:border-zinc-700";
+
+interface ErrorTableRow {
+  session: string;
+  n: number;
+  currentA: number;
+  forceMn: number;
+  fieldMt: number;
+  errorMt: number;
+  upperMt: number;
+  lowerMt: number;
+  errorPct: number;
+  containsReference: boolean;
+}
+
+function summarizeErrorRows(rows: ErrorTableRow[]) {
+  const n = Math.max(1, rows.length);
+  const meanFieldMt = rows.reduce((s, r) => s + r.fieldMt, 0) / n;
+  const meanErrorMt = rows.reduce((s, r) => s + r.errorMt, 0) / n;
+  const variance =
+    rows.reduce((s, r) => s + (r.fieldMt - meanFieldMt) ** 2, 0) /
+    Math.max(1, rows.length - 1);
+  return { meanFieldMt, meanErrorMt, spreadMt: Math.sqrt(variance) };
+}
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
@@ -85,6 +113,8 @@ export function Lab1Page() {
   const c = LAB1_COPY[language];
   const [showMarkers, setShowMarkers] = useState(true);
   const [directHoverIndex, setDirectHoverIndex] = useState<number | null>(null);
+  const [errorSession, setErrorSession] = useState<string>("all");
+  const [rampErrorBranch, setRampErrorBranch] = useState<string>("all");
 
   const analysis = useMemo(
     () => analyzeStep(escalonForceMn, escalonCurrentA),
@@ -276,13 +306,83 @@ export function Lab1Page() {
 
   // The ideal-solenoid formula against that same average — not against any
   // single route, since none of them is "the" answer.
-  const theory = theoreticalFieldMt(COIL_CURRENT_A, COIL_CURRENT_ERROR_A);
+  const theory = useMemo(
+    () => theoreticalFieldMt(COIL_CURRENT_A, COIL_CURRENT_ERROR_A),
+    [],
+  );
   const theoryDeltaPct = percentDelta(theory.fieldMt, measuredAvgMt);
 
   // What the guide literally asks for: both calculated results (the
   // force-based measurement and the theoretical formula) checked against the
   // direct probe measurement specifically, not the four-way average.
   const theoryVsDirectPct = Math.abs(percentDelta(theory.fieldMt, DIRECT_B_MT));
+
+  // Per-point error propagation (guide's ΔB formula) over every clean,
+  // non-calibration point of the point-by-point indirect measurement — this
+  // is what lets us check the theoretical B against each point's own band,
+  // not just against the session-to-session spread.
+  const errorTable = useMemo(() => {
+    const rows: ErrorTableRow[] = [];
+    indirectSessions.forEach((session, si) => {
+      const outliers = new Set(indirect.sessions[si]?.outlierIndices ?? []);
+      session.currentA.forEach((currentA, k) => {
+        if (outliers.has(k) || Math.abs(currentA) < 0.5) return;
+        const forceMn = session.forceMn[k] ?? 0;
+        const p = propagatePointError(
+          forceMn,
+          currentA,
+          LOOP_LENGTH_M,
+          theory.fieldMt,
+        );
+        rows.push({ session: session.label, n: session.n[k] ?? 0, ...p });
+      });
+    });
+    return { rows, ...summarizeErrorRows(rows) };
+  }, [indirect, theory.fieldMt]);
+
+  const errorSessionOptions = useMemo(
+    () => ["all", ...indirectSessions.map((s) => s.label)],
+    [],
+  );
+
+  // Same rows, narrowed to one session (or "all") via the selector below the
+  // chart — this is what makes it quick to find a single session's own
+  // points and re-check its own Bₘ/ΔBₘ against the pooled one above.
+  const filteredErrorTable = useMemo(() => {
+    const rows =
+      errorSession === "all"
+        ? errorTable.rows
+        : errorTable.rows.filter((r) => r.session === errorSession);
+    return { rows, ...summarizeErrorRows(rows) };
+  }, [errorSession, errorTable.rows]);
+
+  // Same per-point ΔB propagation, applied to every raw sample of the
+  // continuous sweep instead of the discrete steps — "session" here is
+  // really the branch (rising/falling) so the chart can reuse the same
+  // rising/falling filter language as the hysteresis discussion above it.
+  const rampErrorTable = useMemo(() => {
+    const rows: ErrorTableRow[] = [];
+    for (let k = 0; k < rampCurrentA.length; k++) {
+      const currentA = rampCurrentA[k] ?? 0;
+      if (Math.abs(currentA) < 0.5) continue;
+      const forceMn = rampForceMn[k] ?? 0;
+      const p = propagatePointError(forceMn, currentA, LOOP_LENGTH_M, theory.fieldMt);
+      rows.push({
+        session: k <= ramp.peakIndex ? "rising" : "falling",
+        n: k,
+        ...p,
+      });
+    }
+    return { rows, ...summarizeErrorRows(rows) };
+  }, [ramp.peakIndex, theory.fieldMt]);
+
+  const filteredRampErrorTable = useMemo(() => {
+    const rows =
+      rampErrorBranch === "all"
+        ? rampErrorTable.rows
+        : rampErrorTable.rows.filter((r) => r.session === rampErrorBranch);
+    return { rows, ...summarizeErrorRows(rows) };
+  }, [rampErrorBranch, rampErrorTable.rows]);
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -437,6 +537,103 @@ export function Lab1Page() {
             value={`± ${indirect.fieldSpreadMt.toFixed(2)} mT`}
           />
         </div>
+
+        <h3 className="pt-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          {c.errorTableTitle}
+        </h3>
+        <p className={BODY}>{c.errorTableBody}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            {c.errorSessionFilterLabel}
+          </span>
+          {errorSessionOptions.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setErrorSession(opt)}
+              aria-pressed={errorSession === opt}
+              className={
+                errorSession === opt
+                  ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+                  : "rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              }
+            >
+              {opt === "all" ? c.errorSessionAll : opt}
+            </button>
+          ))}
+        </div>
+        <Lab1ErrorScatterChart
+          points={filteredErrorTable.rows}
+          meanFieldMt={filteredErrorTable.meanFieldMt}
+          xLabel={c.indirectAxisI}
+          yLabel={c.chartField}
+          pointLabel={c.errorChartPoint}
+          meanLabel={c.errorChartMean}
+          hoverHint={c.hoverHint}
+          formatSample={(p, i) => {
+            const r = filteredErrorTable.rows[i];
+            return r
+              ? `${r.session} · n=${r.n}  ·  I = ${r.currentA.toFixed(2)} A  ·  B = ${r.fieldMt.toFixed(3)} ± ${r.errorMt.toFixed(3)} mT`
+              : c.hoverHint;
+          }}
+        />
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-zinc-600 dark:text-zinc-300">
+            <thead className="text-zinc-800 dark:text-zinc-100">
+              <tr>
+                <th className={TH}>{c.colSession}</th>
+                <th className={TH}>{c.colCurrent}</th>
+                <th className={TH}>{c.colForce}</th>
+                <th className={TH}>{c.colField}</th>
+                <th className={TH}>{c.colFieldError}</th>
+                <th className={TH}>{c.colUpper}</th>
+                <th className={TH}>{c.colLower}</th>
+                <th className={TH}>{c.colErrorPct}</th>
+                <th className={TH}>{c.colTheory}</th>
+                <th className={TH}>{c.colContainsTheory}</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono">
+              {filteredErrorTable.rows.map((r) => (
+                <tr key={`${r.session}-${r.n}`}>
+                  <td className={`${TD} font-sans`}>
+                    {r.session} · n={r.n}
+                  </td>
+                  <td className={TD}>{r.currentA.toFixed(2)}</td>
+                  <td className={TD}>{r.forceMn.toFixed(2)}</td>
+                  <td className={TD}>{r.fieldMt.toFixed(3)}</td>
+                  <td className={TD}>{r.errorMt.toFixed(3)}</td>
+                  <td className={TD}>{r.upperMt.toFixed(3)}</td>
+                  <td className={TD}>{r.lowerMt.toFixed(3)}</td>
+                  <td className={TD}>{r.errorPct.toFixed(1)} %</td>
+                  <td className={TD}>{theory.fieldMt.toFixed(3)}</td>
+                  <td
+                    className={`${TD} font-sans ${r.containsReference ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+                  >
+                    {r.containsReference
+                      ? c.containsTheoryYes
+                      : c.containsTheoryNo}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className={BODY}>{c.errorTableNote}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric
+            label={c.mErrorMeanField}
+            value={`${filteredErrorTable.meanFieldMt.toFixed(3)} mT`}
+          />
+          <Metric
+            label={c.mErrorMeanDelta}
+            value={`± ${filteredErrorTable.meanErrorMt.toFixed(3)} mT`}
+          />
+          <Metric
+            label={c.mErrorSpread}
+            value={`± ${filteredErrorTable.spreadMt.toFixed(3)} mT`}
+          />
+        </div>
       </section>
 
       <section className={SECTION}>
@@ -583,6 +780,66 @@ export function Lab1Page() {
         </div>
         <p className={BODY}>{c.rampLagNote}</p>
         <p className={BODY}>{c.rampDelayNote}</p>
+
+        <h3 className="pt-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+          {c.rampErrorTitle}
+        </h3>
+        <p className={BODY}>{c.rampErrorBody}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            {c.rampErrorFilterLabel}
+          </span>
+          {(
+            [
+              ["all", c.errorSessionAll],
+              ["rising", c.rampRising],
+              ["falling", c.rampFalling],
+            ] as const
+          ).map(([opt, label]) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setRampErrorBranch(opt)}
+              aria-pressed={rampErrorBranch === opt}
+              className={
+                rampErrorBranch === opt
+                  ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+                  : "rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <Lab1ErrorScatterChart
+          points={filteredRampErrorTable.rows}
+          meanFieldMt={filteredRampErrorTable.meanFieldMt}
+          xLabel={c.rampAxisI}
+          yLabel={c.chartField}
+          pointLabel={c.errorChartPoint}
+          meanLabel={c.errorChartMean}
+          hoverHint={c.hoverHint}
+          formatSample={(p, i) => {
+            const r = filteredRampErrorTable.rows[i];
+            return r
+              ? `${r.session === "rising" ? c.rampRising : c.rampFalling} · t = ${(r.n * RAMP_DT_S).toFixed(1)} s  ·  I = ${r.currentA.toFixed(2)} A  ·  B = ${r.fieldMt.toFixed(3)} ± ${r.errorMt.toFixed(3)} mT`
+              : c.hoverHint;
+          }}
+        />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric
+            label={c.mErrorMeanField}
+            value={`${filteredRampErrorTable.meanFieldMt.toFixed(3)} mT`}
+          />
+          <Metric
+            label={c.mErrorMeanDelta}
+            value={`± ${filteredRampErrorTable.meanErrorMt.toFixed(3)} mT`}
+          />
+          <Metric
+            label={c.mErrorSpread}
+            value={`± ${filteredRampErrorTable.spreadMt.toFixed(3)} mT`}
+          />
+        </div>
       </section>
 
       <section className={SECTION}>
