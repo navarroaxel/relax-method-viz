@@ -7,7 +7,7 @@ import {
   escalonForceMn,
   ESCALON_DT_S,
   LOOP_LENGTH_M,
-} from "./lab1Escalon";
+} from "./lab1Step";
 import {
   analyzeRamp,
   bestLagSamples,
@@ -18,7 +18,7 @@ import {
   rampCurrentA,
   rampForceMn,
   rampTime,
-} from "./lab1MedicionContinua";
+} from "./lab1ContinuousMeasurement";
 
 describe("continuous-measurement capture", () => {
   it("carries 201 aligned samples spanning 20 s", () => {

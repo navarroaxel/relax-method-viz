@@ -112,17 +112,17 @@ Two standalone routes — `src/app/lab1/` and `src/app/lab2/` — are static wri
 
 - **Copy lives next to the route, not in `LanguageContext`**: `src/app/lab1/copy.ts` / `src/app/lab2/copy.ts` export `LAB{1,2}_COPY: Record<Language, Lab{1,2}Copy>` — long-form ES/EN prose (goals, setup steps, per-section analysis, conclusions) plus the typed labels for that lab's diagrams. `LanguageContext` itself only holds the short strings shared by the simulator chrome.
 - **Lab 1** (`src/app/lab1/`) — solenoid force experiment: a loop of known current `I` is lowered into a solenoid's field and `B` is recovered from `B = F/(I·l)`. Four independent measurement routes cross-check the same `B`:
-  - `lib/lab1Escalon.ts` — 1 ms-sampled current-step capture; `analyzeStep` extracts rise time, overshoot, settling time, damping ratio from the sensor's underdamped mechanical response (not field physics).
-  - `lib/lab1MedicionContinua.ts` — continuous hand-swept ramp (0.1 s samples); `analyzeRamp` fits F vs I separately on the rising/falling branches and quantifies the hysteresis loop, `predictFromStepResponse` cross-checks how much of it the step response's own lag explains.
-  - `lib/lab1MedicionIndirecta.ts` — 4 independent point-by-point sessions (`analyzeIndirectSession` fits a robust Theil–Sen line per session and flags outliers by MAD).
-  - `lib/lab1MedicionDirecta.ts` — 14-point Hall-probe traverse (center / end / outside the coil) confirming the field is axial and halves at the coil ends.
+  - `lib/lab1Step.ts` — 1 ms-sampled current-step capture; `analyzeStep` extracts rise time, overshoot, settling time, damping ratio from the sensor's underdamped mechanical response (not field physics).
+  - `lib/lab1ContinuousMeasurement.ts` — continuous hand-swept ramp (0.1 s samples); `analyzeRamp` fits F vs I separately on the rising/falling branches and quantifies the hysteresis loop, `predictFromStepResponse` cross-checks how much of it the step response's own lag explains.
+  - `lib/lab1IndirectMeasurement.ts` — 4 independent point-by-point sessions (`analyzeIndirectSession` fits a robust Theil–Sen line per session and flags outliers by MAD).
+  - `lib/lab1DirectMeasurement.ts` — 14-point Hall-probe traverse (center / end / outside the coil) confirming the field is axial and halves at the coil ends.
   - `lib/lab1Solenoid.ts` computes the ideal-solenoid theoretical field (`B = μ₀·n·I`) for comparison; `lib/lab1FieldSummary.ts` averages the routes and reports the spread as the error bar.
   - Diagrams: `Lab1Diagram.tsx` (animated bench replaying the real step/ramp captures), `Lab1CompassDiagram.tsx` (qualitative compass-needle sketch), `Lab1DirectDiagram.tsx` (Hall-probe traverse positions), `Lab1IndirectChart.tsx` (per-session F vs I with outliers marked).
 - **Lab 2** (`src/app/lab2/`) — permeability of free space: two parallel current-carrying conductors, `μ₀ = 2π·F·r/(I²·l)` from the fitted slope of F vs I².
-  - `lib/lab2Geometria.ts` — hand-measured bench dimensions (lengths, diameters, separation `r`); models the bench as three conductors (not the guide's idealized two), computing `mu0FromSlopeIdeal` vs `mu0FromSlopeCorrected` and the per-term relative-error budget (`errorTerms`) across the current range.
-  - `lib/lab2Curvas.ts` — three stepped F(I) runs, `fitQuadratic` fits F = a·I² + b per run and checks slope agreement across runs.
-  - `lib/lab2Rampa.ts` — continuous up/down sweep; `fitBranch` + hysteresis gap between rising/falling branches.
-  - `lib/lab2Escalon.ts` — 1 ms current-step capture, same underdamped-sensor analysis pattern as Lab 1's step.
+  - `lib/lab2Geometry.ts` — hand-measured bench dimensions (lengths, diameters, separation `r`); models the bench as three conductors (not the guide's idealized two), computing `mu0FromSlopeIdeal` vs `mu0FromSlopeCorrected` and the per-term relative-error budget (`errorTerms`) across the current range.
+  - `lib/lab2Curves.ts` — three stepped F(I) runs, `fitQuadratic` fits F = a·I² + b per run and checks slope agreement across runs.
+  - `lib/lab2Ramp.ts` — continuous up/down sweep; `fitBranch` + hysteresis gap between rising/falling branches.
+  - `lib/lab2Step.ts` — 1 ms current-step capture, same underdamped-sensor analysis pattern as Lab 1's step.
   - Diagrams: `Lab2Diagram.tsx` (cross-section showing the extra loop-return conductor pair the ideal two-wire model ignores), `Lab2CircuitDiagram.tsx` (animated bench replaying real step/ramp captures), `Lab2CurvesChart.tsx` (three F(I) runs, linearizable to F vs I²), `Lab2ErrorChart.tsx` (stacked per-term error-budget chart vs current).
 - **Shared chart components** (`src/components/LabTimeChart.tsx`, `LabXYChart.tsx`) are generic Canvas2D time-series / XY plotters used by both labs' step/ramp/curve charts — analogous to `TraceChart`/`StripChart` in the simulator but lab-specific and dependency-free of the grid/worker machinery.
 - Every `lib/lab{1,2}*.ts` module has a matching `*.test.ts` — these are the bulk of the Vitest suite alongside the simulator's own `src/lib/*.test.ts`.

@@ -20,7 +20,7 @@ import {
   mu0FromSlopeCorrected,
   mu0FromSlopeIdeal,
   SEPARATION_M,
-} from "./lab2Geometria";
+} from "./lab2Geometry";
 
 export interface CurveSeries {
   /** Short label used on the chart legend. */

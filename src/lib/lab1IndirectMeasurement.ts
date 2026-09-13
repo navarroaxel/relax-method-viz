@@ -12,7 +12,7 @@
  * Δl, ΔF) cannot capture.
  */
 
-import { fitLine, type LineFit } from "./lab1MedicionContinua";
+import { fitLine, type LineFit } from "./lab1ContinuousMeasurement";
 
 export interface IndirectSession {
   label: string;

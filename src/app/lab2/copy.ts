@@ -86,10 +86,34 @@ export interface Lab2Copy {
   curvesLinearityNote: (r2: string) => string;
   curvesSpreadNote: (spreadPct: string) => string;
 
+  errorTableTitle: string;
+  errorTableBody: string;
+  errorTableNote: string;
+  errorChartPoint: string;
+  errorChartMean: string;
+  errorChartEmpty: string;
+  errorRunFilterLabel: string;
+  errorRunAll: string;
+  colCurrent: string;
+  colForce: string;
+  colMu0Point: string;
+  colMu0PointError: string;
+  colUpper: string;
+  colLower: string;
+  colErrorPct: string;
+  colAccepted: string;
+  colContainsAccepted: string;
+  containsAcceptedYes: string;
+  containsAcceptedNo: string;
+  mErrorMeanMu0: string;
+  mErrorMeanDelta: string;
+  mErrorSpread: string;
+
   rampTitle: string;
   rampBody: string;
   rampHysteresisNote: (hysteresisPct: string) => string;
   rampAxisI2: string;
+  rampAxisI: string;
   rampAxisF: string;
   rampRising: string;
   rampFalling: string;
@@ -101,6 +125,10 @@ export interface Lab2Copy {
   mRampR2: string;
   mRampGap: string;
   mRampHysteresis: string;
+
+  rampErrorTitle: string;
+  rampErrorBody: string;
+  rampErrorFilterLabel: string;
 
   resultTitle: string;
   resultBody: string;
@@ -303,12 +331,38 @@ const ES: Lab2Copy = {
   curvesSpreadNote: (spreadPct) =>
     `Las tres pendientes se separan apenas ${spreadPct} % entre la mayor y la menor. El montaje es repetible; lo que falla es el modelo con el que se lo interpreta.`,
 
+  errorTableTitle: "6.1. Error propagado, punto por punto",
+  errorTableBody:
+    "Para cada punto (I, F) de las tres series (sin los pasos de corriente casi nula) se calcula μ₀ = 2πFr/(I²l) con el modelo ideal y se propaga el error absoluto Δμ₀ con la fórmula de la guía (§2.2), usando las mismas tolerancias del instrumental que la sección 9: fuente ±0,05 A, sensor ±0,05 mN, r ±0,1 mm y l ±1 mm.",
+  errorTableNote:
+    "La columna «¿incluye μ₀ aceptado?» marca si el valor aceptado cae dentro de la banda [μ₀−Δμ₀, μ₀+Δμ₀] de ese punto. Con el modelo ideal casi ningún punto lo incluye — el desvío sistemático de la sección 8 es mayor que el error instrumental propagado en cualquier punto individual, no sólo en el promedio de la pendiente.",
+  errorChartPoint: "μ₀ (×10⁻⁶ H/m)",
+  errorChartMean: "Promedio",
+  errorChartEmpty: "Sin puntos para esta selección.",
+  errorRunFilterLabel: "Serie:",
+  errorRunAll: "Todas",
+  colCurrent: "I (A)",
+  colForce: "F (mN)",
+  colMu0Point: "μ₀ (×10⁻⁶ H/m)",
+  colMu0PointError: "Δμ₀ (×10⁻⁶ H/m)",
+  colUpper: "μ₀+Δμ₀ (×10⁻⁶ H/m)",
+  colLower: "μ₀−Δμ₀ (×10⁻⁶ H/m)",
+  colErrorPct: "Error [%]",
+  colAccepted: "μ₀ aceptado (×10⁻⁶ H/m)",
+  colContainsAccepted: "¿incluye μ₀ aceptado?",
+  containsAcceptedYes: "sí",
+  containsAcceptedNo: "no",
+  mErrorMeanMu0: "μ₀ₘ (media de los puntos)",
+  mErrorMeanDelta: "Δμ₀ₘ (media de los Δμ₀)",
+  mErrorSpread: "Dispersión entre puntos",
+
   rampTitle: "7. El barrido continuo",
   rampBody:
     "El mismo ensayo pero sin esperar: 314 muestras tomadas mientras se mueve la perilla de 3 A hasta 20 A y se vuelve enseguida. Graficado contra I² el ajuste sigue siendo una recta, y las dos ramas —ida y vuelta— deberían superponerse. No lo hacen del todo, y el lazo que encierran es el retardo del sensor dibujado sobre el plano F-I.",
   rampHysteresisNote: (hysteresisPct) =>
     `El lazo mide ${hysteresisPct} % de la fuerza en el punto de retorno. Es chico — mucho más chico que la histéresis del barrido de Laboratorio 1 — porque acá la perilla se movió despacio en relación con el asentamiento del sensor. Es la confirmación directa de que las series por escalones, que además esperan en cada punto, no arrastran este error.`,
   rampAxisI2: "I² (A²)",
+  rampAxisI: "I (A)",
   rampAxisF: "F (mN)",
   rampRising: "Subida",
   rampFalling: "Bajada",
@@ -320,6 +374,11 @@ const ES: Lab2Copy = {
   mRampR2: "r² del ajuste total",
   mRampGap: "Ancho medio del lazo",
   mRampHysteresis: "Histéresis relativa",
+
+  rampErrorTitle: "7.1. Error propagado, muestra a muestra",
+  rampErrorBody:
+    "La misma propagación de error de la sección 6.1 aplicada a cada una de las 314 muestras del barrido continuo en vez de a los pasos discretos. Con una muestra cada instante de la perilla, lo interesante no es leer un punto individual sino comparar el ancho de las bandas entre la rama de subida y la de bajada, y confirmar que ninguna llega a incluir el μ₀ aceptado con el modelo ideal.",
+  rampErrorFilterLabel: "Rama:",
 
   resultTitle: "8. El valor de μ₀",
   resultBody:
@@ -542,12 +601,38 @@ const EN: Lab2Copy = {
   curvesSpreadNote: (spreadPct) =>
     `The three slopes span only ${spreadPct} % between largest and smallest. The setup is repeatable; what fails is the model used to interpret it.`,
 
+  errorTableTitle: "6.1. Propagated error, point by point",
+  errorTableBody:
+    "For every (I, F) point across the three runs (excluding the near-zero-current steps) μ₀ = 2πFr/(I²l) is computed with the ideal model and its absolute error Δμ₀ propagated with the guide's own §2.2 formula, using the same instrument tolerances as section 9: supply ±0.05 A, sensor ±0.05 mN, r ±0.1 mm and l ±1 mm.",
+  errorTableNote:
+    "The \"contains accepted μ₀?\" column flags whether the accepted value falls inside that point's own [μ₀−Δμ₀, μ₀+Δμ₀] band. With the ideal model almost no point contains it — the systematic offset of section 8 is larger than the propagated instrumental error at any individual point, not only in the averaged slope.",
+  errorChartPoint: "μ₀ (×10⁻⁶ H/m)",
+  errorChartMean: "Average",
+  errorChartEmpty: "No points for this selection.",
+  errorRunFilterLabel: "Run:",
+  errorRunAll: "All",
+  colCurrent: "I (A)",
+  colForce: "F (mN)",
+  colMu0Point: "μ₀ (×10⁻⁶ H/m)",
+  colMu0PointError: "Δμ₀ (×10⁻⁶ H/m)",
+  colUpper: "μ₀+Δμ₀ (×10⁻⁶ H/m)",
+  colLower: "μ₀−Δμ₀ (×10⁻⁶ H/m)",
+  colErrorPct: "Error [%]",
+  colAccepted: "Accepted μ₀ (×10⁻⁶ H/m)",
+  colContainsAccepted: "contains accepted μ₀?",
+  containsAcceptedYes: "yes",
+  containsAcceptedNo: "no",
+  mErrorMeanMu0: "μ₀ₘ (mean of points)",
+  mErrorMeanDelta: "Δμ₀ₘ (mean of Δμ₀)",
+  mErrorSpread: "Spread across points",
+
   rampTitle: "7. The continuous sweep",
   rampBody:
     "The same experiment without waiting: 314 samples logged while the knob is walked from 3 A up to 20 A and straight back. Plotted against I² the fit is still a line, and the two branches — up and down — ought to lie on top of each other. They do not quite, and the loop they enclose is the sensor's lag drawn on the F-I plane.",
   rampHysteresisNote: (hysteresisPct) =>
     `The loop is ${hysteresisPct} % of the force at the turning point. That is small — much smaller than the hysteresis of Lab 1's sweep — because the knob moved slowly compared with the sensor's settling. It is the direct confirmation that the stepped runs, which additionally wait at each point, do not carry this error.`,
   rampAxisI2: "I² (A²)",
+  rampAxisI: "I (A)",
   rampAxisF: "F (mN)",
   rampRising: "Rising",
   rampFalling: "Falling",
@@ -559,6 +644,11 @@ const EN: Lab2Copy = {
   mRampR2: "r² of the overall fit",
   mRampGap: "Mean loop width",
   mRampHysteresis: "Relative hysteresis",
+
+  rampErrorTitle: "7.1. Propagated error, sample by sample",
+  rampErrorBody:
+    "The same error propagation from section 6.1 applied to each of the 314 samples of the continuous sweep instead of the discrete steps. With one sample at every turn of the knob, the point here is not to read a single sample but to compare how wide the bands are on the rising branch versus the falling one, and to confirm that neither one reaches the accepted μ₀ under the ideal model.",
+  rampErrorFilterLabel: "Branch:",
 
   resultTitle: "8. The value of μ₀",
   resultBody:

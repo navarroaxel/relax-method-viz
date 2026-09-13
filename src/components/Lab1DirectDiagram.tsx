@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { ProbePosition } from "@/lib/lab1MedicionDirecta";
+import type { ProbePosition } from "@/lib/lab1DirectMeasurement";
 
 export interface DirectDiagramLabels {
   supply: string;

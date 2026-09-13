@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { summarizeCurves } from "./lab2Curvas";
-import { deltaFromAcceptedPct } from "./lab2Geometria";
+import { summarizeCurves } from "./lab2Curves";
+import { deltaFromAcceptedPct } from "./lab2Geometry";
 import {
   analyzeStep,
   stepCurrentA,
   stepForceMn,
   stepTime,
   STEP_DT_S,
-} from "./lab2Escalon";
+} from "./lab2Step";
 
 describe("escalón capture", () => {
   it("carries 1001 aligned samples over one second", () => {
