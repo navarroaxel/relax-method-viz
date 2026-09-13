@@ -2,7 +2,7 @@
 
 import { useId, useMemo } from "react";
 
-import { geometryFactor, SEPARATION_M, UPPER_LOOP_HEIGHT_M } from "@/lib/lab2Geometria";
+import { geometryFactor, SEPARATION_M, UPPER_LOOP_HEIGHT_M } from "@/lib/lab2Geometry";
 
 export interface Lab2DiagramLabels {
   /** Label on the wire the sensor actually weighs. */

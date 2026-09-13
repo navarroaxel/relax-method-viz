@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { stepCurrentA, stepForceMn, STEP_DT_S } from "@/lib/lab2Escalon";
+import { stepCurrentA, stepForceMn, STEP_DT_S } from "@/lib/lab2Step";
 import {
   SEPARATION_M,
   UPPER_LENGTH_M,
   UPPER_LOOP_HEIGHT_M,
-} from "@/lib/lab2Geometria";
-import { rampCurrentA, rampForceMn } from "@/lib/lab2Rampa";
+} from "@/lib/lab2Geometry";
+import { rampCurrentA, rampForceMn } from "@/lib/lab2Ramp";
 
 export interface Lab2CircuitLabels {
   supply: string;

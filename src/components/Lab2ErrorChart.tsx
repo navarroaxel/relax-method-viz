@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { formatNum, niceTicks } from "@/lib/chartUtils";
-import { errorTerms } from "@/lib/lab2Geometria";
+import { errorTerms } from "@/lib/lab2Geometry";
 
 export interface Lab2ErrorChartLabels {
   xAxis: string;

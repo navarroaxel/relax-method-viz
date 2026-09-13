@@ -6,7 +6,7 @@ import {
   directFieldMt,
   POSITION_LABELS,
   summarizeDirect,
-} from "./lab1MedicionDirecta";
+} from "./lab1DirectMeasurement";
 
 describe("direct-probe capture", () => {
   it("carries 14 points, one label per point", () => {

@@ -8,7 +8,7 @@ import {
   ESCALON_DT_S,
   fieldSeriesMt,
   LOOP_LENGTH_M,
-} from "./lab1Escalon";
+} from "./lab1Step";
 
 describe("escalón capture", () => {
   it("carries 1001 aligned samples on both channels", () => {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { LOOP_LENGTH_M } from "./lab1Escalon";
+import { LOOP_LENGTH_M } from "./lab1Step";
 import {
   analyzeIndirectSession,
   indirectSessions,
   summarizeIndirect,
-} from "./lab1MedicionIndirecta";
+} from "./lab1IndirectMeasurement";
 
 describe("indirect-measurement sessions", () => {
   it("carries four sessions of manual F9 points", () => {

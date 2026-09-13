@@ -9,7 +9,7 @@
  * up and down branches do not retrace, and the gap between them is the
  * sensor's own lag written out on the F-vs-I plane. It is the direct check
  * that the stepped runs waited long enough — the same lesson the escalón
- * capture teaches in the time domain (see {@link lab2Escalon}).
+ * capture teaches in the time domain (see {@link lab2Step}).
  *
  * There is no time column on this sheet, so everything here is indexed by
  * sample rather than by seconds.
@@ -21,7 +21,7 @@ import {
   mu0FromSlopeCorrected,
   mu0FromSlopeIdeal,
   SEPARATION_M,
-} from "./lab2Geometria";
+} from "./lab2Geometry";
 
 const RAMP_CURRENT_A_CSV =
   "3.03,3.17,3.24,3.44,3.45,3.51,3.6,3.6,3.66,3.75,3.87,4.01,4.17,4.21," +

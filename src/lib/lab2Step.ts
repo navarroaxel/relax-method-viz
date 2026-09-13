@@ -23,7 +23,7 @@ import {
   geometryFactor,
   SEPARATION_M,
   type ErrorTerms,
-} from "./lab2Geometria";
+} from "./lab2Geometry";
 
 /** Sampling interval of the capture, in seconds. */
 export const STEP_DT_S = 0.001;

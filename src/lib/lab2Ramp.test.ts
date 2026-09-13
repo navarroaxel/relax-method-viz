@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { summarizeCurves } from "./lab2Curvas";
-import { deltaFromAcceptedPct } from "./lab2Geometria";
-import { analyzeRamp, fitBranch, rampCurrentA, rampForceMn } from "./lab2Rampa";
+import { summarizeCurves } from "./lab2Curves";
+import { deltaFromAcceptedPct } from "./lab2Geometry";
+import { analyzeRamp, fitBranch, rampCurrentA, rampForceMn } from "./lab2Ramp";
 
 describe("continuous sweep capture", () => {
   it("carries 314 aligned samples", () => {

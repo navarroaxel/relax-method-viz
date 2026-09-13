@@ -7,12 +7,12 @@ import {
   escalonForceMn,
   ESCALON_DT_S,
   LOOP_LENGTH_M,
-} from "@/lib/lab1Escalon";
+} from "@/lib/lab1Step";
 import {
   RAMP_DT_S,
   rampCurrentA,
   rampForceMn,
-} from "@/lib/lab1MedicionContinua";
+} from "@/lib/lab1ContinuousMeasurement";
 
 export interface DiagramLabels {
   supply20: string;

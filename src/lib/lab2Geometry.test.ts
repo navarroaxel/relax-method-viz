@@ -13,7 +13,7 @@ import {
   SEPARATION_M,
   UPPER_LENGTH_M,
   UPPER_LOOP_HEIGHT_M,
-} from "./lab2Geometria";
+} from "./lab2Geometry";
 
 describe("bench dimensions", () => {
   it("takes r as the clear gap plus one mean wire diameter", () => {

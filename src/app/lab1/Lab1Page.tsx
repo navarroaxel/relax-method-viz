@@ -28,7 +28,7 @@ import {
   escalonForceMn,
   fieldSeriesMt,
   LOOP_LENGTH_M,
-} from "@/lib/lab1Escalon";
+} from "@/lib/lab1Step";
 
 import {
   analyzeRamp,
@@ -37,12 +37,12 @@ import {
   RAMP_DT_S,
   rampCurrentA,
   rampForceMn,
-} from "@/lib/lab1MedicionContinua";
+} from "@/lib/lab1ContinuousMeasurement";
 
 import {
   indirectSessions,
   summarizeIndirect,
-} from "@/lib/lab1MedicionIndirecta";
+} from "@/lib/lab1IndirectMeasurement";
 
 import { propagatePointError } from "@/lib/lab1ErrorPropagation";
 
@@ -52,7 +52,7 @@ import {
   directFieldMt,
   POSITION_LABELS,
   summarizeDirect,
-} from "@/lib/lab1MedicionDirecta";
+} from "@/lib/lab1DirectMeasurement";
 
 import {
   SOLENOID_LENGTH_M,

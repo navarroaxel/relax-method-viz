@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { curveSeries, fitQuadratic, summarizeCurves } from "./lab2Curvas";
-import { deltaFromAcceptedPct, MU0_ACCEPTED } from "./lab2Geometria";
+import { curveSeries, fitQuadratic, summarizeCurves } from "./lab2Curves";
+import { deltaFromAcceptedPct, MU0_ACCEPTED } from "./lab2Geometry";
 
 describe("stepped runs", () => {
   it("carries three runs with aligned channels", () => {

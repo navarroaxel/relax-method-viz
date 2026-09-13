@@ -12,6 +12,10 @@ import { Lab2CircuitDiagram } from "@/components/Lab2CircuitDiagram";
 import { Lab2Diagram } from "@/components/Lab2Diagram";
 import { Lab2ErrorChart } from "@/components/Lab2ErrorChart";
 import {
+  Lab2ErrorScatterChart,
+  type Mu0ScatterPoint,
+} from "@/components/Lab2ErrorScatterChart";
+import {
   LabTimeChart,
   type ChartMarker,
   type ChartSeries,
@@ -20,13 +24,14 @@ import { LabXYChart, type XYFitLine } from "@/components/LabXYChart";
 import { ProjectCredits } from "@/components/ProjectCredits";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-import { curveSeries, summarizeCurves } from "@/lib/lab2Curvas";
+import { curveSeries, summarizeCurves } from "@/lib/lab2Curves";
 import {
   analyzeStep,
   STEP_DT_S,
   stepCurrentA,
   stepForceMn,
-} from "@/lib/lab2Escalon";
+} from "@/lib/lab2Step";
+import { propagatePointMu0Error } from "@/lib/lab2ErrorPropagation";
 import {
   CURRENT_ERROR_A,
   deltaFromAcceptedPct,
@@ -43,8 +48,8 @@ import {
   UPPER_DIAMETER_M,
   UPPER_LENGTH_M,
   UPPER_LOOP_HEIGHT_M,
-} from "@/lib/lab2Geometria";
-import { analyzeRamp, rampCurrentA, rampForceMn } from "@/lib/lab2Rampa";
+} from "@/lib/lab2Geometry";
+import { analyzeRamp, rampCurrentA, rampForceMn } from "@/lib/lab2Ramp";
 
 import { LAB2_COPY } from "./copy";
 
@@ -79,11 +84,44 @@ function signedPct(value: number, digits = 1): string {
   return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}`;
 }
 
+interface ErrorTableRow {
+  run: string;
+  n: number;
+  currentA: number;
+  forceMn: number;
+  mu0HPerM: number;
+  errorHPerM: number;
+  upperHPerM: number;
+  lowerHPerM: number;
+  errorPct: number;
+  containsReference: boolean;
+}
+
+function summarizeErrorRows(rows: ErrorTableRow[]) {
+  const n = Math.max(1, rows.length);
+  const meanMu0HPerM = rows.reduce((s, r) => s + r.mu0HPerM, 0) / n;
+  const meanErrorHPerM = rows.reduce((s, r) => s + r.errorHPerM, 0) / n;
+  const variance =
+    rows.reduce((s, r) => s + (r.mu0HPerM - meanMu0HPerM) ** 2, 0) /
+    Math.max(1, rows.length - 1);
+  return { meanMu0HPerM, meanErrorHPerM, spreadHPerM: Math.sqrt(variance) };
+}
+
+function toMicroPoints(rows: ErrorTableRow[]): Mu0ScatterPoint[] {
+  return rows.map((r) => ({
+    currentA: r.currentA,
+    mu0Micro: r.mu0HPerM * 1e6,
+    errorMicro: r.errorHPerM * 1e6,
+  }));
+}
+
 export function Lab2Page() {
   const { language, toggle } = useLanguage();
   const c = LAB2_COPY[language];
   const [showMarkers, setShowMarkers] = useState(true);
   const [linearize, setLinearize] = useState(false);
+  const [errorRun, setErrorRun] = useState<string>("all");
+  const [rampErrorBranch, setRampErrorBranch] = useState<string>("all");
 
   const step = useMemo(() => analyzeStep(), []);
   const ramp = useMemo(() => analyzeRamp(), []);
@@ -130,6 +168,66 @@ export function Lab2Page() {
       })),
     [curves],
   );
+
+  // Per-point μ₀ error propagation (§2.2 budget) over every clean point of
+  // the three stepped runs — this is what lets the accepted μ₀ be checked
+  // against each point's own band, not just against the fitted slope.
+  const errorTable = useMemo(() => {
+    const rows: ErrorTableRow[] = [];
+    curveSeries.forEach((s) => {
+      s.currentA.forEach((currentA, k) => {
+        if (Math.abs(currentA) < 0.5) return;
+        const forceMn = s.forceMn[k] ?? 0;
+        const p = propagatePointMu0Error(currentA, forceMn, MU0_ACCEPTED);
+        rows.push({ run: s.label, n: k + 1, ...p });
+      });
+    });
+    return { rows, ...summarizeErrorRows(rows) };
+  }, []);
+
+  const errorRunOptions = useMemo(
+    () => ["all", ...curveSeries.map((s) => s.label)],
+    [],
+  );
+
+  // Same rows, narrowed to one run (or "all") via the selector below the
+  // chart — this is what makes it quick to find a single run's own points
+  // and re-check its own μ₀ₘ/Δμ₀ₘ against the pooled one above.
+  const filteredErrorTable = useMemo(() => {
+    const rows =
+      errorRun === "all"
+        ? errorTable.rows
+        : errorTable.rows.filter((r) => r.run === errorRun);
+    return { rows, ...summarizeErrorRows(rows) };
+  }, [errorRun, errorTable.rows]);
+
+  // Same per-point Δμ₀ propagation, applied to every raw sample of the
+  // continuous sweep instead of the discrete steps — "run" here is really
+  // the branch (rising/falling) so the chart can reuse the same
+  // rising/falling filter language as the hysteresis discussion above it.
+  const rampErrorTable = useMemo(() => {
+    const rows: ErrorTableRow[] = [];
+    for (let k = 0; k < rampCurrentA.length; k++) {
+      const currentA = rampCurrentA[k] ?? 0;
+      if (Math.abs(currentA) < 0.5) continue;
+      const forceMn = rampForceMn[k] ?? 0;
+      const p = propagatePointMu0Error(currentA, forceMn, MU0_ACCEPTED);
+      rows.push({
+        run: k <= ramp.peakIndex ? "rising" : "falling",
+        n: k,
+        ...p,
+      });
+    }
+    return { rows, ...summarizeErrorRows(rows) };
+  }, [ramp.peakIndex]);
+
+  const filteredRampErrorTable = useMemo(() => {
+    const rows =
+      rampErrorBranch === "all"
+        ? rampErrorTable.rows
+        : rampErrorTable.rows.filter((r) => r.run === rampErrorBranch);
+    return { rows, ...summarizeErrorRows(rows) };
+  }, [rampErrorBranch, rampErrorTable.rows]);
 
   // The hysteresis loop is plotted against I² rather than I so that the three
   // fits stay straight lines on the same axes — the same linearisation the
@@ -462,6 +560,102 @@ export function Lab2Page() {
             </tbody>
           </table>
         </div>
+
+        <h3 className={H3}>{c.errorTableTitle}</h3>
+        <p className={BODY}>{c.errorTableBody}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            {c.errorRunFilterLabel}
+          </span>
+          {errorRunOptions.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setErrorRun(opt)}
+              aria-pressed={errorRun === opt}
+              className={
+                errorRun === opt
+                  ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+                  : "rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              }
+            >
+              {opt === "all" ? c.errorRunAll : opt}
+            </button>
+          ))}
+        </div>
+        <Lab2ErrorScatterChart
+          points={toMicroPoints(filteredErrorTable.rows)}
+          meanMu0Micro={filteredErrorTable.meanMu0HPerM * 1e6}
+          xLabel={c.curvesAxisI}
+          yLabel={c.errorChartPoint}
+          pointLabel={c.errorChartPoint}
+          meanLabel={c.errorChartMean}
+          hoverHint={c.hoverHint}
+          emptyLabel={c.errorChartEmpty}
+          formatSample={(p, i) => {
+            const r = filteredErrorTable.rows[i];
+            return r
+              ? `${r.run} · n=${r.n}  ·  I = ${r.currentA.toFixed(2)} A  ·  μ₀ = ${(r.mu0HPerM * 1e6).toFixed(3)} ± ${(r.errorHPerM * 1e6).toFixed(3)} ×10⁻⁶ H/m`
+              : c.hoverHint;
+          }}
+        />
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-zinc-600 dark:text-zinc-300">
+            <thead className="text-zinc-800 dark:text-zinc-100">
+              <tr>
+                <th className={TH}>{c.colRun}</th>
+                <th className={TH}>{c.colCurrent}</th>
+                <th className={TH}>{c.colForce}</th>
+                <th className={TH}>{c.colMu0Point}</th>
+                <th className={TH}>{c.colMu0PointError}</th>
+                <th className={TH}>{c.colUpper}</th>
+                <th className={TH}>{c.colLower}</th>
+                <th className={TH}>{c.colErrorPct}</th>
+                <th className={TH}>{c.colAccepted}</th>
+                <th className={TH}>{c.colContainsAccepted}</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono">
+              {filteredErrorTable.rows.map((r) => (
+                <tr key={`${r.run}-${r.n}`}>
+                  <td className={`${TD} font-sans`}>
+                    {r.run} · n={r.n}
+                  </td>
+                  <td className={TD}>{r.currentA.toFixed(2)}</td>
+                  <td className={TD}>{r.forceMn.toFixed(2)}</td>
+                  <td className={TD}>{(r.mu0HPerM * 1e6).toFixed(3)}</td>
+                  <td className={TD}>{(r.errorHPerM * 1e6).toFixed(3)}</td>
+                  <td className={TD}>{(r.upperHPerM * 1e6).toFixed(3)}</td>
+                  <td className={TD}>{(r.lowerHPerM * 1e6).toFixed(3)}</td>
+                  <td className={TD}>{r.errorPct.toFixed(1)} %</td>
+                  <td className={TD}>{(MU0_ACCEPTED * 1e6).toFixed(3)}</td>
+                  <td
+                    className={`${TD} font-sans ${r.containsReference ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+                  >
+                    {r.containsReference
+                      ? c.containsAcceptedYes
+                      : c.containsAcceptedNo}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className={BODY}>{c.errorTableNote}</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric
+            label={c.mErrorMeanMu0}
+            value={`${(filteredErrorTable.meanMu0HPerM * 1e6).toFixed(3)}·10⁻⁶`}
+          />
+          <Metric
+            label={c.mErrorMeanDelta}
+            value={`± ${(filteredErrorTable.meanErrorHPerM * 1e6).toFixed(3)}·10⁻⁶`}
+          />
+          <Metric
+            label={c.mErrorSpread}
+            value={`± ${(filteredErrorTable.spreadHPerM * 1e6).toFixed(3)}·10⁻⁶`}
+          />
+        </div>
       </section>
 
       {/* 7 — continuous sweep */}
@@ -502,6 +696,65 @@ export function Lab2Page() {
           <Metric
             label={c.mRampHysteresis}
             value={`${ramp.hysteresisPct.toFixed(2)} %`}
+          />
+        </div>
+
+        <h3 className={H3}>{c.rampErrorTitle}</h3>
+        <p className={BODY}>{c.rampErrorBody}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            {c.rampErrorFilterLabel}
+          </span>
+          {(
+            [
+              ["all", c.errorRunAll],
+              ["rising", c.rampRising],
+              ["falling", c.rampFalling],
+            ] as const
+          ).map(([opt, label]) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setRampErrorBranch(opt)}
+              aria-pressed={rampErrorBranch === opt}
+              className={
+                rampErrorBranch === opt
+                  ? "rounded-md border border-sky-500 bg-sky-50 px-2 py-1 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+                  : "rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              }
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <Lab2ErrorScatterChart
+          points={toMicroPoints(filteredRampErrorTable.rows)}
+          meanMu0Micro={filteredRampErrorTable.meanMu0HPerM * 1e6}
+          xLabel={c.rampAxisI}
+          yLabel={c.errorChartPoint}
+          pointLabel={c.errorChartPoint}
+          meanLabel={c.errorChartMean}
+          hoverHint={c.hoverHint}
+          emptyLabel={c.errorChartEmpty}
+          formatSample={(p, i) => {
+            const r = filteredRampErrorTable.rows[i];
+            return r
+              ? `${r.run === "rising" ? c.rampRising : c.rampFalling} · n=${r.n}  ·  I = ${r.currentA.toFixed(2)} A  ·  μ₀ = ${(r.mu0HPerM * 1e6).toFixed(3)} ± ${(r.errorHPerM * 1e6).toFixed(3)} ×10⁻⁶ H/m`
+              : c.hoverHint;
+          }}
+        />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric
+            label={c.mErrorMeanMu0}
+            value={`${(filteredRampErrorTable.meanMu0HPerM * 1e6).toFixed(3)}·10⁻⁶`}
+          />
+          <Metric
+            label={c.mErrorMeanDelta}
+            value={`± ${(filteredRampErrorTable.meanErrorHPerM * 1e6).toFixed(3)}·10⁻⁶`}
+          />
+          <Metric
+            label={c.mErrorSpread}
+            value={`± ${(filteredRampErrorTable.spreadHPerM * 1e6).toFixed(3)}·10⁻⁶`}
           />
         </div>
       </section>
