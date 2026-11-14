@@ -10,6 +10,7 @@ import { shuffleSeeded } from "@/lib/teoriaStudy";
 
 import { Rich, Tex } from "../magnetismo-teoria/Tex";
 import { EXERCISES, type Exercise, type Params } from "./exercises";
+import { ExerciseFigure } from "./Figures";
 
 const CARD =
   "rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900";
@@ -103,6 +104,7 @@ function ExerciseView({ exercise }: { exercise: Exercise }) {
       <p className={BODY}>
         <Rich text={exercise.statement(params)} />
       </p>
+      <ExerciseFigure id={exercise.id} params={params} />
       {exercise.note && (
         <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
           {exercise.note}

@@ -1,8 +1,11 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { mulberry32 } from "@/lib/teoriaStudy";
 
 import { EXERCISES } from "./exercises";
+import { ExerciseFigure, FIGURE_IDS } from "./Figures";
 
 const balanced = (s: string) => (s.match(/\$/g)?.length ?? 0) % 2 === 0;
 
@@ -49,5 +52,27 @@ describe("EXERCISES", () => {
     expect(get("g48")[2]?.value).toBeCloseTo(89.9, 1);
     expect(get("g50")[0]?.value).toBeCloseTo(9.9, 1);
     expect(get("g50")[1]?.value).toBeCloseTo(0.175, 3);
+  });
+});
+
+describe("figuras", () => {
+  it("cada figura corresponde a un ejercicio y se dibuja con datos variados", () => {
+    const ids = new Set(EXERCISES.map((e) => e.id));
+    expect(FIGURE_IDS.length).toBeGreaterThan(0);
+    for (const id of FIGURE_IDS) {
+      expect(ids.has(id)).toBe(true);
+      const ex = EXERCISES.find((e) => e.id === id)!;
+      const rand = mulberry32(5);
+      for (const p of [
+        ex.original,
+        ...Array.from({ length: 30 }, () => ex.vary(rand)),
+      ]) {
+        const html = renderToStaticMarkup(
+          createElement(ExerciseFigure, { id, params: p }),
+        );
+        expect(html).toContain("<svg");
+        expect(html).not.toMatch(/NaN|undefined|Infinity/);
+      }
+    }
   });
 });
