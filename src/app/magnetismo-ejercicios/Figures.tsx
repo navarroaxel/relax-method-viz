@@ -4,6 +4,9 @@ import {
   alphaGoodConductor,
   attenuationDistance,
   C0,
+  cableMultiLayer,
+  cableMultiLayerField,
+  cableSingleLayer,
   conductivityFromDepth,
   displacementCurrentAmplitude,
   loopTorque,
@@ -1016,7 +1019,7 @@ function Plot({
   return (
     <g>
       {title && (
-        <T x={ox + w} y={oy - 8} anchor="end">
+        <T x={ox + w} y={oy - 18} anchor="end">
           {title}
         </T>
       )}
@@ -1762,6 +1765,60 @@ function CampoCoaxialB({ p }: { p: Params }) {
     </Frame>
   );
 }
+/** E(r) en el cable: una capa (decae como 1/r) frente a tres capas (diente de sierra). */
+function CampoCable({ p }: { p: Params }) {
+  const a = v(p, "a") / 100;
+  const b = v(p, "b") / 100;
+  const e = v(p, "E");
+  const eps = [6, 4, 2] as const;
+  const m = cableMultiLayer(a, b, e * 1e5, eps);
+  const one = cableSingleLayer(a, b, e * 1e5, 6);
+  const xmax = v(p, "b") * 1.1;
+  const single = (x: number) =>
+    x >= v(p, "a") && x <= v(p, "b") ? (e * v(p, "a")) / x : 0;
+  const multi = (x: number) =>
+    cableMultiLayerField(x / 100, a, b, e * 1e5, eps) / 1e5;
+  return (
+    <Frame
+      label="Campo eléctrico en función del radio del cable con una sola capa de aislante y con tres capas"
+      h={185}
+    >
+      <Plot
+        ox={34}
+        oy={32}
+        w={108}
+        h={100}
+        xmax={xmax}
+        ymax={e * 1.15}
+        fn={single}
+        xlabel="cm"
+        ylabel="E (kV/cm)"
+        title="una capa"
+        vlines={[{ x: v(p, "a"), label: "a" }]}
+      />
+      <Plot
+        ox={186}
+        oy={32}
+        w={108}
+        h={100}
+        xmax={xmax}
+        ymax={e * 1.15}
+        fn={multi}
+        xlabel="cm"
+        ylabel="E (kV/cm)"
+        title="tres capas"
+        vlines={[
+          { x: m.r1 * 100, label: "r₁" },
+          { x: m.r2 * 100, label: "r₂" },
+        ]}
+      />
+      <T x={160} y={178}>
+        Vmax: {fmt(one.vmax / 1e3)} kV (una capa) · {fmt(m.vmax / 1e3)} kV
+        (tres)
+      </T>
+    </Frame>
+  );
+}
 
 const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g39: (p) => <EspiraPar p={p} />,
@@ -1771,6 +1828,7 @@ const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
       <CamposCoaxial p={p} />
     </>
   ),
+  g24: (p) => <CampoCable p={p} />,
   g25: (p) => <CampoConductor p={p} />,
   g26: (p) => <CampoToroide p={p} />,
   g27: (p) => <CampoTubo p={p} />,

@@ -94,7 +94,55 @@ export function tubularInternalInductance(
   );
 }
 
-// ---- Guía de ejercicios (25 en adelante) ----
+// ---- Guía de ejercicios (24 en adelante) ----
+
+/** Cable de radio a con una sola capa de aislante (ε_r) hasta la pantalla b: E máx. en r = a. */
+export function cableSingleLayer(
+  aM: number,
+  bM: number,
+  emaxVPerM: number,
+  epsR = 1,
+) {
+  return {
+    vmax: emaxVPerM * aM * Math.log(bM / aM),
+    cPerM: (2 * Math.PI * EPS0 * epsR) / Math.log(bM / aM),
+  };
+}
+
+/**
+ * Aislante en tres capas (ε_r de adentro hacia afuera) ajustadas para que E valga
+ * E máx. al comienzo de cada capa: r₁ = a·ε₁/ε₂, r₂ = r₁·ε₂/ε₃.
+ */
+export function cableMultiLayer(
+  aM: number,
+  bM: number,
+  emaxVPerM: number,
+  epsR: readonly [number, number, number],
+) {
+  const [e1, e2, e3] = epsR;
+  const r1 = (aM * e1) / e2;
+  const r2 = (r1 * e2) / e3;
+  const k = emaxVPerM * e1 * aM; // ρ/(2π ε₀)
+  const vmax =
+    k *
+    (Math.log(r1 / aM) / e1 + Math.log(r2 / r1) / e2 + Math.log(bM / r2) / e3);
+  return { r1, r2, vmax, cPerM: (2 * Math.PI * EPS0 * k) / vmax };
+}
+
+/** E(r) del cable de tres capas (V/m); 0 fuera de [a, b]. */
+export function cableMultiLayerField(
+  rM: number,
+  aM: number,
+  bM: number,
+  emaxVPerM: number,
+  epsR: readonly [number, number, number],
+): number {
+  const { r1, r2 } = cableMultiLayer(aM, bM, emaxVPerM, epsR);
+  if (rM < aM || rM > bM) return 0;
+  const k = emaxVPerM * epsR[0] * aM;
+  const eps = rM <= r1 ? epsR[0] : rM <= r2 ? epsR[1] : epsR[2];
+  return k / (eps * rM);
+}
 
 /** B de un conductor macizo de radio b a distancia r del eje (dentro y fuera). */
 export function solidWireField(

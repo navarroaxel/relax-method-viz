@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   alphaExact,
+  cableMultiLayer,
+  cableMultiLayerField,
+  cableSingleLayer,
   circularLoopAxisField,
   coaxInductancePerLength,
   coaxPoynting,
@@ -215,5 +218,40 @@ describe("guía de ejercicios (25 en adelante)", () => {
       p += coaxPoynting(100, 2, a, b, r) * 2 * Math.PI * r * ((b - a) / n);
     }
     expect(p).toBeCloseTo(200, 6);
+  });
+});
+
+describe("guía 24: cable con aislante", () => {
+  const a = 0.004;
+  const b = 0.024;
+  const emax = 1e7; // 100 kV/cm
+  it("una capa: Vmax ≈ 71,67 kV (PDF)", () => {
+    expect(cableSingleLayer(a, b, emax, 6).vmax / 1e3).toBeCloseTo(71.67, 1);
+  });
+  it("tres capas: r₁ = 0,6 cm, r₂ = 1,2 cm y Vmax ≈ 141 kV (PDF)", () => {
+    const m = cableMultiLayer(a, b, emax, [6, 4, 2]);
+    expect(m.r1 * 100).toBeCloseTo(0.6, 6);
+    expect(m.r2 * 100).toBeCloseTo(1.2, 6);
+    expect(m.vmax / 1e3).toBeCloseTo(141, 0);
+  });
+  it("E vale Emax al comienzo de cada capa y V = ∫E dr", () => {
+    const eps = [6, 4, 2] as const;
+    const m = cableMultiLayer(a, b, emax, eps);
+    expect(cableMultiLayerField(a, a, b, emax, eps)).toBeCloseTo(emax, 3);
+    expect(cableMultiLayerField(m.r1 * 1.0000001, a, b, emax, eps)).toBeCloseTo(
+      emax,
+      -2,
+    );
+    expect(cableMultiLayerField(m.r2 * 1.0000001, a, b, emax, eps)).toBeCloseTo(
+      emax,
+      -2,
+    );
+    const n = 200000;
+    let v = 0;
+    for (let k = 0; k < n; k++) {
+      const r = a + ((k + 0.5) * (b - a)) / n;
+      v += cableMultiLayerField(r, a, b, emax, eps) * ((b - a) / n);
+    }
+    expect(v / m.vmax).toBeCloseTo(1, 3);
   });
 });
