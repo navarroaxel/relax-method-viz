@@ -23,6 +23,7 @@ import {
 import {
   CARDS,
   ORDER_EXERCISES,
+  QUIZ,
   PAIR_SETS,
   type OrderExercise,
   type PairSet,
@@ -44,13 +45,18 @@ const BTN_PRIMARY =
   "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40";
 const BODY = "text-sm leading-relaxed text-zinc-600 dark:text-zinc-300";
 
-type Mode = "cards" | "order" | "match";
+type Mode = "cards" | "quiz" | "order" | "match";
 
 const MODES: { id: Mode; label: string; help: string }[] = [
   {
     id: "cards",
     label: "Tarjetas",
     help: "Leé la pregunta, recordá cada paso en tu cabeza y recién después revelalo. Marcá qué tan bien lo sabías: las que fallás vuelven más seguido.",
+  },
+  {
+    id: "quiz",
+    label: "Quiz",
+    help: "Opción múltiple con distractores parecidos (signos, constantes, condiciones). Cada ronda son 10 preguntas, empezando por los temas que peor tenés. Si fallás, ese tema baja de nivel en las tarjetas.",
   },
   {
     id: "order",
@@ -428,6 +434,179 @@ function MatchGame({ set }: { set: PairSet }) {
   );
 }
 
+const QUIZ_LENGTH = 10;
+
+function Quiz({ boxes }: { boxes: Boxes }) {
+  const [seed, setSeed] = useState(1);
+  // Los niveles al empezar la ronda: fallar no reordena las preguntas restantes.
+  const [startBoxes, setStartBoxes] = useState(boxes);
+  const [index, setIndex] = useState(0);
+  const [picked, setPicked] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const [failed, setFailed] = useState<readonly string[]>([]);
+
+  const questions = useMemo(
+    () =>
+      shuffleSeeded(QUIZ, seed * 104729)
+        .map((q, i) => ({ q, i }))
+        .sort(
+          (a, b) =>
+            (startBoxes[a.q.cardId] ?? 0) - (startBoxes[b.q.cardId] ?? 0) ||
+            a.i - b.i,
+        )
+        .slice(0, QUIZ_LENGTH)
+        .map(({ q }) => q),
+    [seed, startBoxes],
+  );
+  const question = questions[index];
+  const options = useMemo(
+    () =>
+      question
+        ? shuffleSeeded(
+            question.options.map((_, i) => i),
+            seed * 31 + index * 7 + 3,
+          )
+        : [],
+    [question, seed, index],
+  );
+  const finished = index >= questions.length;
+  const answered = picked !== null;
+
+  const answer = useCallback(
+    (i: number) => {
+      if (!question || picked !== null) return;
+      setPicked(i);
+      if (i === 0) {
+        setScore((s) => s + 1);
+      } else {
+        setFailed((f) =>
+          f.includes(question.cardId) ? f : [...f, question.cardId],
+        );
+        saveBoxes({
+          ...boxes,
+          [question.cardId]: nextBox(boxes[question.cardId] ?? 0, "forgot"),
+        });
+      }
+    },
+    [boxes, picked, question],
+  );
+  const next = useCallback(() => {
+    setIndex((n) => n + 1);
+    setPicked(null);
+  }, []);
+  const restart = () => {
+    setSeed((s) => s + 1);
+    setStartBoxes(boxes);
+    setIndex(0);
+    setPicked(null);
+    setScore(0);
+    setFailed([]);
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (finished) return;
+      if (answered && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        next();
+      } else if (!answered && /^[1-4]$/.test(e.key)) {
+        const o = options[Number(e.key) - 1];
+        if (o !== undefined) answer(o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [answered, finished, options, answer, next]);
+
+  if (finished) {
+    return (
+      <section className={`${CARD} flex flex-col gap-3`}>
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          {score}/{questions.length} correctas
+        </h2>
+        {failed.length > 0 ? (
+          <div className={BODY}>
+            A repasar:{" "}
+            {failed
+              .map((id) => CARDS.find((c) => c.id === id)?.title ?? id)
+              .join(" · ")}
+            . Ya bajaron de nivel en las tarjetas.
+          </div>
+        ) : (
+          <p className="text-sm font-medium text-green-700 dark:text-green-400">
+            ¡Ronda perfecta!
+          </p>
+        )}
+        <div>
+          <button type="button" className={BTN_PRIMARY} onClick={restart}>
+            Nueva ronda
+          </button>
+        </div>
+      </section>
+    );
+  }
+  if (!question) return null;
+
+  return (
+    <section className={`${CARD} flex flex-col gap-3`}>
+      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+        <span>
+          Pregunta {index + 1}/{questions.length}
+        </span>
+        <span>Aciertos: {score}</span>
+      </div>
+      <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        <Rich text={question.prompt} />
+      </h2>
+      <div className="flex flex-col gap-2">
+        {options.map((o, pos) => {
+          const opt = question.options[o];
+          const isRight = o === 0;
+          const style = !answered
+            ? "border-zinc-300 hover:bg-zinc-50 dark:border-zinc-600 dark:hover:bg-zinc-800"
+            : isRight
+              ? "border-green-400 bg-green-50 dark:border-green-700 dark:bg-green-950/40"
+              : o === picked
+                ? "border-red-400 bg-red-50 dark:border-red-700 dark:bg-red-950/40"
+                : "border-zinc-200 opacity-60 dark:border-zinc-700";
+          return (
+            <button
+              key={o}
+              type="button"
+              disabled={answered}
+              onClick={() => answer(o)}
+              className={`flex items-center gap-3 rounded-md border p-2 text-left ${style}`}
+            >
+              <kbd className="text-xs text-zinc-400">{pos + 1}</kbd>
+              <span className="min-w-0 flex-1 text-sm text-zinc-700 dark:text-zinc-200">
+                {opt?.tex ? (
+                  <Tex tex={opt.tex} />
+                ) : (
+                  <Rich text={opt?.text ?? ""} />
+                )}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {answered && (
+        <div className="flex flex-col gap-2">
+          <p className={BODY}>
+            <strong>{picked === 0 ? "¡Correcto! " : "No era esa. "}</strong>
+            <Rich text={question.explain} />
+          </p>
+          <div>
+            <button type="button" className={BTN_PRIMARY} onClick={next}>
+              {index + 1 >= questions.length ? "Ver resultado" : "Siguiente"}{" "}
+              <kbd className="text-xs opacity-80">enter</kbd>
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Picker<T extends { id: string; title: string }>({
   items,
   value,
@@ -541,6 +720,7 @@ export function TeoriaPage() {
           <OrderGame key={exercise.id} exercise={exercise} />
         </>
       )}
+      {mode === "quiz" && <Quiz boxes={boxes} />}
       {mode === "match" && pairSet && (
         <>
           <Picker items={PAIR_SETS} value={pairSet.id} onChange={setPairId} />

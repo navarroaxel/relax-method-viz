@@ -679,3 +679,414 @@ export const PAIR_SETS: PairSet[] = [
     ],
   },
 ];
+
+export interface QuizOption {
+  tex?: string;
+  text?: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  /** Tarjeta que baja de nivel si se falla. */
+  cardId: string;
+  prompt: string;
+  /** La opción correcta siempre va primero acá; la UI las mezcla. */
+  options: QuizOption[];
+  explain: string;
+}
+
+const t = (tex: string): QuizOption => ({ tex });
+const x = (text: string): QuizOption => ({ text });
+
+export const QUIZ: QuizQuestion[] = [
+  {
+    id: "q-poynting-flujo",
+    cardId: "poynting",
+    prompt:
+      "¿Qué representa el flujo del vector de Poynting a través de $S=\\partial V$?",
+    options: [
+      x("La potencia electromagnética que sale del volumen V"),
+      x("La energía almacenada en el campo eléctrico dentro de V"),
+      x("La potencia disipada por efecto Joule dentro de V"),
+      x("La carga que atraviesa la superficie S por unidad de tiempo"),
+    ],
+    explain:
+      "La energía en V baja por Joule o porque sale por S; el flujo de $\\vec E\\times\\vec H$ es esto último.",
+  },
+  {
+    id: "q-poynting-uh",
+    cardId: "poynting",
+    prompt: "La energía almacenada en el campo magnético es:",
+    options: [
+      t(r`U_H=\int_V\tfrac12\mu H^2\,dV`),
+      t(r`U_H=\int_V\tfrac12\varepsilon H^2\,dV`),
+      t(r`U_H=\int_V\mu H\,dV`),
+      t(r`U_H=\int_V\tfrac12\mu^2 H\,dV`),
+    ],
+    explain: "$\\varepsilon$ va con $E$ (campo eléctrico); $\\mu$ va con $H$.",
+  },
+  {
+    id: "q-poynting-balance",
+    cardId: "poynting",
+    prompt: "¿Cuál es el teorema de Poynting?",
+    options: [
+      t(
+        r`P_J+\frac{\partial}{\partial t}(U_E+U_H)+\oint_S\vec E\times\vec H\cdot d\vec s=0`,
+      ),
+      t(
+        r`P_J-\frac{\partial}{\partial t}(U_E+U_H)+\oint_S\vec E\times\vec H\cdot d\vec s=0`,
+      ),
+      t(
+        r`P_J+\frac{\partial}{\partial t}(U_E-U_H)+\oint_S\vec E\times\vec H\cdot d\vec s=0`,
+      ),
+      t(
+        r`P_J+\frac{\partial}{\partial t}(U_E+U_H)+\oint_S\vec E\cdot\vec H\,ds=0`,
+      ),
+    ],
+    explain:
+      "Los tres términos suman cero; las energías se suman y el flujo es del producto vectorial $\\vec E\\times\\vec H$.",
+  },
+  {
+    id: "q-desp-incons",
+    cardId: "desplazamiento",
+    prompt:
+      "¿Por qué la ley de Ampère estática ($\\nabla\\times\\vec H=\\vec J$) es inconsistente con campos variables?",
+    options: [
+      x(
+        "Porque la divergencia de un rotor es 0, lo que fuerza $\\nabla\\cdot\\vec J=0$, y eso contradice la ecuación de continuidad",
+      ),
+      x("Porque no cumple la ley de Gauss para el campo magnético"),
+      x("Porque $\\nabla\\times\\vec E$ deja de ser nulo"),
+      x("Porque $\\vec H$ deja de ser solenoidal"),
+    ],
+    explain:
+      "$\\nabla\\cdot(\\nabla\\times\\vec H)=0$ siempre, pero la continuidad pide $\\nabla\\cdot\\vec J=-\\partial\\rho_v/\\partial t\\neq0$.",
+  },
+  {
+    id: "q-desp-ampere",
+    cardId: "desplazamiento",
+    prompt: "La ley de Ampère–Maxwell es:",
+    options: [
+      t(r`\nabla\times\vec H=\vec J+\frac{\partial\vec D}{\partial t}`),
+      t(r`\nabla\times\vec H=\vec J-\frac{\partial\vec D}{\partial t}`),
+      t(r`\nabla\times\vec H=\vec J+\frac{\partial\vec B}{\partial t}`),
+      t(r`\nabla\times\vec E=\vec J+\frac{\partial\vec D}{\partial t}`),
+    ],
+    explain:
+      "Sale de combinar continuidad con $\\rho_v=\\nabla\\cdot\\vec D$: el término es $+\\partial\\vec D/\\partial t$.",
+  },
+  {
+    id: "q-faraday-cond",
+    cardId: "faraday",
+    prompt: "¿Cuándo existe fem cinética?",
+    options: [
+      x(
+        "Cuando el circuito se mueve ($\\vec v\\neq0$) en un campo $\\vec B$, aunque $B$ sea constante en el tiempo",
+      ),
+      x("Solo cuando $\\vec B$ varía en el tiempo"),
+      x("Solo cuando el circuito está en reposo"),
+      x("Solo cuando hay un campo eléctrico estático"),
+    ],
+    explain:
+      "La fem cinética sale del término magnético de la fuerza de Lorentz; la variación temporal de $B$ da el otro término (transformador).",
+  },
+  {
+    id: "q-faraday-expr",
+    cardId: "faraday",
+    prompt: "La fem cinética o de rotación es:",
+    options: [
+      t(r`fem_R=\oint_{\partial S}\vec v\times\vec B\cdot d\vec l`),
+      t(r`fem_R=\oint_{\partial S}\vec v\cdot\vec B\,dl`),
+      t(r`fem_R=-\int_S\frac{\partial\vec B}{\partial t}\cdot d\vec s`),
+      t(r`fem_R=\oint_{\partial S}\vec E\times\vec v\cdot d\vec l`),
+    ],
+    explain:
+      "La opción de $-\\int\\partial B/\\partial t$ es la fem de transformador, no la cinética.",
+  },
+  {
+    id: "q-faraday-ley",
+    cardId: "postulados",
+    prompt: "¿Cuál es la ley de Faraday en forma diferencial?",
+    options: [
+      t(r`\nabla\times\vec E=-\frac{\partial\vec B}{\partial t}`),
+      t(r`\nabla\times\vec E=\frac{\partial\vec B}{\partial t}`),
+      t(r`\nabla\times\vec B=-\frac{\partial\vec E}{\partial t}`),
+      t(r`\nabla\cdot\vec E=-\frac{\partial\vec B}{\partial t}`),
+    ],
+    explain: "Rotor de $E$ (no divergencia) y signo negativo (Lenz).",
+  },
+  {
+    id: "q-conductor-ideal",
+    cardId: "onda-conductor",
+    prompt:
+      "En un conductor ideal ($\\sigma\\to\\infty$) las constantes de propagación son:",
+    options: [
+      t(r`\alpha=\beta=\sqrt{\frac{\omega\mu\sigma}{2}}`),
+      t(r`\alpha=0,\;\beta=\omega\sqrt{\mu\varepsilon}`),
+      t(r`\alpha=\beta=\omega\mu\sigma`),
+      t(r`\alpha=\sqrt{\frac{\omega\mu\sigma}{2}},\;\beta=0`),
+    ],
+    explain:
+      "$\\Gamma^2\\to j\\omega\\mu\\sigma$, de donde $\\Gamma=\\sqrt{\\omega\\mu\\sigma}e^{j\\pi/4}$ y $\\alpha=\\beta$. La segunda opción es el dieléctrico ideal.",
+  },
+  {
+    id: "q-dielectrico-fase",
+    cardId: "onda-conductor",
+    prompt:
+      "En un dieléctrico ideal, los campos $\\vec E$ y $\\vec H$ de la onda plana:",
+    options: [
+      x(
+        "Están en fase ($\\gamma=0$), son ortogonales y la amplitud se mantiene",
+      ),
+      x("Están en fase, pero la amplitud decrece como $e^{-\\alpha x}$"),
+      x("Tienen un desfase temporal de $\\pi/4$"),
+      x("Son paralelos entre sí y en fase"),
+    ],
+    explain:
+      "$\\alpha=0$ implica sin atenuación. El desfase de $\\pi/4$ corresponde al conductor ideal.",
+  },
+  {
+    id: "q-atenuacion-causa",
+    cardId: "atenuacion",
+    prompt: "¿Cuál es la causa física de la atenuación en un medio material?",
+    options: [
+      x(
+        "Pérdidas por efecto Joule de las corrientes inducidas $\\vec J=\\sigma\\vec E$",
+      ),
+      x("La corriente de desplazamiento $\\partial\\vec D/\\partial t$"),
+      x("La reducción de la frecuencia de la onda"),
+      x("La divergencia de $\\vec B$ no nula"),
+    ],
+    explain: "Con $\\sigma=0$ no hay corrientes inducidas y $\\alpha=0$.",
+  },
+  {
+    id: "q-factor-conductor",
+    cardId: "factor-medio",
+    prompt: "Si $\\sigma/\\omega\\varepsilon\\gg1$, el medio se comporta como:",
+    options: [
+      x(
+        "Buen conductor, con $\\alpha\\approx\\beta\\approx\\sqrt{\\omega\\mu\\sigma/2}$",
+      ),
+      x(
+        "Buen dieléctrico, con $\\beta\\approx\\omega\\sqrt{\\mu\\varepsilon}$",
+      ),
+      x("Vacío, con $v=c$"),
+      x("Conductor ideal, sin campo en su interior y $\\alpha=0$"),
+    ],
+    explain:
+      "Predomina la corriente de conducción $\\sigma E$ sobre la de desplazamiento $\\omega\\varepsilon E$.",
+  },
+  {
+    id: "q-factor-frecuencia",
+    cardId: "factor-medio",
+    prompt:
+      "Si aumentás mucho la frecuencia en un material con $\\sigma$ y $\\varepsilon$ fijos, ¿cómo cambia su comportamiento?",
+    options: [
+      x(
+        "Tiende a comportarse como dieléctrico, porque $\\sigma/\\omega\\varepsilon$ disminuye",
+      ),
+      x(
+        "Tiende a comportarse como conductor, porque $\\sigma/\\omega\\varepsilon$ aumenta",
+      ),
+      x("No cambia: depende solo de $\\sigma$"),
+      x("Se vuelve conductor ideal"),
+    ],
+    explain:
+      "$\\omega$ está en el denominador del factor: el mismo material puede ser conductor a baja frecuencia y dieléctrico a alta.",
+  },
+  {
+    id: "q-paralelos-repel",
+    cardId: "paralelos",
+    prompt:
+      "Dos conductores rectos paralelos con corrientes de igual dirección y sentido opuesto:",
+    options: [
+      x("Se repelen"),
+      x("Se atraen"),
+      x("No interactúan"),
+      x("Sienten un torque pero ninguna fuerza neta"),
+    ],
+    explain:
+      "Con corrientes en el mismo sentido se atraen; con sentidos opuestos ($d\\vec l_2=-d\\vec l_1$) se repelen.",
+  },
+  {
+    id: "q-biot-savart",
+    cardId: "paralelos",
+    prompt: "La ley de Biot–Savart para el campo de un circuito $C_1$ es:",
+    options: [
+      t(
+        r`\vec B_{12}=\frac{\mu_0I_1}{4\pi}\oint_{C_1}\frac{d\vec l_1\times\hat a_{R12}}{R_{12}^2}`,
+      ),
+      t(
+        r`\vec B_{12}=\frac{\mu_0I_1}{4\pi}\oint_{C_1}\frac{d\vec l_1\cdot\hat a_{R12}}{R_{12}^2}`,
+      ),
+      t(
+        r`\vec B_{12}=\frac{\mu_0I_1}{4\pi}\oint_{C_1}\frac{d\vec l_1\times\hat a_{R12}}{R_{12}}`,
+      ),
+      t(
+        r`\vec B_{12}=\frac{\mu_0I_1}{2\pi}\oint_{C_1}\frac{d\vec l_1\times\hat a_{R12}}{R_{12}^2}`,
+      ),
+    ],
+    explain:
+      "Producto vectorial, decae con $R^2$ y el factor es $\\mu_0/4\\pi$.",
+  },
+  {
+    id: "q-b-hilo",
+    cardId: "permeabilidad",
+    prompt:
+      "El campo de un conductor recto infinito a distancia $r$ (por Ampère) es:",
+    options: [
+      t(r`B=\frac{\mu_0I}{2\pi r}`),
+      t(r`B=\frac{\mu_0I}{4\pi r}`),
+      t(r`B=\frac{\mu_0I}{2\pi r^2}`),
+      t(r`B=\frac{\mu_0Ir}{2\pi}`),
+    ],
+    explain: "$\\oint B\\,dl=B\\cdot2\\pi r=\\mu_0I$.",
+  },
+  {
+    id: "q-mu0-expr",
+    cardId: "permeabilidad",
+    prompt: "Del balance de fuerzas sobre la espira, $\\mu_0$ se calcula como:",
+    options: [
+      t(
+        r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
+      ),
+      t(
+        r`\mu_0=\frac{2\pi|\vec F_m|}{I\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
+      ),
+      t(
+        r`\mu_0=\frac{|\vec F_m|}{2\pi I^2\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
+      ),
+      t(
+        r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac{L}{d+h}-\frac{L-a}{d}\right)}`,
+      ),
+    ],
+    explain:
+      "La fuerza va con $I^2$ (corriente por ambos), $2\\pi$ queda en el numerador y el lado inferior ($d$) lleva $L$, el superior ($d+h$) lleva $L-a$.",
+  },
+  {
+    id: "q-c",
+    cardId: "velocidad-luz",
+    prompt:
+      "De la ecuación de onda en el vacío, la velocidad de propagación es:",
+    options: [
+      t(r`v=\frac{1}{\sqrt{\mu_0\varepsilon_0}}`),
+      t(r`v=\sqrt{\mu_0\varepsilon_0}`),
+      t(r`v=\frac{1}{\mu_0\varepsilon_0}`),
+      t(r`v=\sqrt{\frac{\mu_0}{\varepsilon_0}}`),
+    ],
+    explain:
+      "De $\\mu_0\\varepsilon_0v^2=1$. La última opción es la impedancia del vacío, no una velocidad.",
+  },
+  {
+    id: "q-identidad",
+    cardId: "velocidad-luz",
+    prompt:
+      "¿Qué identidad vectorial se usa al tomar el rotor de la ley de Faraday?",
+    options: [
+      t(
+        r`\nabla\times\nabla\times\vec E=\nabla(\nabla\cdot\vec E)-\nabla^2\vec E`,
+      ),
+      t(
+        r`\nabla\times\nabla\times\vec E=\nabla(\nabla\cdot\vec E)+\nabla^2\vec E`,
+      ),
+      t(r`\nabla\times\nabla\times\vec E=\nabla\cdot(\nabla\vec E)`),
+      t(r`\nabla\times\nabla\times\vec E=0`),
+    ],
+    explain:
+      "Con $\\nabla\\cdot\\vec E=0$ queda $-\\nabla^2\\vec E$ y se llega a la ecuación de onda.",
+  },
+  {
+    id: "q-continuidad-teo",
+    cardId: "continuidad",
+    prompt:
+      "¿Qué teorema pasa de $\\oint_S\\vec J\\cdot d\\vec s$ a una integral de volumen en la deducción de la continuidad?",
+    options: [
+      x("El teorema de la divergencia"),
+      x("El teorema de Stokes (del rotor)"),
+      x("El teorema de Helmholtz"),
+      x("El teorema de Poynting"),
+    ],
+    explain:
+      "Flujo cerrado → divergencia en el volumen: $\\oint\\vec J\\cdot d\\vec s=\\int\\nabla\\cdot\\vec J\\,dV$.",
+  },
+  {
+    id: "q-inductancia",
+    cardId: "corriente-lineal",
+    prompt: "Para un medio lineal, la inductancia es:",
+    options: [
+      t(r`L=\frac{\Phi_M}{I}`),
+      t(r`L=\frac{I}{\Phi_M}`),
+      t(r`L=\Phi_M\,I`),
+      t(r`L=\frac{\Phi_M}{I^2}`),
+    ],
+    explain: "Flujo creado por cada ampere de corriente.",
+  },
+  {
+    id: "q-energia-l",
+    cardId: "corriente-lineal",
+    prompt:
+      "La energía magnética almacenada en un circuito con inductancia $L$ es:",
+    options: [
+      t(r`W_M=\tfrac12LI^2`),
+      t(r`W_M=LI^2`),
+      t(r`W_M=\tfrac12L^2I`),
+      t(r`W_M=\tfrac12LI`),
+    ],
+    explain: "Análoga a $\\tfrac12CV^2$ en el campo eléctrico.",
+  },
+  {
+    id: "q-l-depende",
+    cardId: "corriente-lineal",
+    prompt: "¿De qué depende la inductancia de un circuito en un medio lineal?",
+    options: [
+      x("Solo de la geometría del circuito y de $\\mu$, no de la corriente"),
+      x("De la corriente que circula, de forma proporcional"),
+      x("Solo de la tensión aplicada"),
+      x("De la frecuencia de la corriente únicamente"),
+    ],
+    explain:
+      "$\\vec A\\propto I$, así que el cociente $\\Phi_M/I$ es independiente de $I$.",
+  },
+  {
+    id: "q-helmholtz",
+    cardId: "postulados",
+    prompt:
+      "Según el teorema de Helmholtz, un campo vectorial queda determinado si se conocen:",
+    options: [
+      x("Su divergencia y su rotor en todos los puntos"),
+      x("Solo su rotor"),
+      x("Solo su divergencia"),
+      x("Su potencial en la frontera únicamente"),
+    ],
+    explain:
+      "Por eso los postulados de Maxwell especifican divergencia y rotor de $\\vec E$ y $\\vec B$.",
+  },
+  {
+    id: "q-monopolos",
+    cardId: "postulados",
+    prompt: "$\\nabla\\cdot\\vec B=0$ significa que:",
+    options: [
+      x(
+        "No hay cargas magnéticas aisladas: las líneas de $\\vec B$ son cerradas",
+      ),
+      x("El campo magnético es irrotacional"),
+      x("El campo magnético es siempre nulo en el vacío"),
+      x("Las corrientes no generan campo magnético"),
+    ],
+    explain:
+      "$\\vec B$ es solenoidal, no irrotacional: su rotor es $\\mu(\\vec J+\\partial\\vec D/\\partial t)$.",
+  },
+  {
+    id: "q-gauss",
+    cardId: "postulados",
+    prompt: "La ley de Gauss $\\nabla\\cdot\\vec D=\\rho_v$ indica que:",
+    options: [
+      x("Las cargas son las fuentes escalares del campo eléctrico"),
+      x("Las cargas son las fuentes vectoriales del campo magnético"),
+      x("El campo eléctrico siempre es solenoidal"),
+      x("La carga total no se conserva"),
+    ],
+    explain:
+      "Divergencia = fuentes escalares; el rotor de $\\vec E$ lo gobierna Faraday.",
+  },
+];
