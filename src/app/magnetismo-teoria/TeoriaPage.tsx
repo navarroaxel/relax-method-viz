@@ -294,7 +294,9 @@ function OrderGame({ exercise }: { exercise: OrderExercise }) {
               Paso {i + 1}
             </div>
             <Tex tex={it.tex} block />
-            <p className={BODY}>{it.why}</p>
+            <p className={BODY}>
+              <Rich text={it.why} />
+            </p>
           </li>
         ))}
       </ol>
@@ -683,12 +685,20 @@ export function TeoriaPage() {
             </button>
           )}
         </div>
-        <Link
-          href="/"
-          className="text-xs text-blue-700 hover:underline dark:text-blue-400"
-        >
-          ← Volver al simulador
-        </Link>
+        <div className="flex gap-4">
+          <Link
+            href="/magnetismo-ejercicios"
+            className="text-xs text-blue-700 hover:underline dark:text-blue-400"
+          >
+            Ejercicios de parciales y guía →
+          </Link>
+          <Link
+            href="/"
+            className="text-xs text-blue-700 hover:underline dark:text-blue-400"
+          >
+            ← Volver al simulador
+          </Link>
+        </div>
       </header>
 
       <nav className="flex gap-1 border-b border-zinc-200 dark:border-zinc-700">

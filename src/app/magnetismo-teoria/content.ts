@@ -576,6 +576,32 @@ export const ORDER_EXERCISES: OrderExercise[] = [
       },
     ],
   },
+  {
+    id: "o-energia-campo",
+    title: "Energía magnética en función de los campos (guía 35)",
+    items: [
+      {
+        tex: r`W_m=\tfrac12LI^2=\tfrac12I\Phi`,
+        why: "Energía magnética de un circuito.",
+      },
+      {
+        tex: r`W_m=\tfrac12\int_V\vec J\cdot\vec A\,dV`,
+        why: "Con el potencial vectorial, $\vec B=\nabla\times\vec A$.",
+      },
+      {
+        tex: r`W_m=\tfrac12\int_V(\nabla\times\vec H)\cdot\vec A\,dV`,
+        why: "Ampère en régimen estacionario: $\vec J=\nabla\times\vec H$.",
+      },
+      {
+        tex: r`W_m=\tfrac12\int_V\vec H\cdot(\nabla\times\vec A)\,dV-\tfrac12\int_V\nabla\cdot(\vec A\times\vec H)\,dV`,
+        why: "Identidad $\nabla\cdot(\vec A\times\vec H)=\vec H\cdot\nabla\times\vec A-\vec A\cdot\nabla\times\vec H$; el último término es una integral de superficie que se anula en el infinito.",
+      },
+      {
+        tex: r`W_m=\tfrac12\int_V\vec B\cdot\vec H\,dV`,
+        why: "Resultado: la energía está distribuida en el campo.",
+      },
+    ],
+  },
 ];
 
 export const PAIR_SETS: PairSet[] = [
