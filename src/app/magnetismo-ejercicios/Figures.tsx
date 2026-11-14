@@ -5,6 +5,7 @@ import {
   attenuationDistance,
   C0,
   conductivityFromDepth,
+  displacementCurrentAmplitude,
   loopTorque,
   MU0,
   solenoidField,
@@ -1483,6 +1484,134 @@ function OndaViajera({ p }: { p: Params }) {
     </Frame>
   );
 }
+function Sub({ a, b }: { a: string; b: string }) {
+  return (
+    <>
+      {a}
+      <tspan fontSize={8} dy={3}>
+        {b}
+      </tspan>
+      <tspan dy={-3}>{""}</tspan>
+    </>
+  );
+}
+
+/** Circuito de la guía (#42): fuente AC, capacitor, B alrededor del alambre y lazo de Ampère entre placas. */
+function CircuitoCapacitor({ p }: { p: Params }) {
+  const i0 =
+    displacementCurrentAmplitude(
+      v(p, "C") * 1e-9,
+      v(p, "V0"),
+      2 * Math.PI * v(p, "f") * 1e3,
+    ) * 1e3;
+  const top = 50;
+  const bot = 130;
+  const xl = 40;
+  const xr = 282;
+  const c1 = 168;
+  const c2 = 192;
+  const sine = Array.from({ length: 25 }, (_, k) => {
+    const t = (k / 24) * 2 * Math.PI;
+    return `${xl - 10 + (k / 24) * 20},${90 - 5 * Math.sin(t)}`;
+  }).join(" ");
+  return (
+    <Frame
+      label="Circuito: fuente alterna conectada a un capacitor de placas paralelas, con el campo B alrededor del alambre y el lazo de Ampère entre las placas"
+      h={205}
+    >
+      <path
+        d={`M${xl} 74 V${top} H${c1}`}
+        fill="none"
+        strokeWidth={2}
+        className={WIRE}
+      />
+      <path
+        d={`M${c2} ${top} H${xr} V${bot} H${xl} V106`}
+        fill="none"
+        strokeWidth={2}
+        className={WIRE}
+      />
+      <circle
+        cx={xl}
+        cy={90}
+        r={16}
+        strokeWidth={2}
+        className={`${WIRE} fill-white dark:fill-zinc-900`}
+      />
+      <polyline points={sine} fill="none" strokeWidth={1.4} className={WIRE} />
+      <T x={10} y={bot + 30} anchor="start">
+        <Sub a="V" b="c" /> = V₀ sen ωt
+      </T>
+      <line
+        x1={c1}
+        y1={top - 30}
+        x2={c1}
+        y2={top + 30}
+        strokeWidth={3}
+        className={INK}
+      />
+      <line
+        x1={c2}
+        y1={top - 30}
+        x2={c2}
+        y2={top + 30}
+        strokeWidth={3}
+        className={INK}
+      />
+      {[-22, -11, 0, 11, 22].map((dy) => (
+        <Arrow
+          key={dy}
+          x1={c1 + 3}
+          y1={top + dy}
+          x2={c2 - 3}
+          y2={top + dy}
+          tone="b"
+          w={1.2}
+        />
+      ))}
+      <ellipse
+        cx={(c1 + c2) / 2}
+        cy={top}
+        rx={5}
+        ry={27}
+        fill="none"
+        strokeWidth={1.6}
+        strokeDasharray="4 3"
+        className={FIELD}
+      />
+      <T x={c1 - 6} y={top - 38} anchor="end">
+        C₁
+      </T>
+      <T x={(c1 + c2) / 2 + 10} y={top + 46} anchor="start" tone="b">
+        E, <Sub a="I" b="d" />
+      </T>
+      <T x={c2 + 4} y={top - 38} anchor="start" tone="a">
+        lazo de Ampère
+      </T>
+      <Arrow x1={70} y1={top} x2={100} y2={top} tone="b" w={2.2} />
+      <T x={85} y={top - 8} tone="b">
+        I(t)
+      </T>
+      <ellipse
+        cx={124}
+        cy={top}
+        rx={7}
+        ry={17}
+        fill="none"
+        strokeWidth={1.8}
+        className={FIELD}
+      />
+      <T x={124} y={top - 22} tone="a">
+        B
+      </T>
+      <Arrow x1={218} y1={top} x2={252} y2={top} tone="b" w={2.2} />
+      <T x={160} y={bot + 50}>
+        <Sub a="I" b="d" /> = <Sub a="I" b="c" /> = C dv/dt · I₀ = Cω V₀ ={" "}
+        {fmt(i0)} mA
+      </T>
+    </Frame>
+  );
+}
 
 const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g39: (p) => <EspiraPar p={p} />,
@@ -1492,6 +1621,7 @@ const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g27: (p) => <CampoTubo p={p} />,
   g28: (p) => <CampoSolenoide p={p} />,
   g38: (p) => <FuerzaAlambres p={p} />,
+  g42: (p) => <CircuitoCapacitor p={p} />,
   g43: (p) => <OndaViajera p={p} />,
   g37: (p) => <CampoDosAlambres p={p} />,
   g47: (p) => <AtenuacionAgua p={p} />,
