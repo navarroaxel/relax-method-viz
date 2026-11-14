@@ -1,6 +1,12 @@
 import type { ReactElement, ReactNode } from "react";
 
-import { loopTorque } from "@/lib/teoriaExercises";
+import {
+  alphaGoodConductor,
+  attenuationDistance,
+  conductivityFromDepth,
+  loopTorque,
+  solidWireField,
+} from "@/lib/teoriaExercises";
 
 import type { Params } from "./exercises";
 
@@ -955,10 +961,337 @@ function PoyntingCoax({ p }: { p: Params }) {
     </Frame>
   );
 }
+const fmt = (x: number) => String(Number(x.toPrecision(3)));
+
+interface PlotDot {
+  x: number;
+  y: number;
+  label: string;
+  anchor?: "start" | "middle" | "end";
+  dy?: number;
+}
+
+interface PlotProps {
+  ox: number;
+  oy: number;
+  w: number;
+  h: number;
+  xmax: number;
+  ymax: number;
+  fn: (x: number) => number;
+  xlabel: string;
+  ylabel: string;
+  title?: string;
+  vlines?: { x: number; label: string }[];
+  dots?: PlotDot[];
+}
+
+/** Gráfico simple de una curva y(x) con ejes, marcas verticales y puntos rotulados. */
+function Plot({
+  ox,
+  oy,
+  w,
+  h,
+  xmax,
+  ymax,
+  fn,
+  xlabel,
+  ylabel,
+  title,
+  vlines = [],
+  dots = [],
+}: PlotProps) {
+  const X = (x: number) => ox + (x / xmax) * w;
+  const Y = (y: number) => oy + h - (Math.min(y, ymax) / ymax) * h;
+  const pts = Array.from({ length: 121 }, (_, k) => {
+    const x = (k / 120) * xmax;
+    return `${X(x)},${Y(fn(x))}`;
+  });
+  return (
+    <g>
+      {title && (
+        <T x={ox + w} y={oy - 8} anchor="end">
+          {title}
+        </T>
+      )}
+      <line
+        x1={ox}
+        y1={oy + h}
+        x2={ox + w}
+        y2={oy + h}
+        strokeWidth={1.2}
+        className={INK}
+      />
+      <line
+        x1={ox}
+        y1={oy}
+        x2={ox}
+        y2={oy + h}
+        strokeWidth={1.2}
+        className={INK}
+      />
+      {vlines.map((l) => (
+        <g key={l.label}>
+          <line
+            x1={X(l.x)}
+            y1={oy}
+            x2={X(l.x)}
+            y2={oy + h}
+            strokeDasharray="3 3"
+            className={SOFT}
+          />
+          <T x={X(l.x)} y={oy + h + 12}>
+            {l.label}
+          </T>
+        </g>
+      ))}
+      <polyline
+        points={pts.join(" ")}
+        fill="none"
+        strokeWidth={2}
+        className={WIRE}
+      />
+      {dots.map((d) => (
+        <g key={d.label}>
+          <circle cx={X(d.x)} cy={Y(d.y)} r={3.5} className={FIELD_FILL} />
+          <T
+            x={X(d.x) + (d.anchor === "end" ? -6 : 6)}
+            y={Y(d.y) + (d.dy ?? -6)}
+            anchor={d.anchor ?? "start"}
+            tone="a"
+          >
+            {d.label}
+          </T>
+        </g>
+      ))}
+      <T x={ox - 4} y={oy + 4} anchor="end">
+        {fmt(ymax)}
+      </T>
+      <T x={ox - 4} y={oy + h} anchor="end">
+        0
+      </T>
+      <T x={ox + w} y={oy + h + 24} anchor="end">
+        {fmt(xmax)} {xlabel}
+      </T>
+      <T x={ox + 3} y={oy - 4} anchor="start">
+        {ylabel}
+      </T>
+    </g>
+  );
+}
+
+/** B(r) de un conductor macizo: lineal adentro, 1/r afuera. */
+function CampoConductor({ p }: { p: Params }) {
+  const bMm = v(p, "b");
+  const rinMm = v(p, "rin");
+  const routMm = v(p, "rout");
+  const cur = v(p, "I");
+  const B = (rMm: number) => solidWireField(cur, bMm / 1000, rMm / 1000) * 1e6;
+  const xmax = Math.max(routMm * 1.15, bMm * 3);
+  const ymax = B(bMm) * 1.15;
+  return (
+    <Frame
+      label="Campo B en función de la distancia al eje de un conductor macizo: crece linealmente hasta r = b y decae como 1/r"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={xmax}
+        ymax={ymax}
+        fn={B}
+        xlabel="mm"
+        ylabel="B (µT)"
+        vlines={[{ x: bMm, label: "r = b" }]}
+        dots={[
+          {
+            x: rinMm,
+            y: B(rinMm),
+            label: `${fmt(B(rinMm))} µT`,
+            anchor: "end",
+            dy: -8,
+          },
+          { x: routMm, y: B(routMm), label: `${fmt(B(routMm))} µT`, dy: -8 },
+        ]}
+      />
+      <T x={46 + (bMm / xmax) * 125} y={178} tone="b">
+        ∝ r adentro · ∝ 1/r afuera
+      </T>
+    </Frame>
+  );
+}
+
+/** B entre los ejes de una línea de dos alambres con corrientes opuestas. */
+function CampoDosAlambres({ p }: { p: Params }) {
+  const aMm = v(p, "a");
+  const dMm = v(p, "d") * 10;
+  const B = (xMm: number) =>
+    (solidWireField(1, aMm / 1000, xMm / 1000) +
+      solidWireField(1, aMm / 1000, (dMm - xMm) / 1000)) *
+    1e6;
+  const ymax = B(2 * aMm);
+  return (
+    <Frame
+      label="Campo B por unidad de corriente a lo largo de la recta que une los ejes de dos alambres con corrientes opuestas"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={dMm}
+        ymax={ymax}
+        fn={B}
+        xlabel="mm"
+        ylabel="B / I (µT/A)"
+        vlines={[
+          { x: aMm, label: "a" },
+          { x: dMm - aMm, label: "d − a" },
+        ]}
+      />
+      <T x={46 + 125} y={178} tone="b">
+        área entre a y d − a = flujo externo
+      </T>
+    </Frame>
+  );
+}
+
+interface AttenPanel {
+  ox: number;
+  title: string;
+  /** α en Np por unidad del eje x. */
+  alpha: number;
+  unit: string;
+  /** Punto objetivo: la amplitud relativa y buscada. */
+  targetY: number;
+  targetLabel: string;
+  marks?: { x: number; label: string; dy?: number }[];
+}
+
+function AttenPlot({
+  ox,
+  title,
+  alpha,
+  unit,
+  targetY,
+  targetLabel,
+  marks = [],
+}: AttenPanel) {
+  const xt = -Math.log(targetY) / alpha;
+  const xmax = xt * 1.8;
+  return (
+    <Plot
+      ox={ox}
+      oy={30}
+      w={100}
+      h={96}
+      xmax={xmax}
+      ymax={1}
+      fn={(x) => Math.exp(-alpha * x)}
+      xlabel={unit}
+      ylabel="E/E₀"
+      title={title}
+      dots={[
+        { x: xt, y: targetY, label: targetLabel, dy: -10 },
+        ...marks.map((m) => ({
+          x: m.x,
+          y: Math.exp(-alpha * m.x),
+          label: m.label,
+          dy: m.dy ?? -8,
+        })),
+      ]}
+    />
+  );
+}
+
+/** Decaimiento exponencial e^(−αx) a las dos frecuencias, con la distancia pedida. */
+function AtenuacionAgua({ p }: { p: Params }) {
+  const sigma = 1 / v(p, "rho");
+  const k = v(p, "k");
+  const pct = 100 * (1 - 1 / k);
+  const x1 = attenuationDistance(
+    alphaGoodConductor(sigma, v(p, "f1") * 1e3),
+    pct,
+  );
+  const x2 =
+    attenuationDistance(alphaGoodConductor(sigma, v(p, "f2") * 1e6), pct) * 100;
+  return (
+    <Frame
+      label="Amplitud del campo en función de la distancia en el agua para las dos frecuencias, con la distancia en que cae a 1/k"
+      h={185}
+    >
+      <AttenPlot
+        ox={34}
+        title={`${v(p, "f1")} kHz`}
+        alpha={-Math.log(1 / k) / x1}
+        unit="m"
+        targetY={1 / k}
+        targetLabel={`x = ${fmt(x1)} m`}
+      />
+      <AttenPlot
+        ox={186}
+        title={`${v(p, "f2")} MHz`}
+        alpha={-Math.log(1 / k) / x2}
+        unit="cm"
+        targetY={1 / k}
+        targetLabel={`x = ${fmt(x2)} cm`}
+      />
+      <T x={160} y={178}>
+        E/E₀ = e^(−αx) = 1/{k}
+      </T>
+    </Frame>
+  );
+}
+
+/** Decaimiento en el grafito: δ marca el 1/e y z el valor pedido α·z. */
+function AtenuacionGrafito({ p }: { p: Params }) {
+  const d1 = v(p, "d1");
+  const f1 = v(p, "f1");
+  const f2 = v(p, "f2");
+  const az = v(p, "az");
+  const d2 = d1 * Math.sqrt(f1 / (f2 * 1e3));
+  // Chequeo de coherencia con la conductividad (solo para el rótulo).
+  const sigma = conductivityFromDepth(d1 * 1e-3, f1 * 1e6);
+  return (
+    <Frame
+      label="Amplitud del campo en el grafito en función de la profundidad a las dos frecuencias, con la profundidad de penetración δ y la distancia z"
+      h={185}
+    >
+      <AttenPlot
+        ox={34}
+        title={`${f1} MHz`}
+        alpha={1 / d1}
+        unit="mm"
+        targetY={Math.exp(-az)}
+        targetLabel={`z = ${fmt(az * d1)}`}
+        marks={[{ x: d1, label: "δ", dy: -8 }]}
+      />
+      <AttenPlot
+        ox={186}
+        title={`${f2} GHz`}
+        alpha={1 / d2}
+        unit="mm"
+        targetY={Math.exp(-az)}
+        targetLabel={`z = ${fmt(az * d2)}`}
+        marks={[{ x: d2, label: "δ", dy: -8 }]}
+      />
+      <T x={160} y={178}>
+        σ ≈ {fmt(sigma / 1e4)}×10⁴ S/m · δ ∝ 1/√f
+      </T>
+    </Frame>
+  );
+}
 
 const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g39: (p) => <EspiraPar p={p} />,
   g52: (p) => <PoyntingCoax p={p} />,
+  g25: (p) => <CampoConductor p={p} />,
+  g37: (p) => <CampoDosAlambres p={p} />,
+  g47: (p) => <AtenuacionAgua p={p} />,
+  g50: (p) => <AtenuacionGrafito p={p} />,
   "p-tres-conductores": (p) => <TresConductores p={p} forces />,
 };
 
