@@ -3,9 +3,14 @@ import type { ReactElement, ReactNode } from "react";
 import {
   alphaGoodConductor,
   attenuationDistance,
+  C0,
   conductivityFromDepth,
   loopTorque,
+  MU0,
+  solenoidField,
   solidWireField,
+  thinTubeField,
+  toroidField,
 } from "@/lib/teoriaExercises";
 
 import type { Params } from "./exercises";
@@ -1284,11 +1289,210 @@ function AtenuacionGrafito({ p }: { p: Params }) {
     </Frame>
   );
 }
+/** B(r) de un solenoide largo: constante adentro, nulo afuera. */
+function CampoSolenoide({ p }: { p: Params }) {
+  const b = solenoidField(v(p, "n"), v(p, "I")) * 1e3;
+  return (
+    <Frame
+      label="Campo B en función de la distancia al eje de un solenoide largo: constante adentro y nulo afuera"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={2}
+        ymax={b * 1.3}
+        fn={(x) => (x <= 1 ? b : 0)}
+        xlabel="× R"
+        ylabel="B (mT)"
+        vlines={[{ x: 1, label: "r = R" }]}
+        dots={[{ x: 0.5, y: b, label: `B = μ₀nI = ${fmt(b)} mT`, dy: -8 }]}
+      />
+      <T x={171} y={178} tone="b">
+        uniforme adentro · B = 0 afuera
+      </T>
+    </Frame>
+  );
+}
+
+/** B(r) de un tubo delgado con corriente superficial: nulo adentro, 1/r afuera. */
+function CampoTubo({ p }: { p: Params }) {
+  const bMm = v(p, "b");
+  const rMm = v(p, "r");
+  const B = (x: number) =>
+    thinTubeField(v(p, "I"), bMm / 1000, Math.max(x, 1e-6) / 1000) * 1e6;
+  const xmax = Math.max(rMm * 1.3, bMm * 3);
+  return (
+    <Frame
+      label="Campo B en función de la distancia al eje de un tubo delgado con corriente superficial: nulo adentro y 1/r afuera"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={xmax}
+        ymax={B(bMm) * 1.15}
+        fn={B}
+        xlabel="mm"
+        ylabel="B (µT)"
+        vlines={[{ x: bMm, label: "r = b" }]}
+        dots={[{ x: rMm, y: B(rMm), label: `${fmt(B(rMm))} µT`, dy: -8 }]}
+      />
+      <T x={171} y={178} tone="b">
+        B = 0 adentro · salto en r = b · ∝ 1/r afuera
+      </T>
+    </Frame>
+  );
+}
+
+/** B(r) dentro de un toroide: μ₀NI/2πr entre a y b, nulo afuera. */
+function CampoToroide({ p }: { p: Params }) {
+  const aMm = v(p, "a");
+  const bMm = v(p, "b");
+  const rMm = v(p, "r");
+  const B = (x: number) =>
+    x >= aMm && x <= bMm
+      ? toroidField(v(p, "N"), v(p, "I"), x / 1000) * 1e3
+      : 0;
+  return (
+    <Frame
+      label="Campo B en función del radio en un toroide: cae como 1/r entre los radios a y b y es nulo afuera"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={bMm * 1.4}
+        ymax={B(aMm) * 1.15}
+        fn={B}
+        xlabel="mm"
+        ylabel="B (mT)"
+        vlines={[
+          { x: aMm, label: "a" },
+          { x: bMm, label: "b" },
+        ]}
+        dots={[{ x: rMm, y: B(rMm), label: `${fmt(B(rMm))} mT`, dy: -8 }]}
+      />
+      <T x={171} y={178} tone="b">
+        ∝ 1/r entre a y b · B = 0 afuera
+      </T>
+    </Frame>
+  );
+}
+
+/** Dos alambres con corrientes paralelas: B₁ en el alambre 2 y fuerzas de atracción. */
+function FuerzaAlambres({ p }: { p: Params }) {
+  const f =
+    ((MU0 * v(p, "I1") * v(p, "I2")) / (2 * Math.PI * (v(p, "d") / 100))) * 1e3;
+  const x1 = 100;
+  const x2 = 220;
+  const y = 85;
+  return (
+    <Frame
+      label="Dos alambres paralelos con corrientes en el mismo sentido: el campo del primero sobre el segundo y las fuerzas de atracción"
+      h={170}
+    >
+      <Out x={x1} y={y} r={9} />
+      <Out x={x2} y={y} r={9} />
+      <T x={x1} y={y - 18} tone="b">
+        I₁ = {v(p, "I1")} A
+      </T>
+      <T x={x2} y={y - 18} tone="b">
+        I₂ = {v(p, "I2")} A
+      </T>
+      <Arrow x1={x2 - 14} y1={y + 50} x2={x2 - 14} y2={y + 22} tone="a" w={2} />
+      <T x={x2 - 20} y={y + 40} anchor="end" tone="a">
+        B₁ (en 2)
+      </T>
+      <Arrow x1={x1 + 14} y1={y} x2={x1 + 48} y2={y} w={2.4} />
+      <Arrow x1={x2 - 14} y1={y} x2={x2 - 48} y2={y} w={2.4} />
+      <T x={x1 + 31} y={y - 6}>
+        F₁₂
+      </T>
+      <T x={x2 - 31} y={y - 6}>
+        F₂₁
+      </T>
+      <Dim x1={x1} y1={140} x2={x2} y2={140} />
+      <T x={160} y={156}>
+        d = {v(p, "d")} cm
+      </T>
+      <T x={160} y={28}>
+        F/l = {fmt(f)} mN/m · atracción
+      </T>
+    </Frame>
+  );
+}
+
+/** Pulso f(x − vt) en dos instantes: se traslada sin deformarse. */
+function OndaViajera({ p }: { p: Params }) {
+  const vel = C0 / Math.sqrt(v(p, "er") * v(p, "mr"));
+  const base = 120;
+  const shape = (x0: number) =>
+    Array.from({ length: 141 }, (_, k) => {
+      const x = 30 + (k / 140) * 260;
+      return `${x},${base - 70 * Math.exp(-(((x - x0) / 22) ** 2))}`;
+    }).join(" ");
+  return (
+    <Frame
+      label="Pulso f(x − vt) en dos instantes: se desplaza hacia +x una distancia v por Δt sin deformarse"
+      h={185}
+    >
+      <line
+        x1={30}
+        y1={base}
+        x2={292}
+        y2={base}
+        strokeWidth={1.2}
+        className={INK}
+      />
+      <polyline
+        points={shape(95)}
+        fill="none"
+        strokeWidth={2}
+        strokeDasharray="4 3"
+        className={SOFT}
+      />
+      <polyline
+        points={shape(215)}
+        fill="none"
+        strokeWidth={2.2}
+        className={WIRE}
+      />
+      <T x={95} y={base + 16}>
+        t = 0
+      </T>
+      <T x={215} y={base + 16} tone="b">
+        t = Δt
+      </T>
+      <Arrow x1={95} y1={36} x2={215} y2={36} tone="a" w={2} />
+      <T x={155} y={28} tone="a">
+        v·Δt
+      </T>
+      <T x={292} y={base + 16} anchor="end">
+        x
+      </T>
+      <T x={160} y={160}>
+        v = 1/√(με) = {fmt(vel / 1e8)}×10⁸ m/s
+      </T>
+    </Frame>
+  );
+}
 
 const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g39: (p) => <EspiraPar p={p} />,
   g52: (p) => <PoyntingCoax p={p} />,
   g25: (p) => <CampoConductor p={p} />,
+  g26: (p) => <CampoToroide p={p} />,
+  g27: (p) => <CampoTubo p={p} />,
+  g28: (p) => <CampoSolenoide p={p} />,
+  g38: (p) => <FuerzaAlambres p={p} />,
+  g43: (p) => <OndaViajera p={p} />,
   g37: (p) => <CampoDosAlambres p={p} />,
   g47: (p) => <AtenuacionAgua p={p} />,
   g50: (p) => <AtenuacionGrafito p={p} />,
