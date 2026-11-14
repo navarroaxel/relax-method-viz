@@ -83,10 +83,9 @@ describe("figuras", () => {
 });
 
 describe("figuras de la resolución", () => {
-  it("no se solapan con las del enunciado y se dibujan con datos variados", () => {
+  it("corresponden a un ejercicio y se dibujan con datos variados", () => {
     expect(SOLUTION_FIGURE_IDS.length).toBeGreaterThan(0);
     for (const id of SOLUTION_FIGURE_IDS) {
-      expect(FIGURE_IDS).not.toContain(id);
       const ex = EXERCISES.find((e) => e.id === id)!;
       const rand = mulberry32(9);
       for (const p of [

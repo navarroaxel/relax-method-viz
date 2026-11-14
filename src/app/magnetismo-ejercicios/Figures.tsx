@@ -400,15 +400,35 @@ function OndaPlana({ p }: { p: Params }) {
   );
 }
 
-function TresConductores({ p }: { p: Params }) {
+const TRI = (() => {
   const s = 110;
   const h = (s * Math.sqrt(3)) / 2;
   const top: [number, number] = [160, 28];
   const bl: [number, number] = [160 - s / 2, 28 + h];
   const br: [number, number] = [160 + s / 2, 28 + h];
-  const cx = 160;
-  const cy = 28 + (2 * h) / 3;
-  const vertices = [top, bl, br];
+  return {
+    top,
+    bl,
+    br,
+    cx: 160,
+    cy: 28 + (2 * h) / 3,
+    vertices: [top, bl, br],
+  };
+})();
+
+const unitVec = (x1: number, y1: number, x2: number, y2: number) => {
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  return [(x2 - x1) / len, (y2 - y1) / len] as const;
+};
+
+function TresConductores({
+  p,
+  forces = false,
+}: {
+  p: Params;
+  forces?: boolean;
+}) {
+  const { top, bl, br, cx, cy, vertices } = TRI;
   return (
     <Frame label="Tres conductores paralelos en los vértices de un triángulo equilátero, con corriente saliendo de la hoja">
       <polygon
@@ -418,21 +438,34 @@ function TresConductores({ p }: { p: Params }) {
         className={SOFT}
       />
       {vertices.map(([x, y]) => {
-        const dx = cx - x;
-        const dy = cy - y;
-        const len = Math.hypot(dx, dy);
-        const ux = dx / len;
-        const uy = dy / len;
+        const [ux, uy] = unitVec(x, y, cx, cy);
+        const others = vertices.filter(([ox, oy]) => ox !== x || oy !== y);
         return (
           <g key={`${x}-${y}`}>
-            <Arrow
-              x1={x + ux * 12}
-              y1={y + uy * 12}
-              x2={x + ux * 42}
-              y2={y + uy * 42}
-              tone="a"
-              w={2}
-            />
+            {forces &&
+              others.map(([ox, oy]) => {
+                const [vx, vy] = unitVec(x, y, ox, oy);
+                return (
+                  <Arrow
+                    key={`${ox}-${oy}`}
+                    x1={x + vx * 12}
+                    y1={y + vy * 12}
+                    x2={x + vx * 34}
+                    y2={y + vy * 34}
+                    w={1.4}
+                  />
+                );
+              })}
+            {forces && (
+              <Arrow
+                x1={x + ux * 12}
+                y1={y + uy * 12}
+                x2={x + ux * 50}
+                y2={y + uy * 50}
+                tone="a"
+                w={2.2}
+              />
+            )}
             <Out x={x} y={y} r={8} />
           </g>
         );
@@ -444,9 +477,19 @@ function TresConductores({ p }: { p: Params }) {
       <T x={top[0] + 14} y={top[1] + 4} anchor="start" tone="b">
         I = {v(p, "I")} A
       </T>
-      <T x={cx} y={cy + 4} tone="a">
-        F
-      </T>
+      {forces && (
+        <>
+          <T x={232} y={50} anchor="start">
+            F₁₂ (cada par)
+          </T>
+          <T x={232} y={66} anchor="start" tone="a">
+            F (resultante)
+          </T>
+          <T x={232} y={92} anchor="start">
+            ΣF = 0
+          </T>
+        </>
+      )}
     </Frame>
   );
 }
@@ -916,11 +959,12 @@ function PoyntingCoax({ p }: { p: Params }) {
 const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g39: (p) => <EspiraPar p={p} />,
   g52: (p) => <PoyntingCoax p={p} />,
+  "p-tres-conductores": (p) => <TresConductores p={p} forces />,
 };
 
 export const SOLUTION_FIGURE_IDS = Object.keys(SOLUTION_FIGURES);
 
-/** Figura que adelantaría el resultado: se muestra solo con la resolución. */
+/** Figura que adelantaría el resultado (fuerzas, par, P): se muestra solo con la resolución. */
 export function SolutionFigure({ id, params }: { id: string; params: Params }) {
   const render = SOLUTION_FIGURES[id];
   return render ? render(params) : null;
