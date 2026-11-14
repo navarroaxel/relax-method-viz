@@ -5,7 +5,12 @@ import { describe, expect, it } from "vitest";
 import { mulberry32 } from "@/lib/teoriaStudy";
 
 import { EXERCISES } from "./exercises";
-import { ExerciseFigure, FIGURE_IDS } from "./Figures";
+import {
+  ExerciseFigure,
+  FIGURE_IDS,
+  SOLUTION_FIGURE_IDS,
+  SolutionFigure,
+} from "./Figures";
 
 const balanced = (s: string) => (s.match(/\$/g)?.length ?? 0) % 2 === 0;
 
@@ -69,6 +74,27 @@ describe("figuras", () => {
       ]) {
         const html = renderToStaticMarkup(
           createElement(ExerciseFigure, { id, params: p }),
+        );
+        expect(html).toContain("<svg");
+        expect(html).not.toMatch(/NaN|undefined|Infinity/);
+      }
+    }
+  });
+});
+
+describe("figuras de la resolución", () => {
+  it("no se solapan con las del enunciado y se dibujan con datos variados", () => {
+    expect(SOLUTION_FIGURE_IDS.length).toBeGreaterThan(0);
+    for (const id of SOLUTION_FIGURE_IDS) {
+      expect(FIGURE_IDS).not.toContain(id);
+      const ex = EXERCISES.find((e) => e.id === id)!;
+      const rand = mulberry32(9);
+      for (const p of [
+        ex.original,
+        ...Array.from({ length: 30 }, () => ex.vary(rand)),
+      ]) {
+        const html = renderToStaticMarkup(
+          createElement(SolutionFigure, { id, params: p }),
         );
         expect(html).toContain("<svg");
         expect(html).not.toMatch(/NaN|undefined|Infinity/);

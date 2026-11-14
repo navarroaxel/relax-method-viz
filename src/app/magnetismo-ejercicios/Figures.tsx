@@ -1,5 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 
+import { loopTorque } from "@/lib/teoriaExercises";
+
 import type { Params } from "./exercises";
 
 const INK = "stroke-zinc-700 dark:stroke-zinc-300";
@@ -34,8 +36,9 @@ function Frame({
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
-          markerWidth="7"
-          markerHeight="7"
+          markerUnits="userSpaceOnUse"
+          markerWidth="8"
+          markerHeight="8"
           orient="auto-start-reverse"
         >
           <path d="M0 0L10 5L0 10z" className={INK_FILL} />
@@ -45,8 +48,9 @@ function Frame({
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
-          markerWidth="7"
-          markerHeight="7"
+          markerUnits="userSpaceOnUse"
+          markerWidth="8"
+          markerHeight="8"
           orient="auto-start-reverse"
         >
           <path d="M0 0L10 5L0 10z" className={WIRE_FILL} />
@@ -56,8 +60,9 @@ function Frame({
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
-          markerWidth="7"
-          markerHeight="7"
+          markerUnits="userSpaceOnUse"
+          markerWidth="8"
+          markerHeight="8"
           orient="auto-start-reverse"
         >
           <path d="M0 0L10 5L0 10z" className={FIELD_FILL} />
@@ -718,5 +723,204 @@ export const FIGURE_IDS = Object.keys(FIGURES);
 
 export function ExerciseFigure({ id, params }: { id: string; params: Params }) {
   const render = FIGURES[id];
+  return render ? render(params) : null;
+}
+
+/** Vista desde +z: las fuerzas en los lados salen o entran de la hoja y el par queda en el plano. */
+function EspiraPar({ p }: { p: Params }) {
+  const bx = v(p, "bx");
+  const by = v(p, "by");
+  const cx = 110;
+  const cy = 85;
+  const hw = 55;
+  const hh = Math.max(
+    24,
+    Math.min(50, (hw * v(p, "b2")) / Math.max(v(p, "b1"), 1)),
+  );
+  const t = loopTorque(v(p, "I"), v(p, "b1") / 100, v(p, "b2") / 100, bx, by);
+  const unit = (x: number, y: number, len: number) => {
+    const m = Math.hypot(x, y) || 1;
+    return [(x / m) * len, (-y / m) * len] as const;
+  };
+  const [bdx, bdy] = unit(bx, by, 44);
+  const [tdx, tdy] = unit(t.tx, t.ty, 44);
+  const force = (x: number, y: number, outOfPage: boolean, name: string) => (
+    <g>
+      {outOfPage ? <Out x={x} y={y} r={7} /> : <In x={x} y={y} r={7} />}
+      <T
+        x={x + (x > cx ? 12 : x < cx ? -12 : 0)}
+        y={y + (y > cy ? 20 : y < cy ? -12 : 4)}
+        anchor={x > cx ? "start" : x < cx ? "end" : "middle"}
+      >
+        {name}
+      </T>
+    </g>
+  );
+  return (
+    <Frame label="Espira vista desde +z con las fuerzas de cada lado, el campo B en el plano y el par resultante">
+      <rect
+        x={cx - hw}
+        y={cy - hh}
+        width={2 * hw}
+        height={2 * hh}
+        fill="none"
+        strokeWidth={2}
+        className={INK}
+      />
+      <Arrow x1={cx - 8} y1={cy + hh} x2={cx + 12} y2={cy + hh} />
+      <Arrow x1={cx + hw} y1={cy + 8} x2={cx + hw} y2={cy - 12} />
+      <Arrow x1={cx + 8} y1={cy - hh} x2={cx - 12} y2={cy - hh} />
+      <Arrow x1={cx - hw} y1={cy - 8} x2={cx - hw} y2={cy + 12} />
+      {force(cx - 22, cy + hh, by > 0, "F₁")}
+      {force(cx + hw, cy + 22, bx <= 0, "F₂")}
+      {force(cx + 22, cy - hh, by <= 0, "F₃")}
+      {force(cx - hw, cy - 22, bx > 0, "F₄")}
+      <Out x={cx} y={cy} r={6} />
+      <T x={cx + 10} y={cy + 4} anchor="start">
+        m
+      </T>
+      <Arrow x1={cx} y1={cy} x2={cx + bdx} y2={cy + bdy} tone="a" w={2.2} />
+      <T x={cx + bdx * 0.5 + 8} y={cy + bdy * 0.5 + 12} anchor="start" tone="a">
+        B (plano)
+      </T>
+      <Arrow x1={cx} y1={cy} x2={cx + tdx} y2={cy + tdy} tone="b" w={2.2} />
+      <T x={cx + tdx + 4} y={cy + tdy - 4} anchor="start" tone="b">
+        τ
+      </T>
+      <T x={215} y={40} anchor="start">
+        F₁ + F₂ + F₃ + F₄ = 0
+      </T>
+      <T x={215} y={70} anchor="start" tone="b">
+        τx = {Number((t.tx * 1e3).toPrecision(3))} mN·m
+      </T>
+      <T x={215} y={86} anchor="start" tone="b">
+        τy = {Number((t.ty * 1e3).toPrecision(3))} mN·m
+      </T>
+      <T x={215} y={116} anchor="start">
+        vista desde +z
+      </T>
+    </Frame>
+  );
+}
+
+/** E radial, H azimutal y P = E × H axial: P es ortogonal a ambos. */
+function PoyntingCoax({ p }: { p: Params }) {
+  const b = 50;
+  const a = Math.max(8, (b * v(p, "a")) / Math.max(v(p, "b"), 1));
+  const cx = 62;
+  const cy = 78;
+  const mid = (a + b) / 2;
+  const angles = [45, 135, 225, 315];
+  const hAngles = [0, 90, 180, 270].map((d) => (d * Math.PI) / 180);
+  // Vista longitudinal: z a la derecha, y arriba, x entrando a la hoja.
+  const x0 = 150;
+  const x1 = 305;
+  return (
+    <Frame
+      label="Coaxial en continua: E radial, H azimutal y el vector de Poynting P a lo largo del cable, ortogonal a ambos"
+      h={190}
+    >
+      <circle
+        cx={cx}
+        cy={cy}
+        r={b}
+        fill="none"
+        strokeWidth={2.5}
+        className={WIRE}
+      />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={a}
+        className={`${WIRE} fill-blue-100 dark:fill-blue-950`}
+        strokeWidth={1.6}
+      />
+      {angles.map((t) => (
+        <g key={t}>
+          <Arrow
+            x1={cx + (a + 3) * Math.cos(t)}
+            y1={cy - (a + 3) * Math.sin(t)}
+            x2={cx + (b - 3) * Math.cos(t)}
+            y2={cy - (b - 3) * Math.sin(t)}
+            tone="b"
+          />
+        </g>
+      ))}
+      {hAngles.map((t) => (
+        <g key={t}>
+          <Arrow
+            x1={cx + mid * Math.cos(t - 0.4)}
+            y1={cy - mid * Math.sin(t - 0.4)}
+            x2={cx + mid * Math.cos(t + 0.4)}
+            y2={cy - mid * Math.sin(t + 0.4)}
+            tone="a"
+          />
+        </g>
+      ))}
+      <Out x={cx} y={cy} r={Math.min(a - 2, 7)} />
+      <T x={cx} y={cy + b + 18}>
+        corte transversal
+      </T>
+
+      <line
+        x1={x0}
+        y1={cy - 50}
+        x2={x1}
+        y2={cy - 50}
+        strokeWidth={2.5}
+        className={WIRE}
+      />
+      <line
+        x1={x0}
+        y1={cy + 50}
+        x2={x1}
+        y2={cy + 50}
+        strokeWidth={2.5}
+        className={WIRE}
+      />
+      <rect
+        x={x0}
+        y={cy - 12}
+        width={x1 - x0}
+        height={24}
+        className={`${WIRE} fill-blue-100 dark:fill-blue-950`}
+        strokeWidth={1.6}
+      />
+      {[185, 250].map((x) => (
+        <g key={x}>
+          <Arrow x1={x} y1={cy - 14} x2={x} y2={cy - 46} tone="b" />
+          <Out x={x + 14} y={cy - 30} r={5} />
+          <Arrow x1={x + 24} y1={cy - 30} x2={x + 52} y2={cy - 30} w={2.6} />
+          <Arrow x1={x} y1={cy + 14} x2={x} y2={cy + 46} tone="b" />
+          <In x={x + 14} y={cy + 30} r={5} tone="a" />
+          <Arrow x1={x + 24} y1={cy + 30} x2={x + 52} y2={cy + 30} w={2.6} />
+        </g>
+      ))}
+      <T x={(x0 + x1) / 2} y={cy + b + 18}>
+        corte longitudinal (I hacia +z)
+      </T>
+      <T x={14} y={178} anchor="start" tone="b">
+        E: radial
+      </T>
+      <T x={100} y={178} anchor="start" tone="a">
+        H: azimutal
+      </T>
+      <T x={196} y={178} anchor="start">
+        P = E × H: axial
+      </T>
+    </Frame>
+  );
+}
+
+const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
+  g39: (p) => <EspiraPar p={p} />,
+  g52: (p) => <PoyntingCoax p={p} />,
+};
+
+export const SOLUTION_FIGURE_IDS = Object.keys(SOLUTION_FIGURES);
+
+/** Figura que adelantaría el resultado: se muestra solo con la resolución. */
+export function SolutionFigure({ id, params }: { id: string; params: Params }) {
+  const render = SOLUTION_FIGURES[id];
   return render ? render(params) : null;
 }

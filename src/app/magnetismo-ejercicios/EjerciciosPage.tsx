@@ -10,7 +10,7 @@ import { shuffleSeeded } from "@/lib/teoriaStudy";
 
 import { Rich, Tex } from "../magnetismo-teoria/Tex";
 import { EXERCISES, type Exercise, type Params } from "./exercises";
-import { ExerciseFigure } from "./Figures";
+import { ExerciseFigure, SolutionFigure } from "./Figures";
 
 const CARD =
   "rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900";
@@ -21,6 +21,12 @@ const BTN_PRIMARY =
 const BODY = "text-sm leading-relaxed text-zinc-600 dark:text-zinc-300";
 
 type Group = "parciales" | "guia";
+
+/** Los de la guía llevan su número: «#32 Autoinductancia…». */
+function chipLabel(e: Exercise): string {
+  const num = e.group === "guia" ? /^g(\d+)$/.exec(e.id)?.[1] : undefined;
+  return num ? `#${num} ${e.title}` : e.title;
+}
 
 const GROUPS: { id: Group; label: string }[] = [
   { id: "parciales", label: "Parciales 2P" },
@@ -213,6 +219,7 @@ function ExerciseView({ exercise }: { exercise: Exercise }) {
         </p>
       </div>
 
+      {showSolution && <SolutionFigure id={exercise.id} params={params} />}
       {showSolution && (
         <ol className="flex flex-col gap-2">
           {steps.map((s, i) => {
@@ -335,7 +342,7 @@ export function EjerciciosPage() {
                 : "border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
             }`}
           >
-            {e.title}
+            {chipLabel(e)}
           </button>
         ))}
       </div>
