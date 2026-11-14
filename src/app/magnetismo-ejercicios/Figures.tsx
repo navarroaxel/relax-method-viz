@@ -406,7 +406,7 @@ function OndaPlana({ p }: { p: Params }) {
         H (−x)
       </T>
       <T x={190} y={162}>
-        E_M = {v(p, "EM")} V/m · f = {v(p, "f")} MHz
+        <Sub a="E" b="M" /> = {v(p, "EM")} V/m · f = {v(p, "f")} MHz
       </T>
     </Frame>
   );
@@ -1612,10 +1612,165 @@ function CircuitoCapacitor({ p }: { p: Params }) {
     </Frame>
   );
 }
+/** E(r) y B(r) de un coaxial en continua, con escalas propias a izquierda y derecha. */
+function CamposCoaxial({ p }: { p: Params }) {
+  const aMm = v(p, "a");
+  const bMm = v(p, "b");
+  const rMm = v(p, "r");
+  const volts = v(p, "V");
+  const cur = v(p, "I");
+  const E = (x: number) =>
+    x > aMm && x <= bMm ? volts / ((x / 1000) * Math.log(bMm / aMm)) / 1e3 : 0;
+  const B = (x: number) =>
+    x <= aMm
+      ? ((MU0 * cur * (x / 1000)) / (2 * Math.PI * (aMm / 1000) ** 2)) * 1e6
+      : x <= bMm
+        ? ((MU0 * cur) / (2 * Math.PI * (x / 1000))) * 1e6
+        : 0;
+  const xmax = bMm * 1.25;
+  const emax = E(aMm + 1e-9);
+  const bmax = B(aMm);
+  const ox = 52;
+  const oy = 26;
+  const w = 216;
+  const h = 108;
+  const X = (x: number) => ox + (x / xmax) * w;
+  const curve = (fn: (x: number) => number, max: number) =>
+    Array.from({ length: 241 }, (_, k) => {
+      const x = (k / 240) * xmax;
+      return `${X(x)},${oy + h - (fn(x) / max) * h}`;
+    }).join(" ");
+  return (
+    <Frame
+      label="Campo eléctrico y densidad de flujo magnético en función del radio en un coaxial, con los radios a y b marcados en el eje horizontal"
+      h={185}
+    >
+      <line
+        x1={ox}
+        y1={oy + h}
+        x2={ox + w}
+        y2={oy + h}
+        strokeWidth={1.2}
+        className={INK}
+      />
+      <line
+        x1={ox}
+        y1={oy}
+        x2={ox}
+        y2={oy + h}
+        strokeWidth={1.2}
+        className={WIRE}
+      />
+      <line
+        x1={ox + w}
+        y1={oy}
+        x2={ox + w}
+        y2={oy + h}
+        strokeWidth={1.2}
+        className={FIELD}
+      />
+      {[
+        { x: aMm, label: "r = a" },
+        { x: bMm, label: "r = b" },
+        { x: rMm, label: "r" },
+      ].map((l) => (
+        <g key={l.label}>
+          <line
+            x1={X(l.x)}
+            y1={oy}
+            x2={X(l.x)}
+            y2={oy + h}
+            strokeDasharray="3 3"
+            className={SOFT}
+          />
+          <T x={X(l.x)} y={oy + h + 13}>
+            {l.label}
+          </T>
+        </g>
+      ))}
+
+      <polyline
+        points={curve(B, bmax)}
+        fill="none"
+        strokeWidth={2}
+        className={FIELD}
+      />
+      <polyline
+        points={curve(E, emax)}
+        fill="none"
+        strokeWidth={2}
+        strokeDasharray="7 4"
+        className={WIRE}
+      />
+      <T x={ox - 4} y={oy + 4} anchor="end" tone="b">
+        {fmt(emax)}
+      </T>
+      <T x={ox - 4} y={oy + h} anchor="end">
+        0
+      </T>
+      <T x={ox} y={oy - 8} anchor="start" tone="b">
+        E (kV/m)
+      </T>
+      <T x={ox + w + 4} y={oy + 4} anchor="start" tone="a">
+        {fmt(bmax)}
+      </T>
+      <T x={ox + w} y={oy - 8} anchor="end" tone="a">
+        B (µT)
+      </T>
+      <T x={ox + w} y={oy + h + 26} anchor="end">
+        {fmt(xmax)} mm
+      </T>
+      <T x={160} y={178}>
+        E y B ∝ 1/r entre a y b ⇒ P = E×H ∝ 1/r²
+      </T>
+    </Frame>
+  );
+}
+/** B(r) por amperio en un coaxial: lineal en el conductor interno, 1/r en el dieléctrico y nulo afuera. */
+function CampoCoaxialB({ p }: { p: Params }) {
+  const aMm = v(p, "a");
+  const bMm = v(p, "b");
+  const B = (x: number) =>
+    x <= aMm
+      ? ((MU0 * (x / 1000)) / (2 * Math.PI * (aMm / 1000) ** 2)) * 1e6
+      : x <= bMm
+        ? (MU0 / (2 * Math.PI * (x / 1000))) * 1e6
+        : 0;
+  return (
+    <Frame
+      label="Densidad de flujo magnético en función del radio en un coaxial: lineal hasta r = a, 1/r entre a y b y nula afuera"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={bMm * 1.3}
+        ymax={B(aMm) * 1.15}
+        fn={B}
+        xlabel="mm"
+        ylabel="B / I (µT/A)"
+        vlines={[
+          { x: aMm, label: "r = a" },
+          { x: bMm, label: "r = b" },
+        ]}
+      />
+      <T x={171} y={178} tone="b">
+        ∝ r en el interno · ∝ 1/r entre a y b · 0 afuera
+      </T>
+    </Frame>
+  );
+}
 
 const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g39: (p) => <EspiraPar p={p} />,
-  g52: (p) => <PoyntingCoax p={p} />,
+  g52: (p) => (
+    <>
+      <PoyntingCoax p={p} />
+      <CamposCoaxial p={p} />
+    </>
+  ),
   g25: (p) => <CampoConductor p={p} />,
   g26: (p) => <CampoToroide p={p} />,
   g27: (p) => <CampoTubo p={p} />,
@@ -1623,6 +1778,7 @@ const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g38: (p) => <FuerzaAlambres p={p} />,
   g42: (p) => <CircuitoCapacitor p={p} />,
   g43: (p) => <OndaViajera p={p} />,
+  g36: (p) => <CampoCoaxialB p={p} />,
   g37: (p) => <CampoDosAlambres p={p} />,
   g47: (p) => <AtenuacionAgua p={p} />,
   g50: (p) => <AtenuacionGrafito p={p} />,

@@ -113,7 +113,7 @@ function ExerciseView({ exercise }: { exercise: Exercise }) {
       <ExerciseFigure id={exercise.id} params={params} />
       {exercise.note && (
         <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-          {exercise.note}
+          <Rich text={exercise.note} />
         </p>
       )}
 
@@ -158,7 +158,7 @@ function ExerciseView({ exercise }: { exercise: Exercise }) {
             className="flex flex-wrap items-center gap-2 text-sm"
           >
             <span className="min-w-48 text-zinc-700 dark:text-zinc-200">
-              {f.label}
+              <Rich text={f.label} />
             </span>
             <input
               inputMode="decimal"

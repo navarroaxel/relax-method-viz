@@ -347,7 +347,7 @@ export const EXERCISES: Exercise[] = [
     group: "parciales",
     source: "2P 2023-12-11 · P2",
     title: "Campos D, B, H de una onda plana en el vacío",
-    note: "La guía escribe H sobre â_z, pero con E sobre â_y y propagación en +z, H queda sobre −â_x (E×H debe apuntar en +z). Acá se usa la versión corregida. Los datos numéricos son un ejemplo.",
+    note: "La guía escribe H sobre $\\hat a_z$, pero con E sobre $\\hat a_y$ y propagación en +z, H queda sobre $-\\hat a_x$ (E×H debe apuntar en +z). Acá se usa la versión corregida. Los datos numéricos son un ejemplo.",
     original: { EM: 377, f: 100 },
     vary: (r) => ({
       EM: pick(r, [10, 50, 100, 377]),
@@ -370,8 +370,8 @@ export const EXERCISES: Exercise[] = [
       const w = planeWaveInVacuum(p.EM ?? 0, (p.f ?? 1) * 1e6);
       return [
         { label: "β", unit: "rad/m", value: w.beta },
-        { label: "H_M", unit: "A/m", value: w.hMax },
-        { label: "B_M", unit: "µT", value: w.bMax * 1e6 },
+        { label: "$H_M$", unit: "A/m", value: w.hMax },
+        { label: "$B_M$", unit: "µT", value: w.bMax * 1e6 },
       ];
     },
     steps: (p) => {
@@ -1176,7 +1176,7 @@ export const EXERCISES: Exercise[] = [
     source: "Guía · 42",
     title: "Corriente de desplazamiento en un capacitor",
     note:
-      "La guía demuestra I_c = C dv/dt y I_D = I_c; el cálculo de H a distancia r (Ampère alrededor del conductor) se completa acá. " +
+      "La guía demuestra $I_c=C\\,dv/dt$ e $I_D=I_c$; el cálculo de H a distancia r (Ampère alrededor del conductor) se completa acá. " +
       EXAMPLE,
     original: { C: 100, V0: 10, f: 1, r: 2 },
     vary: (r) => ({
@@ -1407,7 +1407,7 @@ export const EXERCISES: Exercise[] = [
     group: "guia",
     source: "Guía · 49",
     title: "Onda plana en un dieléctrico: β, v y H",
-    note: "La guía calcula β y v; la amplitud de H (último campo) se completa acá con η = η₀/√ε_r.",
+    note: "La guía calcula β y v; la amplitud de H (último campo) se completa acá con $\\eta=\\eta_0/\\sqrt{\\varepsilon_r}$.",
     original: { E0: 5, w: 1e9, er: 9 },
     vary: (r) => ({
       E0: pick(r, [2, 5, 10]),
