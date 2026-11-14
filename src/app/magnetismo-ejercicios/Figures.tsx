@@ -207,64 +207,65 @@ function In({
 }
 
 function Helmholtz({ p }: { p: Params }) {
-  const x1 = 105;
-  const x2 = 215;
+  const ax = 150;
+  const y1 = 38;
+  const y2 = 122;
   return (
-    <Frame label="Dos bobinas coaxiales separadas una distancia R, con el punto P en el medio">
+    <Frame label="Dos bobinas coaxiales con eje vertical z, separadas una distancia R, con el punto P en el medio">
       <line
-        x1={50}
-        y1={90}
-        x2={270}
-        y2={90}
+        x1={ax}
+        y1={8}
+        x2={ax}
+        y2={162}
         strokeDasharray="4 3"
         className={SOFT}
       />
-      {[x1, x2].map((x) => (
-        <g key={x}>
+      {[y1, y2].map((y) => (
+        <g key={y}>
           <ellipse
-            cx={x}
-            cy={90}
-            rx={10}
-            ry={48}
+            cx={ax}
+            cy={y}
+            rx={48}
+            ry={10}
             strokeWidth={2}
             fill="none"
             className={WIRE}
           />
           <ellipse
-            cx={x + 6}
-            cy={90}
-            rx={10}
-            ry={48}
+            cx={ax}
+            cy={y + 6}
+            rx={48}
+            ry={10}
             strokeWidth={2}
             fill="none"
             className={WIRE}
           />
         </g>
       ))}
-      <circle cx={160} cy={90} r={3.5} className={INK_FILL} />
-      <T x={160} y={82}>
+      <circle cx={ax} cy={80} r={3.5} className={INK_FILL} />
+      <T x={ax + 8} y={96} anchor="start">
         P
       </T>
-      <Arrow x1={170} y1={90} x2={196} y2={90} tone="a" w={2} />
-      <T x={183} y={106} tone="a">
+      <Arrow x1={ax} y1={72} x2={ax} y2={58} tone="a" w={2} />
+      <T x={ax + 8} y={62} anchor="start" tone="a">
         B
       </T>
-      <Dim x1={x1} y1={150} x2={x2} y2={150} />
-      <T x={160} y={164}>
+      <Dim x1={70} y1={y1} x2={70} y2={y2} />
+      <T x={64} y={84} anchor="end">
         R = {v(p, "R")} cm
       </T>
-      <Dim x1={x2 + 30} y1={90} x2={x2 + 30} y2={42} />
-      <T x={x2 + 36} y={70} anchor="start">
+      <Dim x1={ax} y1={20} x2={ax + 48} y2={20} />
+      <T x={ax + 24} y={14}>
         R
       </T>
-      <T x={x1} y={30} tone="b">
+      <T x={212} y={y1 + 4} anchor="start" tone="b">
         N = {v(p, "N")} espiras
       </T>
-      <T x={x2} y={30} tone="b">
+      <T x={212} y={y2 + 10} anchor="start" tone="b">
         N = {v(p, "N")} espiras
       </T>
-      <T x={26} y={92}>
-        eje
+      <T x={ax - 6} y={160} anchor="end">
+        eje z
       </T>
     </Frame>
   );
