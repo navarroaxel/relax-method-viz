@@ -29,9 +29,9 @@ function chipLabel(e: Exercise): string {
 }
 
 const GROUPS: { id: Group; label: string }[] = [
-  { id: "parciales", label: "Parciales 2P" },
   { id: "guia1", label: "Guía (1 al 24)" },
   { id: "guia", label: "Guía (25 en adelante)" },
+  { id: "parciales", label: "Parciales 2P" },
 ];
 
 function ExerciseView({ exercise }: { exercise: Exercise }) {
@@ -162,7 +162,7 @@ function ExerciseView({ exercise }: { exercise: Exercise }) {
               <Rich text={f.label} />
             </span>
             <input
-              inputMode="decimal"
+              inputMode="text"
               value={inputs[i] ?? ""}
               onChange={(e) => {
                 const next = [...inputs];
@@ -276,7 +276,7 @@ function ExerciseView({ exercise }: { exercise: Exercise }) {
 }
 
 export function EjerciciosPage() {
-  const [group, setGroup] = useState<Group>("parciales");
+  const [group, setGroup] = useState<Group>("guia1");
   const list = EXERCISES.filter((e) => e.group === group);
   const [id, setId] = useState(list[0]?.id ?? "");
   const exercise = list.find((e) => e.id === id) ?? list[0];

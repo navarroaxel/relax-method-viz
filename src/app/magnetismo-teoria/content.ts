@@ -137,7 +137,7 @@ export const CARDS: Card[] = [
       {
         hint: "Identificar la fem cinética",
         tex: r`fem_R=\oint_{\partial S}\vec v\times\vec B\cdot d\vec l`,
-        body: "Fem cinética o de rotación. Proviene del término magnético de la fuerza de Lorentz. Existe siempre que el circuito se mueva ($\\vec v\\neq0$) dentro de un campo $\\vec B$, aunque $B$ sea constante en el tiempo.",
+        body: "Fem cinética o de rotación. Proviene del término magnético de la fuerza de Lorentz. Aparece cuando el circuito se mueve y $\\vec v\\times\\vec B$ tiene componente a lo largo del circuito, de modo que la integral no se anula; puede darse aunque $B$ sea constante en el tiempo.",
       },
     ],
   },
@@ -235,7 +235,7 @@ export const CARDS: Card[] = [
       },
       {
         hint: "Despejar μ₀",
-        tex: r`\mu_0=\frac{2\pi\,|\vec F_m|}{I^2\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
+        tex: r`\mu_0=\frac{2\pi\,|\vec F_m|}{I^2\left(\frac Ld-\frac{L-a}{d+h}\right)}`,
       },
     ],
   },
@@ -571,7 +571,7 @@ export const ORDER_EXERCISES: OrderExercise[] = [
         why: "Suma de ambas.",
       },
       {
-        tex: r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
+        tex: r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac Ld-\frac{L-a}{d+h}\right)}`,
         why: "Se despeja μ₀.",
       },
     ],
@@ -586,15 +586,15 @@ export const ORDER_EXERCISES: OrderExercise[] = [
       },
       {
         tex: r`W_m=\tfrac12\int_V\vec J\cdot\vec A\,dV`,
-        why: "Con el potencial vectorial, $\vec B=\nabla\times\vec A$.",
+        why: r`Con el potencial vectorial, $\vec B=\nabla\times\vec A$.`,
       },
       {
         tex: r`W_m=\tfrac12\int_V(\nabla\times\vec H)\cdot\vec A\,dV`,
-        why: "Ampère en régimen estacionario: $\vec J=\nabla\times\vec H$.",
+        why: r`Ampère en régimen estacionario: $\vec J=\nabla\times\vec H$.`,
       },
       {
         tex: r`W_m=\tfrac12\int_V\vec H\cdot(\nabla\times\vec A)\,dV-\tfrac12\int_V\nabla\cdot(\vec A\times\vec H)\,dV`,
-        why: "Identidad $\nabla\cdot(\vec A\times\vec H)=\vec H\cdot\nabla\times\vec A-\vec A\cdot\nabla\times\vec H$; el último término es una integral de superficie que se anula en el infinito.",
+        why: r`Identidad $\nabla\cdot(\vec A\times\vec H)=\vec H\cdot\nabla\times\vec A-\vec A\cdot\nabla\times\vec H$; el último término es una integral de superficie que se anula en el infinito.`,
       },
       {
         tex: r`W_m=\tfrac12\int_V\vec B\cdot\vec H\,dV`,
@@ -807,7 +807,7 @@ export const QUIZ: QuizQuestion[] = [
     prompt: "¿Cuándo existe fem cinética?",
     options: [
       x(
-        "Cuando el circuito se mueve ($\\vec v\\neq0$) en un campo $\\vec B$, aunque $B$ sea constante en el tiempo",
+        "Cuando el circuito se mueve en un campo $\\vec B$ y $\\oint(\\vec v\\times\\vec B)\\cdot d\\vec l\\neq0$, aunque $B$ sea constante en el tiempo",
       ),
       x("Solo cuando $\\vec B$ varía en el tiempo"),
       x("Solo cuando el circuito está en reposo"),
@@ -974,16 +974,14 @@ export const QUIZ: QuizQuestion[] = [
     prompt: "Del balance de fuerzas sobre la espira, $\\mu_0$ se calcula como:",
     options: [
       t(
-        r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
+        r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac Ld-\frac{L-a}{d+h}\right)}`,
+      ),
+      t(r`\mu_0=\frac{2\pi|\vec F_m|}{I\left(\frac Ld-\frac{L-a}{d+h}\right)}`),
+      t(
+        r`\mu_0=\frac{|\vec F_m|}{2\pi I^2\left(\frac Ld-\frac{L-a}{d+h}\right)}`,
       ),
       t(
-        r`\mu_0=\frac{2\pi|\vec F_m|}{I\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
-      ),
-      t(
-        r`\mu_0=\frac{|\vec F_m|}{2\pi I^2\left(\frac{L-a}{d+h}-\frac{L}{d}\right)}`,
-      ),
-      t(
-        r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac{L}{d+h}-\frac{L-a}{d}\right)}`,
+        r`\mu_0=\frac{2\pi|\vec F_m|}{I^2\left(\frac{L-a}{d}-\frac{L}{d+h}\right)}`,
       ),
     ],
     explain:

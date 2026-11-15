@@ -1,4 +1,4 @@
-/** Cálculos de los ejercicios del 2P (SI). Ver src/app/magnetismo-ejercicios. */
+/** Cálculos de los ejercicios del 2P (SI). Ver src/app/ejercicios. */
 
 export const MU0 = 4 * Math.PI * 1e-7;
 export const EPS0 = 8.854187817e-12;
@@ -29,10 +29,12 @@ export function conductivityFromDepth(deltaM: number, freqHz: number): number {
 }
 
 /** α exacto de una onda plana en un medio con pérdidas (μ₀, ε₀, σ). */
-export function alphaExact(sigma: number, freqHz: number): number {
+export function alphaExact(sigma: number, freqHz: number, epsR = 1): number {
   const w = 2 * Math.PI * freqHz;
-  const r = lossRatio(sigma, freqHz);
-  return w * Math.sqrt((MU0 * EPS0) / 2) * Math.sqrt(Math.sqrt(1 + r * r) - 1);
+  const r = lossRatio(sigma, freqHz, epsR);
+  return (
+    w * Math.sqrt((MU0 * EPS0 * epsR) / 2) * Math.sqrt(Math.sqrt(1 + r * r) - 1)
+  );
 }
 
 /** Distancia para que la amplitud caiga `percent` % (99 → queda 1 %). */

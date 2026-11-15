@@ -53,7 +53,10 @@ export function subscribeBoxes(cb: () => void): () => void {
 
 export function saveBoxes(next: Boxes): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(next));
+    const raw = JSON.stringify(next);
+    localStorage.setItem(KEY, raw);
+    cachedRaw = raw;
+    cached = next;
   } catch {
     // Sin almacenamiento: el progreso vive solo en esta sesión.
     cached = next;

@@ -833,10 +833,10 @@ function EspiraPar({ p }: { p: Params }) {
       <Arrow x1={cx + hw} y1={cy + 8} x2={cx + hw} y2={cy - 12} />
       <Arrow x1={cx + 8} y1={cy - hh} x2={cx - 12} y2={cy - hh} />
       <Arrow x1={cx - hw} y1={cy - 8} x2={cx - hw} y2={cy + 12} />
-      {force(cx - 22, cy + hh, by > 0, "F₁")}
-      {force(cx + hw, cy + 22, bx <= 0, "F₂")}
-      {force(cx + 22, cy - hh, by <= 0, "F₃")}
-      {force(cx - hw, cy - 22, bx > 0, "F₄")}
+      {force(cx - 22, cy + hh, by > 0, "F₁z")}
+      {force(cx + hw, cy + 22, bx <= 0, "F₂z")}
+      {force(cx + 22, cy - hh, by <= 0, "F₃z")}
+      {force(cx - hw, cy - 22, bx > 0, "F₄z")}
       <Out x={cx} y={cy} r={6} />
       <T x={cx + 10} y={cy + 4} anchor="start">
         m
@@ -849,8 +849,11 @@ function EspiraPar({ p }: { p: Params }) {
       <T x={cx + tdx + 4} y={cy + tdy - 4} anchor="start" tone="b">
         τ
       </T>
-      <T x={215} y={40} anchor="start">
-        F₁ + F₂ + F₃ + F₄ = 0
+      <T x={215} y={34} anchor="start">
+        ΣF = 0
+      </T>
+      <T x={215} y={50} anchor="start">
+        (F₁z…F₄z: componentes z)
       </T>
       <T x={215} y={70} anchor="start" tone="b">
         τx = {Number((t.tx * 1e3).toPrecision(3))} mN·m
@@ -1143,7 +1146,7 @@ function CampoDosAlambres({ p }: { p: Params }) {
     (solidWireField(1, aMm / 1000, xMm / 1000) +
       solidWireField(1, aMm / 1000, (dMm - xMm) / 1000)) *
     1e6;
-  const ymax = B(2 * aMm);
+  const ymax = B(aMm) * 1.15;
   return (
     <Frame
       label="Campo B por unidad de corriente a lo largo de la recta que une los ejes de dos alambres con corrientes opuestas"

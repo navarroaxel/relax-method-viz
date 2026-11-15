@@ -1316,12 +1316,16 @@ const BASE: Exercise[] = [
             alphaGoodConductor(s, (p.f1 ?? 1) * 1e3),
             pct,
           ),
+          alt: attenuationDistance(alphaExact(s, (p.f1 ?? 1) * 1e3, 81), pct),
         },
         {
           label: `x a ${p.f2} MHz`,
           unit: "cm",
           value:
             attenuationDistance(alphaGoodConductor(s, (p.f2 ?? 1) * 1e6), pct) *
+            100,
+          alt:
+            attenuationDistance(alphaExact(s, (p.f2 ?? 1) * 1e6, 81), pct) *
             100,
         },
       ];

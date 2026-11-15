@@ -1482,11 +1482,11 @@ export const GUIA1: Exercise[] = [
           tex: T`V_{max}=E_{max}\,a\ln\frac ba=${n(one.vmax / 1e3)}\,\mathrm{kV}`,
         },
         {
-          hint: "Capacidad por unidad de longitud ($\varepsilon=6\varepsilon_0$)",
+          hint: "Capacidad por unidad de longitud ($\\varepsilon=6\\varepsilon_0$)",
           tex: T`\frac Cl=\frac{2\pi\varepsilon}{\ln(b/a)}=${n(one.cPerM * 1e12)}\,\mathrm{pF/m}`,
         },
         {
-          hint: "Tres capas: $E=\rho/(2\pi\varepsilon_{r}\varepsilon_0 r)$ y $E=E_{max}$ al inicio de cada capa",
+          hint: "Tres capas: $E=\\rho/(2\\pi\\varepsilon_{r}\\varepsilon_0 r)$ y $E=E_{max}$ al inicio de cada capa",
           tex: T`\frac{\rho}{2\pi\varepsilon_0}=6E_{max}a\;\Rightarrow\;r_1=\frac64\,a=${n(multi.r1 * 100)}\,\mathrm{cm},\quad r_2=\frac42\,r_1=${n(multi.r2 * 100)}\,\mathrm{cm}`,
         },
         {

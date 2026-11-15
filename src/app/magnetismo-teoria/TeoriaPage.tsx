@@ -401,6 +401,8 @@ function MatchGame({ set }: { set: PairSet }) {
               key={i}
               type="button"
               onClick={() => click("t", i)}
+              disabled={matched.has(i)}
+              aria-pressed={sel?.side === "t" && sel.i === i}
               className={`flex min-h-12 items-center justify-center rounded-md border p-2 ${cls("t", i)}`}
             >
               <Tex tex={set.pairs[i]?.term ?? ""} />
@@ -413,6 +415,8 @@ function MatchGame({ set }: { set: PairSet }) {
               key={i}
               type="button"
               onClick={() => click("m", i)}
+              disabled={matched.has(i)}
+              aria-pressed={sel?.side === "m" && sel.i === i}
               className={`flex min-h-12 items-center rounded-md border p-2 text-left text-sm text-zinc-700 dark:text-zinc-200 ${cls("m", i)}`}
             >
               {set.pairs[i]?.meaning}
@@ -507,6 +511,12 @@ function Quiz({ boxes }: { boxes: Boxes }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const t = e.target;
+      if (
+        t instanceof HTMLElement &&
+        /^(INPUT|TEXTAREA|BUTTON|A)$/.test(t.tagName)
+      )
+        return;
       if (finished) return;
       if (answered && (e.key === "Enter" || e.key === " ")) {
         e.preventDefault();
@@ -687,7 +697,7 @@ export function TeoriaPage() {
         </div>
         <div className="flex gap-4">
           <Link
-            href="/magnetismo-ejercicios"
+            href="/ejercicios"
             className="text-xs text-blue-700 hover:underline dark:text-blue-400"
           >
             Ejercicios de parciales y guía →

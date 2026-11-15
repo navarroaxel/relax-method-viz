@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { checkAnswer } from "@/lib/teoriaExercises";
 import { mulberry32 } from "@/lib/teoriaStudy";
 
 import { EXERCISES } from "./exercises";
@@ -99,5 +100,17 @@ describe("figuras de la resolución", () => {
         expect(html).not.toMatch(/NaN|undefined|Infinity/);
       }
     }
+  });
+});
+
+describe("g47: acepta la aproximación de buen conductor y la exacta", () => {
+  it("rho = 0,3 y f₂ = 50 MHz: 8,98 cm y 9,28 cm son correctas", () => {
+    const ex = EXERCISES.find((e) => e.id === "g47")!;
+    const p = { rho: 0.3, f1: 30, f2: 50, k: 10 };
+    const f = ex.fields(p)[1]!;
+    expect(f.value).toBeGreaterThan(0);
+    expect(checkAnswer("8.98", f)).toBe(true);
+    expect(checkAnswer("9.28", f)).toBe(true);
+    expect(checkAnswer("12", f)).toBe(false);
   });
 });
