@@ -2,6 +2,26 @@ import { describe, expect, it } from "vitest";
 
 import {
   alphaExact,
+  connectedSpheres,
+  coaxLeakResistance,
+  coaxPotential,
+  cylCapacitance,
+  diskAxisField,
+  groundVoltage,
+  lineOverGroundC,
+  planeCharge,
+  plateCapacitance,
+  plateForce,
+  pointInShell,
+  quarterWasherResistance,
+  relaxationTime,
+  shellField,
+  sphericalShellPotential,
+  stormLine,
+  twoWireLeak,
+  uniformSphereField,
+  wedgePotential,
+  EPS0,
   cableMultiLayer,
   cableMultiLayerField,
   cableSingleLayer,
@@ -253,5 +273,125 @@ describe("guía 24: cable con aislante", () => {
       v += cableMultiLayerField(r, a, b, emax, eps) * ((b - a) / n);
     }
     expect(v / m.vmax).toBeCloseTo(1, 3);
+  });
+});
+
+describe("guía 1 al 24 (electrostática y circuitos)", () => {
+  it("1/3: Gauss — E de la capa continua en r = b hacia afuera y el plano", () => {
+    expect(planeCharge(1e-8)).toBeCloseTo(1e-8 / (2 * EPS0), 6);
+    expect(shellField(1e-9, 0.1, 0.05)).toBe(0);
+    expect(shellField(1e-9, 0.1, 0.1)).toBeCloseTo(
+      1e-9 / (4 * Math.PI * EPS0 * 0.01),
+      6,
+    );
+  });
+  it("2: E de la nube es continuo en r = b", () => {
+    expect(uniformSphereField(1e-6, 0.1, 0.1 - 1e-12)).toBeCloseTo(
+      uniformSphereField(1e-6, 0.1, 0.1 + 1e-12),
+      0,
+    );
+  });
+  it("4: el disco tiende al plano infinito y al campo puntual", () => {
+    expect(diskAxisField(1e-8, 1e6, 1) / planeCharge(1e-8)).toBeCloseTo(1, 5);
+    const far = diskAxisField(1e-8, 0.01, 10);
+    const point = (1e-8 * Math.PI * 0.01 ** 2) / (4 * Math.PI * EPS0 * 100);
+    expect(far / point).toBeCloseTo(1, 3);
+  });
+  it("5: V continuo en Ri y R0, E = 0 en el conductor", () => {
+    const [q, ri, r0] = [2e-9, 0.1, 0.15];
+    expect(pointInShell(q, ri, r0, 0.12).e).toBe(0);
+    expect(pointInShell(q, ri, r0, ri - 1e-12).v).toBeCloseTo(
+      pointInShell(q, ri, r0, ri).v,
+      6,
+    );
+    expect(pointInShell(q, ri, r0, r0 + 1e-12).v).toBeCloseTo(
+      pointInShell(q, ri, r0, r0).v,
+      6,
+    );
+  });
+  it("6: mismo potencial y E₁/E₂ = b₂/b₁", () => {
+    const s = connectedSpheres(1e-8, 0.02, 0.06);
+    expect(s.q1 + s.q2).toBeCloseTo(1e-8, 15);
+    expect(s.q1 / 0.02).toBeCloseTo(s.q2 / 0.06, 12);
+    expect(s.e1 / s.e2).toBeCloseTo(0.06 / 0.02, 9);
+  });
+  it("7/8/10: capacidades", () => {
+    expect(plateCapacitance(1, 0.01, 0.001)).toBeCloseTo(EPS0 * 10, 15);
+    expect(cylCapacitance(1, 0.001, 0.01, 1)).toBeCloseTo(
+      (2 * Math.PI * EPS0) / Math.log(10),
+      15,
+    );
+  });
+  it("11: la fuerza coincide con −dW/dx a Q constante", () => {
+    const [q, s] = [1e-8, 0.01];
+    const w = (x: number) => (q * q * x) / (2 * EPS0 * s);
+    const h = 1e-7;
+    expect((w(0.002 + h) - w(0.002 - h)) / (2 * h)).toBeCloseTo(
+      plateForce(q, s),
+      6,
+    );
+  });
+  it("12: V(a) = V₀, V(b) = 0 y E = −dV/dr", () => {
+    expect(coaxPotential(100, 0.002, 0.006, 0.002).v).toBeCloseTo(100, 9);
+    expect(coaxPotential(100, 0.002, 0.006, 0.006).v).toBeCloseTo(0, 9);
+    const h = 1e-8;
+    const dv =
+      (coaxPotential(100, 0.002, 0.006, 0.004 + h).v -
+        coaxPotential(100, 0.002, 0.006, 0.004 - h).v) /
+      (2 * h);
+    expect(-dv).toBeCloseTo(coaxPotential(100, 0.002, 0.006, 0.004).e, 3);
+  });
+  it("13: la cuña vale 0, V₀ y 0 en φ = 0, α, 2π", () => {
+    const a = Math.PI / 3;
+    expect(wedgePotential(100, a, 0)).toBe(0);
+    expect(wedgePotential(100, a, a)).toBeCloseTo(100, 12);
+    expect(wedgePotential(100, a, 2 * Math.PI)).toBeCloseTo(0, 12);
+  });
+  it("14: V(Ri) = V₁, V(R0) = V₂ y E = −dV/dr (corrige el signo de V(r) del PDF)", () => {
+    const f = (r: number) => sphericalShellPotential(100, 20, 0.1, 0.2, r);
+    expect(f(0.1).v).toBeCloseTo(100, 9);
+    expect(f(0.2).v).toBeCloseTo(20, 9);
+    const h = 1e-8;
+    expect(-(f(0.15 + h).v - f(0.15 - h).v) / (2 * h)).toBeCloseTo(
+      f(0.15).e,
+      3,
+    );
+  });
+  it("15: C' = 2πε₀/ln(2h/a) ≈ 8,05 pF/m (el PDF escribe 8,504 por un error de cuenta)", () => {
+    expect(lineOverGroundC(10, 0.02) * 1e12).toBeCloseTo(8.05, 2);
+  });
+  it("17 (PDF): τ cobre ≈ 1,52e-19 s y τ caucho ≈ 26550 s", () => {
+    expect(relaxationTime(1, 5.8e7)).toBeCloseTo(1.52e-19, 20);
+    expect(relaxationTime(3, 1e-15)).toBeCloseTo(26550, -2);
+  });
+  it("19/20: R·C = ε/σ", () => {
+    const [a, b, l, sg] = [0.001, 0.01, 2, 1e-6];
+    expect(
+      coaxLeakResistance(a, b, l, sg) * cylCapacitance(1, a, b, l),
+    ).toBeCloseTo(EPS0 / sg, 12);
+    const w = twoWireLeak(0.001, 0.1, sg);
+    expect(w.rLeak * w.cPerM).toBeCloseTo(EPS0 / sg, 12);
+  });
+  it("21: cuarto de arandela por integración numérica", () => {
+    const [sg, h, a, b] = [5.8e7, 0.002, 0.01, 0.03];
+    const n = 100000;
+    let g = 0;
+    for (let k = 0; k < n; k++) {
+      const r = a + ((k + 0.5) * (b - a)) / n;
+      g += (sg * h * ((b - a) / n)) / ((Math.PI / 2) * r);
+    }
+    expect(quarterWasherResistance(sg, h, a, b)).toBeCloseTo(1 / g, 9);
+  });
+  it("22 (PDF): ρ/2πε₀ ≈ −1,3794·E₀, V_L 10 → 6,69·E₀ y E_M ≈ −343,85·E₀", () => {
+    const s = stormLine(10, 2, 0.004, 1);
+    expect(s.k).toBeCloseTo(-1.3794, 3);
+    expect(s.vAfter).toBeCloseTo(6.6924, 3);
+    expect(s.eM).toBeCloseTo(-343.85, 1);
+  });
+  it("23 (PDF): tensión de paso 385 V y 28 V con 200 A y σ = 10⁻² S/m", () => {
+    const dv = (d1: number, d2: number) =>
+      groundVoltage(200, 1e-2, d1) - groundVoltage(200, 1e-2, d2);
+    expect(dv(2.2, 3)).toBeCloseTo(385, -1);
+    expect(dv(9.2, 10)).toBeCloseTo(28, 0);
   });
 });

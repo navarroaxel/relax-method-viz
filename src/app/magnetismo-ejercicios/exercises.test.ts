@@ -1,6 +1,5 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import katex from "katex";
 import { describe, expect, it } from "vitest";
 
 import { mulberry32 } from "@/lib/teoriaStudy";
@@ -12,7 +11,6 @@ import {
   SOLUTION_FIGURE_IDS,
   SolutionFigure,
 } from "./Figures";
-import { GUIDE_ROWS } from "./guia";
 
 const balanced = (s: string) => (s.match(/\$/g)?.length ?? 0) % 2 === 0;
 
@@ -99,38 +97,6 @@ describe("figuras de la resolución", () => {
         );
         expect(html).toContain("<svg");
         expect(html).not.toMatch(/NaN|undefined|Infinity/);
-      }
-    }
-  });
-});
-
-describe("índice de la guía (24–61)", () => {
-  it("cubre del 24 al 61 sin saltos", () => {
-    expect(GUIDE_ROWS.map((r) => r.num)).toEqual(
-      Array.from({ length: 38 }, (_, i) => 24 + i),
-    );
-  });
-  it("cada ejercicio practicable existe", () => {
-    const ids = new Set(EXERCISES.map((e) => e.id));
-    for (const r of GUIDE_ROWS) {
-      if (r.kind === "practica") expect(ids.has(r.exerciseId)).toBe(true);
-    }
-  });
-  it("los textos tienen matemática válida", () => {
-    for (const r of GUIDE_ROWS) {
-      const texts = [
-        r.title,
-        ...(r.kind === "sin-resolver" ? [r.statement, r.note] : []),
-      ];
-      for (const t of texts) {
-        expect(balanced(t)).toBe(true);
-        t.split(/\$([^$]+)\$/).forEach((part, i) => {
-          if (i % 2 === 1)
-            katex.renderToString(part, {
-              throwOnError: true,
-              strict: "ignore",
-            });
-        });
       }
     }
   });

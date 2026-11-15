@@ -251,6 +251,134 @@ export function coaxPoynting(
   return (v * currentA) / (2 * Math.PI * rM * rM * Math.log(bM / aM));
 }
 
+// ---- Guía de ejercicios (1 al 24) ----
+
+export const planeCharge = (rhoS: number) => rhoS / (2 * EPS0);
+
+/** |E| de una esfera con densidad volumétrica uniforme ρ₀ (radio b) a distancia r. */
+export function uniformSphereField(rho0: number, bM: number, rM: number) {
+  return rM <= bM
+    ? (rho0 * rM) / (3 * EPS0)
+    : (rho0 * bM ** 3) / (3 * EPS0 * rM * rM);
+}
+
+/** |E| de una capa esférica delgada con carga Q (0 adentro). */
+export const shellField = (q: number, bM: number, rM: number) =>
+  rM < bM ? 0 : q / (4 * Math.PI * EPS0 * rM * rM);
+
+/** E sobre el eje de un disco de radio b con densidad ρs, a distancia z > 0. */
+export const diskAxisField = (rhoS: number, bM: number, zM: number) =>
+  (rhoS / (2 * EPS0)) * (1 - zM / Math.hypot(bM, zM));
+
+/** Carga puntual Q en el centro de una capa conductora (radios Ri < R0): E y V a distancia r. */
+export function pointInShell(q: number, riM: number, r0M: number, rM: number) {
+  const k = q / (4 * Math.PI * EPS0);
+  if (rM > r0M) return { e: k / (rM * rM), v: k / rM };
+  if (rM >= riM) return { e: 0, v: k / r0M };
+  return { e: k / (rM * rM), v: k * (1 / rM - 1 / riM + 1 / r0M) };
+}
+
+/** Dos esferas conectadas (b₁ < b₂) con carga total Q. */
+export function connectedSpheres(q: number, b1M: number, b2M: number) {
+  const q1 = (q * b1M) / (b1M + b2M);
+  const q2 = (q * b2M) / (b1M + b2M);
+  return {
+    q1,
+    q2,
+    e1: q1 / (4 * Math.PI * EPS0 * b1M * b1M),
+    e2: q2 / (4 * Math.PI * EPS0 * b2M * b2M),
+  };
+}
+
+export const plateCapacitance = (epsR: number, sM2: number, dM: number) =>
+  (epsR * EPS0 * sM2) / dM;
+
+export const cylCapacitance = (
+  epsR: number,
+  aM: number,
+  bM: number,
+  lM: number,
+) => (2 * Math.PI * epsR * EPS0 * lM) / Math.log(bM / aM);
+
+/** Fuerza de atracción entre placas con carga Q constante (no depende de la separación). */
+export const plateForce = (q: number, sM2: number) =>
+  (q * q) / (2 * EPS0 * sM2);
+
+/** V(r) y E(r) entre los conductores de un coaxial (V₀ en r = a, 0 en r = b). */
+export function coaxPotential(v0: number, aM: number, bM: number, rM: number) {
+  return {
+    v: (v0 * Math.log(rM / bM)) / Math.log(aM / bM),
+    e: v0 / (rM * Math.log(bM / aM)),
+  };
+}
+
+/** Potencial entre dos planos en cuña (0 en φ=0 y φ=2π, V₀ en φ=α). */
+export function wedgePotential(v0: number, alphaRad: number, phi: number) {
+  return phi <= alphaRad
+    ? (v0 * phi) / alphaRad
+    : (v0 * (2 * Math.PI - phi)) / (2 * Math.PI - alphaRad);
+}
+
+/** V(r) y E(r) entre dos capas esféricas (V₁ en Ri, V₂ en R0). */
+export function sphericalShellPotential(
+  v1: number,
+  v2: number,
+  riM: number,
+  r0M: number,
+  rM: number,
+) {
+  const a = (v1 - v2) / (1 / riM - 1 / r0M);
+  return { v: v2 + a * (1 / rM - 1 / r0M), e: a / (rM * rM) };
+}
+
+/** Capacidad por metro de una línea (radio a) a altura h sobre tierra. */
+export const lineOverGroundC = (hM: number, aM: number) =>
+  (2 * Math.PI * EPS0) / Math.log((2 * hM) / aM);
+
+export const relaxationTime = (epsR: number, sigma: number) =>
+  (epsR * EPS0) / sigma;
+
+/** Resistencia de fuga de un tramo l de coaxial con aislante de conductividad σ. */
+export const coaxLeakResistance = (
+  aM: number,
+  bM: number,
+  lM: number,
+  sigma: number,
+) => Math.log(bM / aM) / (2 * Math.PI * lM * sigma);
+
+/** Línea de dos alambres (radio a, ejes a distancia d): C' y resistencia de fuga por unidad de longitud. */
+export function twoWireLeak(aM: number, dM: number, sigma: number, epsR = 1) {
+  const eps = epsR * EPS0;
+  const ln = Math.log((dM - aM) / aM);
+  return { cPerM: (Math.PI * eps) / ln, rLeak: ln / (sigma * Math.PI) };
+}
+
+/** Cuarto de arandela (grosor h, radios a < b): resistencia entre las caras de los extremos. */
+export const quarterWasherResistance = (
+  sigma: number,
+  hM: number,
+  aM: number,
+  bM: number,
+) => Math.PI / (2 * sigma * hM * Math.log(bM / aM));
+
+/** Línea L a altura h protegida por un hilo M (radio a) a m por encima, bajo campo E₀. */
+export function stormLine(hM: number, mM: number, aM: number, e0: number) {
+  const top = hM + mM;
+  const k = (-top * e0) / Math.log((2 * top) / aM); // ρ/(2πε₀)
+  const vBefore = hM * e0;
+  const vFromM = k * Math.log((2 * hM + mM) / mM);
+  return {
+    k,
+    vBefore,
+    vAfter: vBefore + vFromM,
+    eM: k / aM + e0,
+  };
+}
+
+/** Potencial a distancia d de una toma de tierra semiesférica que drena I en suelo de conductividad σ. */
+export const groundVoltage = (iA: number, sigma: number, dM: number) =>
+  iA / (2 * Math.PI * sigma * dM);
+
 /** Número con 3 cifras significativas, listo para TeX. */
 export function texNum(x: number, sig = 3): string {
   if (x === 0) return "0";

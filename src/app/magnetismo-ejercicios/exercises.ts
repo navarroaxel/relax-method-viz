@@ -3,8 +3,6 @@ import {
   alphaGoodConductor,
   attenuationDistance,
   C0,
-  cableMultiLayer,
-  cableSingleLayer,
   circularLoopAxisField,
   coaxInductancePerLength,
   coaxPoynting,
@@ -34,6 +32,8 @@ import {
 
 import type { Step } from "../magnetismo-teoria/content";
 
+import { GUIA1 } from "./exercisesGuia1";
+
 export type Params = Record<string, number>;
 
 export interface Field {
@@ -54,7 +54,7 @@ export interface Strategy {
 
 export interface Exercise {
   id: string;
-  group: "parciales" | "guia";
+  group: "parciales" | "guia" | "guia1";
   source: string;
   title: string;
   /** Aviso sobre diferencias con el PDF o datos que no son del enunciado original. */
@@ -77,7 +77,7 @@ const pick = <X>(rand: () => number, xs: readonly X[]): X =>
 const EXAMPLE =
   "Los datos numéricos son un ejemplo: en la guía el ejercicio es simbólico.";
 
-export const EXERCISES: Exercise[] = [
+const BASE: Exercise[] = [
   // ───────────────────────── Parciales 2P ─────────────────────────
   {
     id: "p-helmholtz",
@@ -572,76 +572,6 @@ export const EXERCISES: Exercise[] = [
   },
 
   // ───────────────────── Guía de ejercicios (25 en adelante) ─────────────────────
-  {
-    id: "g24",
-    group: "guia",
-    source: "Guía · 24",
-    title: "Cable con aislante: capacidad y tensión máxima",
-    note:
-      "La figura de la guía no está en el PDF resuelto: se interpretan sus rótulos como permitividades relativas (una capa de $\\varepsilon_r=6$, o tres capas de 6, 4 y 2 de adentro hacia afuera). " +
-      EXAMPLE,
-    original: { a: 0.4, b: 2.4, E: 100 },
-    vary: (r) => {
-      const a = pick(r, [0.3, 0.4, 0.5]);
-      return { a, b: a * pick(r, [6, 8]), E: pick(r, [50, 100, 150]) };
-    },
-    statement: (p) =>
-      `Un conductor de radio $a=${p.a}\\,\\mathrm{cm}$ está aislado con un blindaje de radio $b=${p.b}\\,\\mathrm{cm}$ puesto a tierra. Los aislantes tienen rigidez dieléctrica $E_{max}=${p.E}\\,\\mathrm{kV/cm}$ y se diseñan al máximo. Para (a) una sola capa de $\\varepsilon_r=6$ y (b) tres capas de $\\varepsilon_r=6,\\,4,\\,2$ (de adentro hacia afuera), determine la capacidad por unidad de longitud, la máxima tensión aplicable y grafique $E(r)$.`,
-    strategy: {
-      prompt: "En la versión de una sola capa, ¿dónde es máximo $E$?",
-      options: [
-        "En la superficie del conductor ($r=a$): $E\\propto1/r$",
-        "En el blindaje ($r=b$)",
-        "Es uniforme en todo el aislante",
-        "En el punto medio entre $a$ y $b$",
-      ],
-      explain:
-        "$E=V_0/\\left(r\\ln(b/a)\\right)$ decrece con $r$: el aislante falla primero junto al conductor. Con varias capas se baja la permitividad hacia afuera para que $E$ vuelva a valer $E_{max}$ al inicio de cada capa y se aproveche mejor el material.",
-    },
-    fields: (p) => {
-      const a = (p.a ?? 1) / 100;
-      const b = (p.b ?? 6) / 100;
-      const e = (p.E ?? 100) * 1e5;
-      const one = cableSingleLayer(a, b, e, 6);
-      const multi = cableMultiLayer(a, b, e, [6, 4, 2]);
-      return [
-        { label: "Vmax (una capa)", unit: "kV", value: one.vmax / 1e3 },
-        { label: "C/l (una capa)", unit: "pF/m", value: one.cPerM * 1e12 },
-        { label: "Vmax (tres capas)", unit: "kV", value: multi.vmax / 1e3 },
-        { label: "C/l (tres capas)", unit: "pF/m", value: multi.cPerM * 1e12 },
-      ];
-    },
-    steps: (p) => {
-      const a = (p.a ?? 1) / 100;
-      const b = (p.b ?? 6) / 100;
-      const e = (p.E ?? 100) * 1e5;
-      const one = cableSingleLayer(a, b, e, 6);
-      const multi = cableMultiLayer(a, b, e, [6, 4, 2]);
-      return [
-        {
-          hint: "Laplace con simetría cilíndrica ($V(a)=V_0$, $V(b)=0$)",
-          tex: T`\nabla^2V=\frac1r\frac{\partial}{\partial r}\left(r\frac{\partial V}{\partial r}\right)=0\;\Rightarrow\;V=\frac{V_0}{\ln(a/b)}\ln\frac rb,\qquad E=\frac{V_0}{r\ln(b/a)}`,
-        },
-        {
-          hint: "Una capa: $E_{max}$ está en $r=a$",
-          tex: T`V_{max}=E_{max}\,a\ln\frac ba=${n(one.vmax / 1e3)}\,\mathrm{kV}`,
-        },
-        {
-          hint: "Capacidad por unidad de longitud ($\varepsilon=6\varepsilon_0$)",
-          tex: T`\frac Cl=\frac{2\pi\varepsilon}{\ln(b/a)}=${n(one.cPerM * 1e12)}\,\mathrm{pF/m}`,
-        },
-        {
-          hint: "Tres capas: $E=\rho/(2\pi\varepsilon_{r}\varepsilon_0 r)$ y $E=E_{max}$ al inicio de cada capa",
-          tex: T`\frac{\rho}{2\pi\varepsilon_0}=6E_{max}a\;\Rightarrow\;r_1=\frac64\,a=${n(multi.r1 * 100)}\,\mathrm{cm},\quad r_2=\frac42\,r_1=${n(multi.r2 * 100)}\,\mathrm{cm}`,
-        },
-        {
-          hint: "Tensión máxima: integrar $E$ capa por capa",
-          tex: T`V_{max}=\frac{\rho}{2\pi\varepsilon_0}\left[\frac{\ln(r_1/a)}6+\frac{\ln(r_2/r_1)}4+\frac{\ln(b/r_2)}2\right]=${n(multi.vmax / 1e3)}\,\mathrm{kV}`,
-          body: `La capacidad por unidad de longitud es $\\rho/V_{max}=${n(multi.cPerM * 1e12)}\\,\\mathrm{pF/m}$.`,
-        },
-      ];
-    },
-  },
   {
     id: "g25",
     group: "guia",
@@ -1662,3 +1592,5 @@ export const EXERCISES: Exercise[] = [
     ],
   },
 ];
+
+export const EXERCISES: Exercise[] = [...BASE, ...GUIA1];

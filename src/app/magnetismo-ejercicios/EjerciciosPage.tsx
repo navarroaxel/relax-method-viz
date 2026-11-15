@@ -10,7 +10,6 @@ import { shuffleSeeded } from "@/lib/teoriaStudy";
 
 import { Rich, Tex } from "../magnetismo-teoria/Tex";
 import { EXERCISES, type Exercise, type Params } from "./exercises";
-import { GUIDE_ROWS, type GuideRow } from "./guia";
 import { ExerciseFigure, SolutionFigure } from "./Figures";
 
 const CARD =
@@ -21,18 +20,18 @@ const BTN_PRIMARY =
   "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-40";
 const BODY = "text-sm leading-relaxed text-zinc-600 dark:text-zinc-300";
 
-type Group = "parciales" | "guia" | "todos";
+type Group = Exercise["group"];
 
 /** Los de la guía llevan su número: «#32 Autoinductancia…». */
 function chipLabel(e: Exercise): string {
-  const num = e.group === "guia" ? /^g(\d+)$/.exec(e.id)?.[1] : undefined;
+  const num = e.group !== "parciales" ? /^g(\d+)$/.exec(e.id)?.[1] : undefined;
   return num ? `#${num} ${e.title}` : e.title;
 }
 
 const GROUPS: { id: Group; label: string }[] = [
   { id: "parciales", label: "Parciales 2P" },
-  { id: "guia", label: "Guía (resueltos)" },
-  { id: "todos", label: "Guía 24–61 (todos)" },
+  { id: "guia1", label: "Guía (1 al 24)" },
+  { id: "guia", label: "Guía (25 en adelante)" },
 ];
 
 function ExerciseView({ exercise }: { exercise: Exercise }) {
@@ -276,83 +275,11 @@ function ExerciseView({ exercise }: { exercise: Exercise }) {
   );
 }
 
-interface Chip {
-  id: string;
-  label: string;
-  muted?: boolean;
-}
-
-function chipsFor(group: Group): Chip[] {
-  if (group === "todos")
-    return GUIDE_ROWS.map((r) => ({
-      id: `r${r.num}`,
-      label: `#${r.num} ${r.title}`,
-      muted: r.kind !== "practica",
-    }));
-  return EXERCISES.filter((e) => e.group === group).map((e) => ({
-    id: e.id,
-    label: chipLabel(e),
-  }));
-}
-
-function UnsolvedView({
-  row,
-}: {
-  row: Extract<GuideRow, { kind: "sin-resolver" }>;
-}) {
-  return (
-    <section className={`${CARD} flex flex-col gap-2`}>
-      <span className="text-xs text-zinc-500 dark:text-zinc-400">
-        Guía · {row.num}
-      </span>
-      <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-        <Rich text={row.title} />
-      </h2>
-      <p className={BODY}>
-        <Rich text={row.statement} />
-      </p>
-      <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-        <Rich text={row.note} />
-      </p>
-    </section>
-  );
-}
-
-function TheoryRow({ row }: { row: Extract<GuideRow, { kind: "teoria" }> }) {
-  return (
-    <section className={`${CARD} flex flex-col gap-2`}>
-      <span className="text-xs text-zinc-500 dark:text-zinc-400">
-        Guía · {row.num}
-      </span>
-      <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-        {row.title}
-      </h2>
-      <p className={BODY}>{row.note}</p>
-      <Link
-        href="/magnetismo-teoria"
-        className="text-sm text-blue-700 hover:underline dark:text-blue-400"
-      >
-        Ir a la página de teoría →
-      </Link>
-    </section>
-  );
-}
-
 export function EjerciciosPage() {
   const [group, setGroup] = useState<Group>("parciales");
-  const chips = chipsFor(group);
-  const [id, setId] = useState(chips[0]?.id ?? "");
-  const current = chips.find((c) => c.id === id) ?? chips[0];
-  const row =
-    group === "todos"
-      ? GUIDE_ROWS.find((r) => `r${r.num}` === current?.id)
-      : undefined;
-  const exercise =
-    group === "todos"
-      ? row?.kind === "practica"
-        ? EXERCISES.find((e) => e.id === row.exerciseId)
-        : undefined
-      : EXERCISES.find((e) => e.id === current?.id);
+  const list = EXERCISES.filter((e) => e.group === group);
+  const [id, setId] = useState(list[0]?.id ?? "");
+  const exercise = list.find((e) => e.id === id) ?? list[0];
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-3 p-4">
@@ -364,11 +291,9 @@ export function EjerciciosPage() {
           <GitHubLink />
         </div>
         <p className={BODY}>
-          Problemas de parciales 2P y de la guía de TdC (del 24 en adelante). En
-          «Guía 24–61 (todos)» están los 38 ejercicios; los que el PDF no
-          resuelve solo muestran el enunciado. Cambiá los datos para no
-          memorizar la cuenta: resolvelo, comprobá el resultado y mirá la
-          resolución paso a paso.
+          Problemas de parciales 2P y de la guía de TdC (del 1 al 61, solo los
+          resueltos). Cambiá los datos para no memorizar la cuenta: resolvelo,
+          comprobá el resultado y mirá la resolución paso a paso.
         </p>
         <div className="flex gap-4">
           <Link
@@ -393,7 +318,7 @@ export function EjerciciosPage() {
             type="button"
             onClick={() => {
               setGroup(g.id);
-              setId(chipsFor(g.id)[0]?.id ?? "");
+              setId(EXERCISES.find((e) => e.group === g.id)?.id ?? "");
             }}
             className={`-mb-px border-b-2 px-3 py-2 text-sm ${
               group === g.id
@@ -407,29 +332,23 @@ export function EjerciciosPage() {
       </nav>
 
       <div className="flex flex-wrap gap-1.5">
-        {chips.map((c) => (
+        {list.map((e) => (
           <button
-            key={c.id}
+            key={e.id}
             type="button"
-            onClick={() => setId(c.id)}
+            onClick={() => setId(e.id)}
             className={`rounded-full border px-2.5 py-1 text-xs ${
-              c.id === current?.id
+              e.id === exercise?.id
                 ? "border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
-                : c.muted
-                  ? "border-dashed border-zinc-300 text-zinc-400 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-500 dark:hover:bg-zinc-800"
-                  : "border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                : "border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
             }`}
           >
-            <Rich text={c.label} />
+            {chipLabel(e)}
           </button>
         ))}
       </div>
 
-      {exercise && (
-        <ExerciseView key={`${group}-${exercise.id}`} exercise={exercise} />
-      )}
-      {row?.kind === "sin-resolver" && <UnsolvedView key={row.num} row={row} />}
-      {row?.kind === "teoria" && <TheoryRow key={row.num} row={row} />}
+      {exercise && <ExerciseView key={exercise.id} exercise={exercise} />}
 
       <ProjectCredits />
     </main>

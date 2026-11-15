@@ -12,9 +12,12 @@ import {
   loopTorque,
   MU0,
   solenoidField,
+  shellField,
   solidWireField,
+  sphericalShellPotential,
   thinTubeField,
   toroidField,
+  uniformSphereField,
 } from "@/lib/teoriaExercises";
 
 import type { Params } from "./exercises";
@@ -1819,6 +1822,131 @@ function CampoCable({ p }: { p: Params }) {
     </Frame>
   );
 }
+/** |E|(r) de la nube esférica: lineal adentro y 1/r² afuera. */
+function CampoNube({ p }: { p: Params }) {
+  const rho = v(p, "rho0") * 1e-6;
+  const bCm = v(p, "b");
+  const E = (x: number) => uniformSphereField(rho, bCm / 100, x / 100) / 1e3;
+  return (
+    <Frame
+      label="Módulo del campo en función del radio para la nube esférica: crece linealmente hasta r = b y decae como 1/r²"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={Math.max(v(p, "rout") * 1.1, bCm * 3)}
+        ymax={E(bCm) * 1.15}
+        fn={E}
+        xlabel="cm"
+        ylabel="|E| (kV/m)"
+        vlines={[{ x: bCm, label: "r = b" }]}
+        dots={[
+          {
+            x: v(p, "rin"),
+            y: E(v(p, "rin")),
+            label: `${fmt(E(v(p, "rin")))} kV/m`,
+            anchor: "end",
+            dy: -8,
+          },
+          {
+            x: v(p, "rout"),
+            y: E(v(p, "rout")),
+            label: `${fmt(E(v(p, "rout")))} kV/m`,
+            dy: -8,
+          },
+        ]}
+      />
+      <T x={171} y={178} tone="b">
+        ∝ r adentro · ∝ 1/r² afuera
+      </T>
+    </Frame>
+  );
+}
+
+/** |E|(r) de la capa esférica: nulo adentro, salto en b y 1/r² afuera. */
+function CampoCapa({ p }: { p: Params }) {
+  const q = v(p, "Q") * 1e-9;
+  const bCm = v(p, "b");
+  const E = (x: number) => shellField(q, bCm / 100, x / 100);
+  return (
+    <Frame
+      label="Módulo del campo en función del radio para una capa esférica cargada: nulo adentro y 1/r² afuera"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={v(p, "r") * 1.15}
+        ymax={E(bCm) * 1.15}
+        fn={E}
+        xlabel="cm"
+        ylabel="|E| (V/m)"
+        vlines={[{ x: bCm, label: "r = b" }]}
+        dots={[
+          {
+            x: v(p, "r"),
+            y: E(v(p, "r")),
+            label: `${fmt(E(v(p, "r")))} V/m`,
+            dy: -8,
+          },
+        ]}
+      />
+      <T x={171} y={178} tone="b">
+        E = 0 adentro · salto en r = b · ∝ 1/r² afuera
+      </T>
+    </Frame>
+  );
+}
+
+/** V(r) entre dos capas esféricas: hiperbólico entre Ri y R0, constante en los conductores. */
+function PotencialCapas({ p }: { p: Params }) {
+  const [v1, v2] = [v(p, "V1"), v(p, "V2")];
+  const [ri, r0] = [v(p, "Ri"), v(p, "R0")];
+  const V = (x: number) =>
+    x <= ri
+      ? v1
+      : x >= r0
+        ? v2
+        : sphericalShellPotential(v1, v2, ri / 100, r0 / 100, x / 100).v;
+  return (
+    <Frame
+      label="Potencial en función del radio entre dos capas esféricas conductoras: hiperbólico en el aislante"
+      h={185}
+    >
+      <Plot
+        ox={46}
+        oy={24}
+        w={250}
+        h={108}
+        xmax={r0 * 1.25}
+        ymax={Math.max(v1, v2) * 1.15}
+        fn={V}
+        xlabel="cm"
+        ylabel="V (V)"
+        vlines={[
+          { x: ri, label: "Rᵢ" },
+          { x: r0, label: "R₀" },
+        ]}
+        dots={[
+          {
+            x: v(p, "r"),
+            y: V(v(p, "r")),
+            label: `${fmt(V(v(p, "r")))} V`,
+            dy: -8,
+          },
+        ]}
+      />
+      <T x={171} y={178} tone="b">
+        V = −A/r + B entre las capas
+      </T>
+    </Frame>
+  );
+}
 
 const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
   g39: (p) => <EspiraPar p={p} />,
@@ -1828,6 +1956,9 @@ const SOLUTION_FIGURES: Record<string, (p: Params) => ReactElement> = {
       <CamposCoaxial p={p} />
     </>
   ),
+  g2: (p) => <CampoNube p={p} />,
+  g3: (p) => <CampoCapa p={p} />,
+  g14: (p) => <PotencialCapas p={p} />,
   g24: (p) => <CampoCable p={p} />,
   g25: (p) => <CampoConductor p={p} />,
   g26: (p) => <CampoToroide p={p} />,
